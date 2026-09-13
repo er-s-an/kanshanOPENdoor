@@ -13,6 +13,14 @@ const BLUE_COVER = '/art/blue/blue-cover.jpg';
 const BLUE_FIRST_SCENE = '/art/blue/blue-training-hall.jpg';
 const CLOSED_DOOR = '/art/portal/door-card-closed.jpg';
 const OPEN_DOOR = '/art/portal/door-card-open.jpg';
+const STORY_ALIASES: Record<string, string> = {
+  'playable-blue': BLUE_STORY_ID,
+  'playable-myopic': '近视眼勇闯恐怖游戏-1747681485547843585',
+};
+
+// Re-entering the lobby during one SPA visit should not replay onboarding.
+// A full page load intentionally introduces Liu Kanshan again.
+let portalIntroduced = false;
 
 type EntryState = { title: string };
 
@@ -52,23 +60,49 @@ function PortalEntry({ entry }: { entry: EntryState }) {
 export function Doors() {
   const { stories, storyError, enterStory, refreshStories } = useGame();
   const { prefs } = usePrefs();
+  const judgeBypass = new URLSearchParams(window.location.search).has('scene');
+  const linkedStoryId = new URLSearchParams(window.location.search).get('story');
+  const [showWelcome, setShowWelcome] = useState(() => !judgeBypass && !portalIntroduced);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [entry, setEntry] = useState<EntryState | null>(null);
   const [fail, setFail] = useState('');
   const [guideOk, setGuideOk] = useState(true);
   const enteringRef = useRef(false);
+  const welcomeHeadingRef = useRef<HTMLHeadingElement>(null);
+  const libraryHeadingRef = useRef<HTMLHeadingElement>(null);
+  const linkedStoryRef = useRef<HTMLButtonElement>(null);
+  const focusLibraryRef = useRef(false);
 
   const saved = useMemo(() => loadSave(), []);
   const resumeStory = useMemo(
     () => (saved ? stories.find((s) => s.id === saved.storyId) || null : null),
     [saved, stories],
   );
+  const linkedStory = useMemo(() => {
+    if (!linkedStoryId) return null;
+    const resolvedId = STORY_ALIASES[linkedStoryId] || linkedStoryId;
+    return stories.find((story) => story.id === resolvedId) || null;
+  }, [linkedStoryId, stories]);
 
   useEffect(() => {
     // Only the one entrance still and the flagship cover are warmed here.
     // Character motion remains strictly state-driven and is not bulk-loaded.
     void preloadImage(TRANSITION_ART);
     void preloadImage(BLUE_COVER);
+  }, []);
+
+  useEffect(() => {
+    if (showWelcome) welcomeHeadingRef.current?.focus();
+    else if (focusLibraryRef.current) {
+      focusLibraryRef.current = false;
+      window.requestAnimationFrame(() => (linkedStoryRef.current || libraryHeadingRef.current)?.focus());
+    }
+  }, [showWelcome]);
+
+  const revealLibrary = useCallback(() => {
+    portalIntroduced = true;
+    focusLibraryRef.current = true;
+    setShowWelcome(false);
   }, []);
 
   const pick = useCallback(async (story: StorySummary, resume = Boolean(loadSave(story.id))) => {
@@ -98,21 +132,53 @@ export function Doors() {
     }
   }, [enterStory, prefs.sfx]);
 
-  // 盐选壳页直达：?story=<id> 时跳过点选，自动推门（演示入口链路）
+  // Only the explicit review shortcut may bypass the welcome and door choice.
+  // A normal ?story= link merely highlights that door after Liu Kanshan's welcome.
   const autoEntered = useRef(false);
   useEffect(() => {
     if (autoEntered.current || !stories.length) return;
-    const target = new URLSearchParams(window.location.search).get('story');
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has('scene')) return;
+    const target = params.get('story');
     if (!target) return;
-    const aliases: Record<string, string> = { 'playable-blue': '蓝血-2025684191967294692', 'playable-myopic': '近视眼勇闯恐怖游戏-1747681485547843585' };
-    const s = stories.find((x) => x.id === (aliases[target] || target));
+    const s = stories.find((x) => x.id === (STORY_ALIASES[target] || target));
     if (!s) return;
     autoEntered.current = true;
     void pick(s);
   }, [pick, stories]);
 
+  if (showWelcome) {
+    const heading = linkedStory
+      ? `我替你守着《${linkedStory.title}》的门。`
+      : '先别急着进故事。让我带你认认这里。';
+    const message = linkedStory
+      ? '有人把这扇门送到了你面前。我先带你去门前，你看清楚以后，再决定要不要进去。'
+      : '这里的每一扇门，都通往一段可以亲自走进去的故事。你会和里面的人交谈、寻找证据，也会留下自己的选择。';
+    return <main className="library library--welcome">
+      <section className="portal-welcome" aria-labelledby="portal-welcome-title">
+        <figure className="portal-welcome__figure">
+          {guideOk ? <img src="/art/character/motion/liu-kanshan-wave.gif" alt="刘看山站在任意门前向你挥手" loading="eager" decoding="async" onError={() => setGuideOk(false)} /> : <span className="portal-welcome__fallback">刘看山</span>}
+          <figcaption>知乎 IP · 刘看山</figcaption>
+        </figure>
+        <div className="portal-welcome__copy">
+          <p className="portal-welcome__eyebrow">看山任意门 · 引路人接站</p>
+          <h1 id="portal-welcome-title" ref={welcomeHeadingRef} tabIndex={-1}>{heading}</h1>
+          <div className="portal-welcome__speech">
+            <strong>我是刘看山，这里的引路人。</strong>
+            <p>{message}</p>
+            <p>准备好以后，自己选一扇门。我来替你打开。</p>
+          </div>
+          <button className="btn btn--primary btn--lg portal-welcome__action" type="button" onClick={revealLibrary}>
+            {linkedStory ? `先看看《${linkedStory.title}》` : '去选一扇门'} <span aria-hidden>→</span>
+          </button>
+          <small>{stories.length ? `前面有 ${stories.length} 扇故事门` : '故事库还在连接，你可以先听我说完'}</small>
+        </div>
+      </section>
+    </main>;
+  }
+
   return <main className="library" aria-busy={loadingId !== null}>
-    <header className="library__head"><p className="library__brand">看山任意门 <span>知乎盐言 · 互动故事</span></p><h1>选一扇门，进入故事。</h1><p className="library__intro">与人物交谈，亲自行动。每个故事，都有它自己的玩法。</p><figure className="library__guide">{guideOk ? <img className="library__guide-img" src="/art/portal/liu-kanshan-lobby-guide.jpg" alt="" loading="eager" decoding="async" onError={() => setGuideOk(false)} /> : null}<figcaption className="library__guide-line"><b>系统引导·刘看山</b><span>每一扇门后都是一个故事。选好以后，我会为你打开通往这篇故事的门。</span></figcaption></figure></header>
+    <header className="library__head"><p className="library__brand">看山任意门 <span>知乎盐言 · 互动故事</span></p><h1 ref={libraryHeadingRef} tabIndex={-1}>现在，选一扇你想推开的门。</h1><p className="library__intro">先看清它通往哪里；选好以后，刘看山会替你开门。</p><p className="library__guide-note"><b>刘看山</b><span>{linkedStory ? `我把《${linkedStory.title}》放在前面了，但最后由你决定。` : '不用赶时间。故事会记住你的进度。'}</span></p></header>
     {resumeStory && saved ? <button className="library__resume" disabled={loadingId !== null} onClick={() => void pick(resumeStory, true)} aria-label={`继续上次的旅程：${resumeStory.title}`}><span className="library__resume-icon" aria-hidden>↳</span><span><small>继续上次进度</small><strong>{resumeStory.title}</strong></span><span className="library__resume-action">继续旅程 →</span></button> : null}
     <div className="library__section"><h2>选择你的处境</h2><span>{stories.length ? `${stories.length} 个互动首章` : '正在寻找故事'}</span></div>
     {storyError && !stories.length ? <section className="library__empty" role="alert"><p>暂时没有连接上故事库。</p><button className="btn btn--primary" onClick={refreshStories}>重新加载</button></section> : null}
@@ -121,7 +187,7 @@ export function Doors() {
       const flagship = isBlue(s);
       const opening = loadingId === s.id;
       return <article className={`library-story${opening ? ' is-opening' : ''}`} key={s.id}>
-        <button className="library-story__open" disabled={loadingId !== null} onClick={() => void pick(s)} aria-label={`${hasSave ? '继续' : '进入'}《${s.title}》`} aria-busy={opening}>
+        <button ref={linkedStory?.id === s.id ? linkedStoryRef : undefined} className={`library-story__open${linkedStory?.id === s.id ? ' is-linked' : ''}`} disabled={loadingId !== null} onClick={() => void pick(s)} aria-label={`${hasSave ? '继续' : '进入'}《${s.title}》`} aria-busy={opening}>
           <span className={`library-story__folio library-story__folio--${i % 3}${flagship ? ' library-story__folio--cover' : ''}`} aria-hidden>
             {flagship ? <img className="library-story__cover-image" src={BLUE_COVER} alt="" loading="eager" decoding="async" onError={(e) => { e.currentTarget.style.display = 'none'; }} /> : <><img className="library-story__door library-story__door--closed" src={CLOSED_DOOR} alt="" loading="lazy" decoding="async" onError={(e) => { e.currentTarget.style.display = 'none'; }} /><img className="library-story__door library-story__door--open" src={OPEN_DOOR} alt="" loading="lazy" decoding="async" onError={(e) => { e.currentTarget.style.display = 'none'; }} /></>}
             <small>{flagship ? '旗舰故事' : 'STORY'}</small><b>{String(i + 1).padStart(2, '0')}</b><span>{opening ? '门已打开' : '看山任意门'}</span>

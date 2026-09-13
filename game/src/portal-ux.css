@@ -14,6 +14,109 @@
   inset: 0;
   pointer-events: none;
 }
+
+/* ---------- Site entrance: meet the guide before choosing a story ---------- */
+.library.library--welcome {
+  max-width: none;
+  display: grid;
+  place-items: center;
+  padding: 40px max(24px, env(safe-area-inset-left)) max(40px, env(safe-area-inset-bottom));
+}
+.portal-welcome {
+  width: min(1080px, 100%);
+  min-height: min(720px, calc(100dvh - 80px));
+  display: grid;
+  grid-template-columns: minmax(300px, .9fr) minmax(360px, 1.1fr);
+  align-items: center;
+  gap: clamp(42px, 7vw, 96px);
+}
+.portal-welcome__figure {
+  position: relative;
+  min-height: 520px;
+  margin: 0;
+  display: grid;
+  place-items: end center;
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid var(--line-2);
+  border-radius: 24px 24px 80px 24px;
+  background: #0a1211;
+  box-shadow: 0 34px 86px rgba(0, 0, 0, .45);
+}
+.portal-welcome__figure::before,
+.portal-welcome__figure::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+}
+.portal-welcome__figure::before {
+  background: url('/art/portal/liu-kanshan-lobby-guide.jpg') 34% center / cover no-repeat;
+  filter: saturate(.72) brightness(.58);
+  transform: scale(1.02);
+}
+.portal-welcome__figure::after {
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(4, 10, 8, .05) 32%, rgba(4, 10, 8, .86));
+}
+.portal-welcome__figure img {
+  width: min(74%, 340px);
+  max-height: 390px;
+  object-fit: contain;
+  filter: drop-shadow(0 18px 28px rgba(0, 0, 0, .5));
+}
+.portal-welcome__figure figcaption {
+  position: absolute;
+  left: 24px;
+  bottom: 20px;
+  color: var(--ink-2);
+  font-size: 12px;
+  letter-spacing: .12em;
+}
+.portal-welcome__fallback {
+  align-self: center;
+  color: var(--amber);
+  font: 500 32px/1.5 var(--serif);
+}
+.portal-welcome__copy { display: grid; justify-items: start; }
+.portal-welcome__eyebrow {
+  margin: 0 0 18px;
+  color: var(--amber);
+  font-size: 12px;
+  letter-spacing: .14em;
+}
+.portal-welcome__copy h1 {
+  margin: 0;
+  max-width: 13em;
+  font: 500 clamp(34px, 4.2vw, 54px)/1.32 var(--serif);
+  letter-spacing: .02em;
+  text-wrap: balance;
+}
+.portal-welcome__copy h1:focus { outline: none; }
+.portal-welcome__speech {
+  position: relative;
+  max-width: 590px;
+  margin: 30px 0 28px;
+  padding: 24px 26px;
+  border-left: 2px solid var(--amber);
+  background: linear-gradient(90deg, rgba(223, 195, 142, .09), transparent 92%);
+}
+.portal-welcome__speech strong { display: block; margin-bottom: 8px; color: var(--ink); font: 500 18px/1.65 var(--serif); }
+.portal-welcome__speech p { margin: 7px 0 0; color: var(--ink-2); font-size: 15px; line-height: 1.85; }
+.portal-welcome__action { min-width: 190px; }
+.portal-welcome__action + small { margin-top: 13px; color: var(--faint); font-size: 12px; }
+
+.library__guide-note {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 22px 0 0;
+  color: var(--ink-2);
+  font-size: 13px;
+}
+.library__guide-note b { color: var(--amber); font: 500 14px/1.6 var(--serif); }
+.library-story__open.is-linked { box-shadow: inset 3px 0 var(--amber); }
 .library.library::before {
   z-index: -2;
   inset: -18px;
@@ -283,6 +386,17 @@
 }
 
 @media (max-width: 760px) {
+  .library.library--welcome { padding: 22px 20px max(28px, env(safe-area-inset-bottom)); }
+  .portal-welcome { min-height: calc(100dvh - 50px); grid-template-columns: 1fr; align-content: center; gap: 26px; }
+  .portal-welcome__figure { min-height: 252px; border-radius: 18px 18px 48px 18px; }
+  .portal-welcome__figure img { width: min(62%, 230px); max-height: 220px; }
+  .portal-welcome__figure figcaption { left: 18px; bottom: 14px; }
+  .portal-welcome__copy h1 { font-size: clamp(29px, 9vw, 38px); }
+  .portal-welcome__speech { margin: 22px 0; padding: 18px 18px; }
+  .portal-welcome__speech strong { font-size: 17px; }
+  .portal-welcome__speech p { font-size: 14px; line-height: 1.75; }
+  .portal-welcome__action { width: 100%; }
+  .library__guide-note { align-items: flex-start; }
   .library__guide { min-height: 252px; margin-top: 26px; }
   .library__guide::after { background: linear-gradient(180deg, transparent 32%, rgba(7, 12, 10, .94) 80%); }
   .library__guide-img { object-position: 34% center; }
@@ -309,5 +423,6 @@
   .portal-entry__art { animation: portalReduced .18s linear both; }
   .portal-entry__veil { animation: none; opacity: .72; }
   .portal-entry__copy > i > b { animation: none; transform: none; }
+  .portal-welcome__figure img { display: none; }
   @keyframes portalReduced { from { opacity: 0; } to { opacity: 1; } }
 }
