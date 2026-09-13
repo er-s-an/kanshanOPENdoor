@@ -783,7 +783,7 @@ async function handleCompiledDialogue({ res, data, scene, plan, system, messages
 // 直答以「AI 搜索产品」自居时必然拒答角色扮演；对策：
 // 1) 提示词改为「文本加工」任务（给事实素材+玩家原话，加工对白），不让模型「成为」角色；
 // 2) 检出戏：回复出现产品自居/拒答措辞 → 剧本兜底，拒答文案绝不进气泡。
-const OFFLINE_RE = /知乎直答|直答|AI ?搜索|人工智能|语言模型|大模型|无法回答|无法扮演|不能扮演|无法协助|无法提供|作为(?:一个|一名|款)? ?AI|AI ?助手|抱歉，?我|对不起，?我|I'm sorry|cannot assist|as an AI/i;
+const OFFLINE_RE = /知乎直答|直答|AI ?搜索|人工智能|语言模型|大模型|无法回答|无法扮演|不能扮演|无法协助|无法提供|无法完成(?:这个|该|您的)?请求|没有提供.{0,24}(?:上下文|背景|素材)|如果您能补充|请(?:您)?补充(?:以下)?(?:信息|内容)|作为(?:一个|一名|款)? ?AI|AI ?助手|抱歉，?(?:我|无法)|对不起，?我|I'm sorry|cannot assist|as an AI/i;
 const isOffline = (text) => OFFLINE_RE.test(String(text || '').replace(/\s+/g, ''));
 
 function buildRewritePrompt({ data, npc, card, scene, lore, plan, windowed }) {

@@ -163,6 +163,14 @@ test('HTTP dialogue keeps canonical facts and grants independent of AI, goal cla
     assert.equal(free.goalAchieved, false);
     assert.deepEqual(free.clues, []);
   });
+  await t.test('generic missing-context refusals never enter the NPC bubble', async () => {
+    harness.setReply('抱歉，无法完成这个请求。您没有提供王经理和玩家之间对话的上下文。如果您能补充以下信息，我可以帮您加工对白。');
+    const result = done(await ai(request({ topicId: 'time' })));
+    assert.equal(result.mode, 'scripted');
+    assert.equal(result.reason, 'OFFLINE');
+    assert.equal(result.reply, scene.dialogue.topics[0].reply);
+    assert.deepEqual(result.clues, ['clue_time']);
+  });
   await t.test('HTTP and embedded upstream failures fall back to marked compiled dialogue', async () => {
     for (const failure of ['http', 'embedded']) {
       harness.setFailure(failure);
