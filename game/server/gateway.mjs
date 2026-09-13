@@ -69,11 +69,14 @@ const NO_CACHE = process.env.KANSHAN_NO_CACHE === '1';
 const INCLUDE_DEV_STORIES = process.env.KANSHAN_INCLUDE_DEV_STORIES === '1';
 const CACHE_DIR = path.join(ROOT, 'server', '.cache');
 const STATIC_DIR = process.env.KANSHAN_STATIC_DIR || (existsSync(path.join(ROOT, 'dist')) ? path.join(ROOT, 'dist') : '');
+const IS_ZHIHU_UPSTREAM = /^https:\/\/developer\.zhihu\.com(?:\/|$)/i.test(BASE_URL);
 // Only actual upstream calls consume these in-memory limits. Cache hits and
 // single-flight followers are free. Zero disables the corresponding guard.
 const CHAT_RATE_LIMIT = envInteger('KANSHAN_CHAT_RATE_LIMIT', 60, 10_000);
 const CHAT_RATE_WINDOW_MS = envInteger('KANSHAN_CHAT_RATE_WINDOW_MS', 10 * 60_000, 24 * 60 * 60_000);
-const CHAT_DAILY_LIMIT = envInteger('KANSHAN_CHAT_DAILY_LIMIT', 4_500, 100_000);
+// The bundled current Zhihu docs list a 100/day Zhida allowance, so reserve
+// headroom there. Compatible model endpoints keep the larger demo default.
+const CHAT_DAILY_LIMIT = envInteger('KANSHAN_CHAT_DAILY_LIMIT', IS_ZHIHU_UPSTREAM ? 80 : 4_500, 100_000);
 
 // ------------------------------------------------------------ secrets
 // 每次请求解析：环境变量优先，其次本地文件（带 mtime 缓存），均失败则降级。

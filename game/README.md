@@ -118,7 +118,7 @@ POST /api/chat      Content-Type: application/json
    - 「继续剧情」在降级后被放行 → 直接沿 scene.next 推进。
 3. 回复被缓存：`server/.cache/` 按请求指纹落盘，相同请求不再消耗直答额度（demo 里重复对话会秒回 cache hit）；
    「换一条」用 `noCache` 绕过；`KANSHAN_NO_CACHE=1` 全局关闭。相同指纹的并发 miss 会合并成一次上游调用，缓存采用临时文件原子替换，流内报错的半截回复不落盘。
-4. 只对真实上游调用做进程内保护：默认每个客户端 10 分钟 60 次、全局每个 UTC 日 4500 次；缓存命中与并发跟随者不计数，目标裁判的额外请求会计数。可用
+4. 只对真实上游调用做进程内保护：默认每个客户端 10 分钟 60 次；知乎直答端点全局每个 UTC 日 80 次，兼容模型端点默认 4500 次，为已核对的不同额度分别预留余量。缓存命中与并发跟随者不计数，目标裁判的额外请求会计数。可用
    `KANSHAN_CHAT_RATE_LIMIT`、`KANSHAN_CHAT_RATE_WINDOW_MS`、`KANSHAN_CHAT_DAILY_LIMIT` 调整，设为 `0` 可关闭相应保护。日计数会随网关重启清零；`CF-Connecting-IP` 仅在直连来源为本机回环地址时采信，其余情况按 TCP 对端限流。
 
 ## 已知缺口 / 后续
