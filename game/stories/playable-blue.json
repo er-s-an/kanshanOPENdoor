@@ -1,0 +1,395 @@
+{
+  "version": "2.0-slice.1+e67673918783",
+  "story": {
+    "id": "playable-blue",
+    "title": "蓝血 · 正常人通行证",
+    "author": "",
+    "tags": [
+      "身份伪装",
+      "风险与查证"
+    ]
+  },
+  "start": "blue_intro",
+  "scenes": [
+    {
+      "id": "blue_intro",
+      "type": "novel",
+      "chapter": "所有人都点头",
+      "text": "培训师指着教材问：“人的血是什么颜色？”\n\n屏幕、教材、同事的回答，都是蓝色。你记得的却是红色。几分钟后，这间教室就会散场。\n\n你可以查清一部分，也可以先装成一个正常人。",
+      "next": "blue_encounter"
+    },
+    {
+      "id": "blue_encounter",
+      "type": "encounter",
+      "chapter": "正常人通行证",
+      "text": "培训师的目光偶尔停在你身上。每次查证都要花时间，公开争辩还会让你更显眼。",
+      "encounter": {
+        "objective": "留下经核对的私人记录，或及时离场。关注达到 5 时，你会被单独留下。",
+        "resources": [
+          {
+            "key": "time",
+            "label": "时间",
+            "min": 0,
+            "max": 5,
+            "unit": "段"
+          },
+          {
+            "key": "attention",
+            "label": "关注",
+            "min": 0,
+            "max": 5,
+            "unit": "点"
+          }
+        ],
+        "actions": [
+          {
+            "id": "public_challenge",
+            "text": "举手：可我记得，血明明是红色的。",
+            "hint": "可以得到直接回应，但会显著提高关注。",
+            "cost": "时间 −1 · 关注 +2",
+            "requires": [
+              {
+                "key": "time",
+                "op": "gte",
+                "value": 1
+              }
+            ],
+            "effects": [
+              {
+                "op": "add",
+                "key": "time",
+                "value": -1
+              },
+              {
+                "op": "add",
+                "key": "attention",
+                "value": 2
+              },
+              {
+                "op": "set",
+                "key": "route",
+                "value": "public"
+              },
+              {
+                "op": "set",
+                "key": "observed",
+                "value": "yes"
+              }
+            ],
+            "feedback": "教室安静了一瞬。培训师没有解释颜色，只让你把自己的说法再讲一遍。"
+          },
+          {
+            "id": "answer_textbook",
+            "text": "照着教材回答：“蓝色。”",
+            "hint": "暂时顺应规则，让目光从你身上移开。",
+            "cost": "时间 −1 · 关注 −1",
+            "requires": [
+              {
+                "key": "time",
+                "op": "gte",
+                "value": 1
+              },
+              {
+                "key": "attention",
+                "op": "gte",
+                "value": 1
+              }
+            ],
+            "effects": [
+              {
+                "op": "add",
+                "key": "time",
+                "value": -1
+              },
+              {
+                "op": "set",
+                "key": "observed",
+                "value": "yes"
+              },
+              {
+                "op": "add",
+                "key": "attention",
+                "value": -1
+              }
+            ],
+            "feedback": "培训师点点头，转身叫了下一位。你悄悄记下那一页。"
+          },
+          {
+            "id": "check_web",
+            "text": "把手机藏在教材后，核对网页上的常识。",
+            "hint": "留下外部材料，但拿出手机会引人注意。",
+            "cost": "时间 −1 · 关注 +1",
+            "requires": [
+              {
+                "key": "time",
+                "op": "gte",
+                "value": 1
+              }
+            ],
+            "effects": [
+              {
+                "op": "add",
+                "key": "time",
+                "value": -1
+              },
+              {
+                "op": "add",
+                "key": "attention",
+                "value": 1
+              },
+              {
+                "op": "set",
+                "key": "observed",
+                "value": "yes"
+              },
+              {
+                "op": "set",
+                "key": "verified",
+                "value": "yes"
+              }
+            ],
+            "feedback": "网页上的答案同样写着蓝色。培训师看了你手中的手机一眼。"
+          },
+          {
+            "id": "check_memory",
+            "text": "默读那一页，和自己的记忆逐条对照。",
+            "hint": "不惊动别人，确认教材与记忆的冲突。",
+            "cost": "时间 −1",
+            "requires": [
+              {
+                "key": "time",
+                "op": "gte",
+                "value": 1
+              }
+            ],
+            "effects": [
+              {
+                "op": "add",
+                "key": "time",
+                "value": -1
+              },
+              {
+                "op": "set",
+                "key": "observed",
+                "value": "yes"
+              },
+              {
+                "op": "set",
+                "key": "verified",
+                "value": "yes"
+              }
+            ],
+            "feedback": "你反复核对措辞：不是一个颜色词的笔误，而是一整段与你记忆不同的常识。"
+          },
+          {
+            "id": "private_record",
+            "text": "把核对过的差异存进离线备忘录。",
+            "hint": "先核对网页或记忆，再留下可靠的私人记录。",
+            "cost": "时间 −1",
+            "requires": [
+              {
+                "key": "observed",
+                "op": "eq",
+                "value": "yes"
+              },
+              {
+                "key": "time",
+                "op": "gte",
+                "value": 1
+              },
+              {
+                "key": "verified",
+                "op": "eq",
+                "value": "yes"
+              }
+            ],
+            "effects": [
+              {
+                "op": "add",
+                "key": "time",
+                "value": -1
+              },
+              {
+                "op": "set",
+                "key": "evidence_saved",
+                "value": "yes"
+              }
+            ],
+            "feedback": "你给这条记录写上日期，把手机收进口袋。它还不能解释这个世界，至少不会随怀疑一起消失。"
+          },
+          {
+            "id": "leave_early",
+            "text": "合上教材，借口不舒服提前离场。",
+            "hint": "放弃这次现场查证，先拉开距离。",
+            "cost": "时间 −1",
+            "requires": [
+              {
+                "key": "time",
+                "op": "gte",
+                "value": 1
+              }
+            ],
+            "effects": [
+              {
+                "op": "add",
+                "key": "time",
+                "value": -1
+              },
+              {
+                "op": "set",
+                "key": "route",
+                "value": "leave"
+              }
+            ],
+            "feedback": "门在你身后合上。你没有得到解释，也没有把怀疑交给这间教室。"
+          },
+          {
+            "id": "wait",
+            "text": "停一会儿，让讨论转向别人。",
+            "hint": "用时间换一点不显眼的余地。",
+            "cost": "时间 −1 · 关注 −1",
+            "requires": [
+              {
+                "key": "time",
+                "op": "gte",
+                "value": 1
+              },
+              {
+                "key": "attention",
+                "op": "gte",
+                "value": 1
+              }
+            ],
+            "effects": [
+              {
+                "op": "add",
+                "key": "time",
+                "value": -1
+              },
+              {
+                "op": "add",
+                "key": "attention",
+                "value": -1
+              }
+            ],
+            "feedback": "你跟着翻页，目光渐渐从你这里移开。离散场也更近了。",
+            "once": false
+          }
+        ],
+        "outcomes": [
+          {
+            "id": "blue_exposed",
+            "when": [
+              {
+                "key": "attention",
+                "op": "gte",
+                "value": 5
+              }
+            ],
+            "next": "blue_end_exposed",
+            "text": "培训师叫住了你：“你留下，我们单独聊聊。”"
+          },
+          {
+            "id": "blue_recorded",
+            "when": [
+              {
+                "key": "evidence_saved",
+                "op": "eq",
+                "value": "yes"
+              }
+            ],
+            "next": "blue_end_record",
+            "text": "你把一条核对过的记录带出了教室。疑问还在，选择暂时仍在你手中。"
+          },
+          {
+            "id": "blue_left",
+            "when": [
+              {
+                "key": "route",
+                "op": "eq",
+                "value": "leave"
+              }
+            ],
+            "next": "blue_end_leave",
+            "text": "你优先保住安全距离。"
+          },
+          {
+            "id": "blue_time",
+            "when": [
+              {
+                "key": "time",
+                "op": "lte",
+                "value": 0
+              }
+            ],
+            "next": "blue_end_time",
+            "text": "时间耗尽，查证暂停。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "blue_end_record",
+      "type": "ending",
+      "chapter": "留证",
+      "text": "私人记录完成；不代表终局。"
+    },
+    {
+      "id": "blue_end_exposed",
+      "type": "ending",
+      "chapter": "质疑",
+      "text": "你得到了现场最直接的回应，也成为最显眼的人。接下来该说多少，你还要继续判断。\n\n这只是本次培训的阶段结果，不是原作结局。"
+    },
+    {
+      "id": "blue_end_leave",
+      "type": "ending",
+      "chapter": "离场",
+      "text": "你暂时安全；不代表终局。"
+    },
+    {
+      "id": "blue_end_time",
+      "type": "ending",
+      "chapter": "耗时",
+      "text": "未知留待后续。"
+    }
+  ],
+  "npcs": [],
+  "endings": [
+    {
+      "id": "blue_end_record",
+      "title": "留证"
+    },
+    {
+      "id": "blue_end_exposed",
+      "title": "质疑"
+    },
+    {
+      "id": "blue_end_leave",
+      "title": "离场"
+    },
+    {
+      "id": "blue_end_time",
+      "title": "耗时"
+    }
+  ],
+  "initialVars": {
+    "time": "5",
+    "attention": "2",
+    "observed": "no",
+    "evidence_saved": "no",
+    "route": "none",
+    "verified": "no"
+  },
+  "source": {
+    "kind": "zhihu-hackathon",
+    "workId": "2025684191967294692",
+    "title": "蓝血",
+    "author": "",
+    "authorStatus": "not_provided",
+    "scope": "excerpt",
+    "adaptationNote": "基于官方开放节选改编。培训后的一次查证是本局范围；时间、关注值与阶段结果均为互动设计，不解释血液变化的最终真相。"
+  },
+  "release": {
+    "status": "lab"
+  }
+}

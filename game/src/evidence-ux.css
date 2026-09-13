@@ -1,0 +1,12 @@
+/* 线索簿 · 物证底纹（渐进增强：纯装饰背景层，文字可读性优先；素材缺失时退化为深色渐变罩） */
+.records-sheet { position: relative; isolation: isolate; }
+.records-sheet::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(180deg, rgba(17, 24, 21, .82) 0%, rgba(17, 24, 21, .9) 100%),
+    url('/art/clue-board-texture.jpg') center / cover no-repeat;
+  pointer-events: none;
+}

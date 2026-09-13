@@ -1,0 +1,458 @@
+{
+  "version": "2.0-slice.1+bf09cb723b51",
+  "story": {
+    "id": "playable-myopic",
+    "title": "近视眼 · 看不清的一家人",
+    "author": "",
+    "tags": [
+      "感知探索",
+      "照料与安排"
+    ]
+  },
+  "start": "myopic_intro",
+  "scenes": [
+    {
+      "id": "myopic_intro",
+      "type": "novel",
+      "chapter": "幸福之家·入口",
+      "text": "远处的人影像一团晕开的墨。别人看得见危险，你只能听、靠近，或者伸手确认。\n\n门里的孩子拽住了脏裙子的边。地上也需要收拾。留给你的时间和体力，够先做哪件事？",
+      "next": "myopic_encounter"
+    },
+    {
+      "id": "myopic_encounter",
+      "type": "encounter",
+      "chapter": "看不清的一家人",
+      "npc": "npc_sisi",
+      "text": "你看不清思思的表情。声音、距离和触感可以补上不同的信息；照料前也需要一块干净的地方。",
+      "encounter": {
+        "objective": "辨认并完成一次照料。体力到 0 会停下；先休息或改用听声，可以改变安排。",
+        "resources": [
+          {
+            "key": "time",
+            "label": "时间",
+            "min": 0,
+            "max": 6,
+            "unit": "段"
+          },
+          {
+            "key": "stamina",
+            "label": "体力",
+            "min": 0,
+            "max": 3,
+            "unit": "点"
+          }
+        ],
+        "actions": [
+          {
+            "id": "far_misread",
+            "text": "留在远处，眯起眼睛看个仔细。",
+            "hint": "不消耗体力，但距离可能让你看不出细节。",
+            "cost": "时间 −1",
+            "requires": [
+              {
+                "key": "time",
+                "op": "gte",
+                "value": 1
+              },
+              {
+                "key": "proximity",
+                "op": "eq",
+                "value": "far"
+              }
+            ],
+            "effects": [
+              {
+                "op": "add",
+                "key": "time",
+                "value": -1
+              },
+              {
+                "op": "set",
+                "key": "recognition",
+                "value": "misread"
+              }
+            ],
+            "feedback": "你越想看清，轮廓越挤在一起。那片红色究竟是什么，远看仍无法确认。"
+          },
+          {
+            "id": "approach",
+            "text": "扶着墙，挪到她能听见你的地方。",
+            "hint": "拉近距离，接下来可以触摸或照料。",
+            "cost": "时间 −1 · 体力 −1",
+            "requires": [
+              {
+                "key": "time",
+                "op": "gte",
+                "value": 1
+              },
+              {
+                "key": "stamina",
+                "op": "gte",
+                "value": 1
+              }
+            ],
+            "effects": [
+              {
+                "op": "add",
+                "key": "time",
+                "value": -1
+              },
+              {
+                "op": "add",
+                "key": "stamina",
+                "value": -1
+              },
+              {
+                "op": "set",
+                "key": "proximity",
+                "value": "close"
+              }
+            ],
+            "feedback": "你摸到门框。裙角擦过手背，思思没有退开。"
+          },
+          {
+            "id": "listen",
+            "text": "先轻声问：“你是不是想换件衣服？”",
+            "hint": "靠声音确认需求，不花体力；照料仍需靠近。",
+            "cost": "时间 −1",
+            "requires": [
+              {
+                "key": "time",
+                "op": "gte",
+                "value": 1
+              }
+            ],
+            "effects": [
+              {
+                "op": "add",
+                "key": "time",
+                "value": -1
+              },
+              {
+                "op": "set",
+                "key": "recognition",
+                "value": "responsive"
+              },
+              {
+                "op": "set",
+                "key": "can_care",
+                "value": "yes"
+              }
+            ],
+            "feedback": "“这件脏了。”声音比想象中轻。你终于有了一件可以帮她做的事。"
+          },
+          {
+            "id": "clean_surface",
+            "text": "擦出一块干净的地面，放好换洗用品。",
+            "hint": "先把照料需要的地方准备好。",
+            "cost": "时间 −1 · 体力 −1",
+            "requires": [
+              {
+                "key": "time",
+                "op": "gte",
+                "value": 1
+              },
+              {
+                "key": "stamina",
+                "op": "gte",
+                "value": 1
+              }
+            ],
+            "effects": [
+              {
+                "op": "add",
+                "key": "time",
+                "value": -1
+              },
+              {
+                "op": "add",
+                "key": "stamina",
+                "value": -1
+              },
+              {
+                "op": "set",
+                "key": "surface_clean",
+                "value": "yes"
+              }
+            ],
+            "feedback": "你把杂物挪开，擦出一块干净的地方。这下可以把换洗用品放下来。"
+          },
+          {
+            "id": "touch_identify",
+            "text": "靠近摸摸裙角，确认哪里需要清理。",
+            "hint": "更直接地辨认，但要花 1 点体力。",
+            "cost": "时间 −1 · 体力 −1",
+            "requires": [
+              {
+                "key": "proximity",
+                "op": "eq",
+                "value": "close"
+              },
+              {
+                "key": "time",
+                "op": "gte",
+                "value": 1
+              },
+              {
+                "key": "stamina",
+                "op": "gte",
+                "value": 1
+              }
+            ],
+            "effects": [
+              {
+                "op": "add",
+                "key": "time",
+                "value": -1
+              },
+              {
+                "op": "add",
+                "key": "stamina",
+                "value": -1
+              },
+              {
+                "op": "set",
+                "key": "recognition",
+                "value": "identified"
+              },
+              {
+                "op": "set",
+                "key": "can_care",
+                "value": "yes"
+              }
+            ],
+            "feedback": "潮湿的布料贴在掌心。你没有凭模糊的轮廓判断她，而是确认了她要换衣服。"
+          },
+          {
+            "id": "rest",
+            "text": "坐下缓一会儿，再安排接下来的事。",
+            "hint": "花时间恢复体力；体力已用尽后就来不及了。",
+            "cost": "时间 −1 · 体力 +1",
+            "requires": [
+              {
+                "key": "time",
+                "op": "gte",
+                "value": 1
+              }
+            ],
+            "effects": [
+              {
+                "op": "add",
+                "key": "time",
+                "value": -1
+              },
+              {
+                "op": "add",
+                "key": "stamina",
+                "value": 1
+              }
+            ],
+            "feedback": "你靠着墙坐了一会儿，手臂不再发酸。思思还在等你。"
+          },
+          {
+            "id": "care",
+            "text": "把干净衣服递给她，慢慢陪她整理好。",
+            "hint": "需要靠近、确认需求，并准备干净的地方。",
+            "cost": "时间 −1 · 体力 −1",
+            "requires": [
+              {
+                "key": "surface_clean",
+                "op": "eq",
+                "value": "yes"
+              },
+              {
+                "key": "time",
+                "op": "gte",
+                "value": 1
+              },
+              {
+                "key": "stamina",
+                "op": "gte",
+                "value": 1
+              },
+              {
+                "key": "can_care",
+                "op": "eq",
+                "value": "yes"
+              },
+              {
+                "key": "proximity",
+                "op": "eq",
+                "value": "close"
+              }
+            ],
+            "effects": [
+              {
+                "op": "add",
+                "key": "time",
+                "value": -1
+              },
+              {
+                "op": "add",
+                "key": "stamina",
+                "value": -1
+              },
+              {
+                "op": "set",
+                "key": "care",
+                "value": "complete"
+              }
+            ],
+            "feedback": "思思接过衣服。你仍看不清她的脸，却听见她没有再催促。屋子安静下来。"
+          },
+          {
+            "id": "retreat",
+            "text": "告诉她你需要停下，先退回门边。",
+            "hint": "主动结束这一段，保留自己的余力。",
+            "cost": "时间 −1",
+            "requires": [
+              {
+                "key": "time",
+                "op": "gte",
+                "value": 1
+              }
+            ],
+            "effects": [
+              {
+                "op": "add",
+                "key": "time",
+                "value": -1
+              },
+              {
+                "op": "set",
+                "key": "route",
+                "value": "retreat"
+              }
+            ],
+            "feedback": "你摸着墙慢慢退回门边，把这次没能完成的照料记在心里。"
+          }
+        ],
+        "outcomes": [
+          {
+            "id": "myopic_cared",
+            "when": [
+              {
+                "key": "care",
+                "op": "eq",
+                "value": "complete"
+              }
+            ],
+            "next": "myopic_end_care",
+            "text": "你根据她的需求完成了照料，换来一段安静的相处。"
+          },
+          {
+            "id": "myopic_retreat",
+            "when": [
+              {
+                "key": "route",
+                "op": "eq",
+                "value": "retreat"
+              }
+            ],
+            "next": "myopic_end_retreat",
+            "text": "你及时退回，保住行动能力。"
+          },
+          {
+            "id": "myopic_exhausted",
+            "when": [
+              {
+                "key": "stamina",
+                "op": "lte",
+                "value": 0
+              }
+            ],
+            "next": "myopic_end_exhausted",
+            "text": "体力耗尽，你只能停下。"
+          },
+          {
+            "id": "myopic_time",
+            "when": [
+              {
+                "key": "time",
+                "op": "lte",
+                "value": 0
+              }
+            ],
+            "next": "myopic_end_time",
+            "text": "时段用完，照料未完成。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "myopic_end_care",
+      "type": "ending",
+      "chapter": "章节结案·安全相处",
+      "text": "第一晚暂时平安；不代表副本通关。"
+    },
+    {
+      "id": "myopic_end_retreat",
+      "type": "ending",
+      "chapter": "章节结案·撤回",
+      "text": "你保住行动能力；副本终局未知。"
+    },
+    {
+      "id": "myopic_end_exhausted",
+      "type": "ending",
+      "chapter": "章节结案·体力见底",
+      "text": "你被迫停下；副本仍在继续。"
+    },
+    {
+      "id": "myopic_end_time",
+      "type": "ending",
+      "chapter": "章节结案·时段用尽",
+      "text": "你结束这次安排；副本终局未知。"
+    }
+  ],
+  "npcs": [
+    {
+      "id": "npc_sisi",
+      "name": "思思",
+      "card": {
+        "first_mes": "思思缩在门后：‘……你为什么不跑？’",
+        "description": "血裙鬼萝莉，只知道当前公开场景与玩家已完成的照料。",
+        "system_prompt": "只围绕当前公开场景回应，不新增规则、证据或状态，不预告副本结局。"
+      }
+    }
+  ],
+  "endings": [
+    {
+      "id": "myopic_end_care",
+      "title": "安全相处"
+    },
+    {
+      "id": "myopic_end_retreat",
+      "title": "撤回"
+    },
+    {
+      "id": "myopic_end_exhausted",
+      "title": "体力见底"
+    },
+    {
+      "id": "myopic_end_time",
+      "title": "时段用尽"
+    }
+  ],
+  "initialVars": {
+    "time": "6",
+    "stamina": "3",
+    "proximity": "far",
+    "recognition": "unknown",
+    "surface_clean": "no",
+    "care": "none",
+    "route": "none",
+    "can_care": "no"
+  },
+  "source": {
+    "kind": "zhihu-hackathon",
+    "workId": "1747681485547843585",
+    "title": "近视眼勇闯恐怖游戏",
+    "author": "",
+    "authorStatus": "not_provided",
+    "scope": "excerpt",
+    "adaptationNote": "基于《近视眼勇闯恐怖游戏》官方开放节选，改编进入家庭后的一个照料片段。行动时段、体力与本局反馈为互动设计；不代表七天副本已通关。"
+  },
+  "release": {
+    "status": "lab"
+  }
+}

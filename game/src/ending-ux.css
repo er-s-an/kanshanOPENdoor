@@ -1,0 +1,47 @@
+/* Closure follows the same reading hierarchy as the chapter, with no timed reveals. */
+.ending.ending--refined { min-height:0; background:var(--bg, #111815); }
+.ending--refined .ending__scroll { padding:28px 24px calc(var(--sab, 0px) + 40px); }
+.ending--refined .ending__body { max-width:660px; }
+.ending-read { padding-bottom:24px; }
+.ending-result { border-top:1px solid var(--line, #344239); padding:28px 0 24px; }
+.ending-result__eyebrow { margin:0 0 12px; color:var(--amber, #dfc38e); font-size:14px; }
+.ending-result h2 { margin:0; color:var(--ink, #f0eee5); font:600 clamp(28px, 5vw, 36px)/1.45 var(--serif, serif); letter-spacing:.02em; }
+.ending-result__tone { margin:12px 0 0; color:var(--ink-2, #c0c7bd); font-size:18px; line-height:1.8; }
+.ending-result__scope { margin:12px 0 0; color:var(--dim, #a0ada0); font-size:14px; line-height:1.8; }
+.ending-recap { padding:20px; border:1px solid var(--line, #344239); border-radius:8px; background:var(--panel, #1a231f); }
+.ending-recap h2,.ending-next-choices h2,.ending-restart h2 { margin:0 0 12px; color:var(--ink, #f0eee5); font-size:16px; font-weight:600; line-height:1.6; }
+.ending-recap ul { margin:0; padding-left:20px; display:grid; gap:10px; }
+.ending-recap li { color:var(--ink-2, #c0c7bd); font-size:16px; line-height:1.8; white-space:pre-line; }
+.ending-recap__note { margin:14px 0 0; color:var(--dim, #a0ada0); font-size:14px; line-height:1.7; }
+.ending-next-choices { margin-top:24px; }
+.ending-next-choices__list { display:grid; gap:10px; }
+.ending-next-choice { display:flex; width:100%; justify-content:space-between; align-items:center; gap:16px; min-height:48px; padding:14px 16px; border:1px solid var(--line, #344239); border-radius:8px; text-align:left; color:var(--ink, #f0eee5); background:var(--panel, #1a231f); font-size:16px; line-height:1.7; }
+.ending-next-choice small { display:block; margin-top:6px; color:var(--dim, #a0ada0); font-size:14px; }
+.ending-next-choice:disabled { cursor:not-allowed; opacity:.7; }
+.ending-next { display:grid; gap:10px; margin-top:28px; }
+.ending--refined .btn { min-height:44px; border-radius:8px; white-space:normal; font-size:16px; line-height:1.6; }
+.ending-next > .btn { justify-content:center; padding:12px 20px; }
+.ending-next > p { margin:0; color:var(--dim, #a0ada0); font-size:14px; line-height:1.7; }
+.ending-next__secondary { display:flex; flex-wrap:wrap; gap:10px; margin-top:6px; }
+.ending-next__secondary .btn { padding:10px 14px; }
+.ending-restart { margin-top:20px; padding:20px; border:1px solid var(--amber, #dfc38e); border-radius:8px; background:var(--panel, #1a231f); }
+.ending-restart p { margin:0 0 16px; color:var(--ink-2, #c0c7bd); font-size:16px; line-height:1.8; }
+.ending-restart > div { display:flex; gap:10px; flex-wrap:wrap; }
+.ending-extras { margin-top:28px; border-top:1px solid var(--line, #344239); }
+.ending-extra { border-bottom:1px solid var(--line, #344239); }
+.ending-extra > summary { display:list-item; cursor:pointer; padding:16px 4px; min-height:44px; color:var(--ink-2, #c0c7bd); font-size:14px; line-height:1.7; }
+.ending-extra > summary > span { margin-left:8px; color:var(--dim, #a0ada0); }
+.ending-records { margin:0; padding:0 4px 20px; }
+.ending-records > div { padding:14px 0; border-top:1px solid var(--line, #344239); }
+.ending-records dt { color:var(--dim, #a0ada0); font-size:14px; line-height:1.7; }
+.ending-records dd { margin:6px 0 0; color:var(--ink-2, #c0c7bd); font-size:16px; line-height:1.8; white-space:pre-line; }
+.ending-keepsake { padding:12px 0 24px; }
+.ending--refined .poster__canvas { border-radius:8px; max-width:100%; box-shadow:none; }
+.ending--refined :is(button,a,summary):focus-visible { outline:2px solid var(--amber, #dfc38e); outline-offset:4px; }
+@media (max-width:520px) {
+  .ending--refined .ending__scroll { padding:22px 20px calc(var(--sab, 0px) + 28px); }
+  .ending-recap,.ending-restart { padding:16px; }
+  .ending-next__secondary { display:grid; grid-template-columns:1fr; gap:4px; }
+  .ending-next__secondary .btn { justify-content:flex-start; text-align:left; }
+  .ending-restart > div { display:grid; grid-template-columns:1fr; }
+}

@@ -1,0 +1,1075 @@
+{
+  "version": "2.2.0-chapter-myopic",
+  "story": {
+    "id": "近视眼勇闯恐怖游戏-1747681485547843585",
+    "title": "近视眼勇闯恐怖游戏",
+    "author": "沈南因",
+    "tags": [
+      "恐怖生存",
+      "家庭关系",
+      "感知与照料",
+      "反套路喜剧"
+    ]
+  },
+  "start": "m01_welcome",
+  "scenes": [
+    {
+      "id": "m01_welcome",
+      "type": "novel",
+      "chapter": "第一日 · 来到幸福之家",
+      "text": "【欢迎进入「幸福之家」副本。】\n【玩家在该副本存活七天，即为通关。】\n【初始玩家：30人；现存活：30人。】\n\n车祸后那阵白光散去，我站在一栋大楼前。机械音在耳边说得清清楚楚，楼的轮廓却模糊得像浸过水的墨。\n\n我高度近视，远处的人脸和招牌都看不清。左边有人哭着说想回家，右边有人暴躁地质问是谁在搞鬼。接着，一男一女走出来，自称老玩家：红姐、俊哥。\n\n我往声音的方向挪近了一点。看不清，就先问清楚。",
+      "onEnter": {
+        "clue_my_system": "found"
+      },
+      "next": "m02_hong",
+      "continueLabel": "走近红姐，自己问规则"
+    },
+    {
+      "id": "m02_hong",
+      "type": "chat",
+      "chapter": "第一日 · 红姐的话",
+      "text": "红姐说话沉稳，情绪却不高。俊哥站在她旁边，时不时往楼里看。\n\n我还惦记着刚才那阵白光。既然已经来到这里，总得先弄清楚怎样继续活下去。",
+      "npc": "npc_hongjie",
+      "goal": "向红姐问清复活传闻、惊悚值的已知例子，以及即将入住的规则。",
+      "lore": [
+        "lore_hong"
+      ],
+      "dialogue": {
+        "topics": [
+          {
+            "id": "hong_revival",
+            "prompt": "我们为什么在这里？复活需要什么？",
+            "keywords": [
+              "复活",
+              "9999",
+              "为什么",
+              "死了",
+              "回去",
+              "通关所有"
+            ],
+            "reply": "红姐压低声音：“被拉进来的都是死了的人。我们听说，通关所有副本、攒够传说中的9999分，就能复活。”她说的是老玩家知道的传闻，没有人当着你演示过复活。",
+            "grants": [
+              "clue_my_revival"
+            ]
+          },
+          {
+            "id": "hong_thrill",
+            "prompt": "惊悚值和积分到底有哪些已知关系？",
+            "keywords": [
+              "惊悚",
+              "积分",
+              "100",
+              "99",
+              "害怕",
+              "0分",
+              "零"
+            ],
+            "reply": "“99惊悚值通关，最后只能得1积分；到100，就直接死。”红姐低声解释，惊悚值说的就是害怕程度，熟悉游戏的老玩家大多能控制在60以内。\n\n我问零惊悚值能不能拿100分，她并没有给出肯定答案。已知的两个例子，还不能补成完整算法。",
+            "grants": [
+              "clue_my_thrill"
+            ]
+          },
+          {
+            "id": "hong_home",
+            "prompt": "入住后要做什么？能不能和别人一起住？",
+            "keywords": [
+              "房间",
+              "楼层",
+              "住",
+              "家人",
+              "扮演",
+              "规则"
+            ],
+            "reply": "“一共30层，一梯一户，每层只能住一名玩家。”红姐接着说，“房子里已经有诡异，它们会扮演你的各种亲密关系。你要跟它们同吃同住七天。之前的玩家留下了一些经验，但这个副本还没有通关的消息。”",
+            "grants": [
+              "clue_my_household"
+            ]
+          }
+        ],
+        "requiredClues": [
+          "clue_my_revival",
+          "clue_my_thrill",
+          "clue_my_household"
+        ],
+        "leaveLabel": "记住这些，再去选房"
+      },
+      "choices": [
+        {
+          "id": "hong_leave",
+          "text": "跟上选房的人群",
+          "next": "m03_floor",
+          "requires": {
+            "clue_my_revival": "found",
+            "clue_my_thrill": "found",
+            "clue_my_household": "found"
+          },
+          "lockedHint": "先完成眼前的观察或对话，再继续。"
+        }
+      ]
+    },
+    {
+      "id": "m03_floor",
+      "type": "novel",
+      "chapter": "第一日 · 最后那一层",
+      "text": "红姐还想继续说，俊哥已经打断她，拉着她往选房处走。他们分别选了一楼和二楼，其他人看见了，也纷纷涌向低楼层。\n\n人影挤成一片，我没能跟上。等大家散开，只剩30层。\n\n我接下这唯一的去处。至少现在，我有一个门牌号了。\n\n> 镜头外 · 我看不到的直播间\n> 观众说这里至今无人首通，曾有玩家明神倒在第六天；又议论楼层越高越危险，把30层叫作“死亡之家”。这些声音没有传进我的耳朵，也没有进入我的手机。",
+      "onEnter": {
+        "clue_my_floor": "found"
+      },
+      "next": "m04_hall",
+      "continueLabel": "抵达30层"
+    },
+    {
+      "id": "m04_hall",
+      "type": "investigate",
+      "chapter": "第一日 · 在门外慢慢辨认",
+      "text": "电梯停下了。门口没有熟人的声音。\n\n我在这片陌生的安静里停了停，打算慢慢认一认地方。大平层，还有可能成为家人的人——光是这个念头，就让我有点期待。",
+      "investigation": {
+        "objective": "从气味、温度和近处轮廓，确认门外的环境。",
+        "searchPlaceholder": "可以输入：闻一闻、冷不冷、靠近看墙……",
+        "hints": [
+          "鼻子和皮肤能告诉你什么？",
+          "走近一点，再看墙与灯光。"
+        ],
+        "items": [
+          {
+            "id": "hall_air",
+            "title": "停下来感受空气",
+            "keywords": [
+              "气味",
+              "闻",
+              "温度",
+              "冷",
+              "空气"
+            ],
+            "text": "凉意贴着皮肤，空气里有一股血腥味。你能闻到它，却无法凭味道判断是谁受了伤。",
+            "clue": "clue_my_air",
+            "kind": "observation"
+          },
+          {
+            "id": "hall_view",
+            "title": "靠近看墙和灯光",
+            "keywords": [
+              "墙",
+              "灯",
+              "靠近",
+              "布局",
+              "看"
+            ],
+            "text": "墙面是暗暗的红色，灯光也暗。你只能辨认大概布局，细节仍不清楚。可是地方很宽敞——这可真是我一直羡慕的大平层。",
+            "clue": "clue_my_view",
+            "kind": "observation"
+          }
+        ],
+        "checks": []
+      },
+      "choices": [
+        {
+          "id": "hall_leave",
+          "text": "走到自家门口",
+          "next": "m05_door",
+          "requires": {
+            "clue_my_air": "found",
+            "clue_my_view": "found"
+          },
+          "lockedHint": "先完成眼前的观察或对话，再继续。"
+        }
+      ]
+    },
+    {
+      "id": "m05_door",
+      "type": "choice",
+      "chapter": "第一日 · 我回家了",
+      "text": "我在现实里没有家人，也没过过宽裕的日子。如今，门里会有人跟我一起生活。\n\n既然是扮演家人，回家时究竟要用什么语气？我想了想，抬起手。",
+      "choices": [
+        {
+          "id": "door_home",
+          "text": "用回家的口吻拍门：“宝宝，我回家啦！”",
+          "next": "m06_door_home",
+          "set": {
+            "my_door_tone": "home"
+          }
+        },
+        {
+          "id": "door_gentle",
+          "text": "轻轻敲门，告诉里面的人：“我回来了，能开门吗？”",
+          "next": "m07_door_gentle",
+          "set": {
+            "my_door_tone": "gentle"
+          }
+        }
+      ]
+    },
+    {
+      "id": "m06_door_home",
+      "type": "novel",
+      "chapter": "第一日 · 熟络的招呼",
+      "text": "我用力拍了拍门：“快开门啊，宝宝我回家啦！再不开门我要饿死了！”\n\n这声招呼里没有试探，倒像真在催家人开饭。我已经先把“回家”这两个字叫了出来。\n\n> 镜头外 · 观众被这份熟络惊住了，议论有人通常会礼貌敲门或等待。可我听不见这些评论，也没有得到它们的指挥。",
+      "next": "m08_child",
+      "continueLabel": "门里传来动静"
+    },
+    {
+      "id": "m07_door_gentle",
+      "type": "novel",
+      "chapter": "第一日 · 轻声的招呼",
+      "text": "我敲了两下，把声音放轻：“我回来了，能开门吗？”\n\n我没有对着模糊的门缝猜测里面是谁，只把自己的声音递了进去。语气可以温和，想要一个家的期待一点没少。\n\n这一次，我选择了慢一点的招呼。",
+      "next": "m08_child",
+      "continueLabel": "门里传来动静"
+    },
+    {
+      "id": "m08_child",
+      "type": "novel",
+      "chapter": "第一日 · 门后的小孩",
+      "text": "门“咯吱”一声开了，凉气扑来。我居然先舒坦了一下：这地方夏天都不用开空调吧。\n\n低头，是个矮小的红色人影，两条辫子的轮廓晃了晃。还没等我再看清一点，她已经扑过来，冰凉的小手突然掐住了我的脖子。\n\n我顺势把她搂住。她那么小，裙角贴着我的手。我把注意力从远处的轮廓，转到眼前能碰到的东西。",
+      "onEnter": {
+        "clue_my_grip": "found"
+      },
+      "next": "m09_care",
+      "continueLabel": "确认她眼前需要什么"
+    },
+    {
+      "id": "m09_care",
+      "type": "investigate",
+      "chapter": "第一日 · 先照顾眼前的小事",
+      "text": "我抱着小孩走进屋里。她的表情看不清，身上的触感却越来越明确。\n\n“是不是冷了？有没有哪里受伤？”我一边轻声问，一边找能帮上忙的东西。现在先弄清楚能做什么。",
+      "investigation": {
+        "objective": "摸清湿衣服的状态，找到干净的换洗用品，接着亲口告诉小孩要怎样照顾她。",
+        "searchPlaceholder": "可以输入：裙角、湿衣服、白裙、热毛巾……",
+        "hints": [
+          "先确认衣服的触感。",
+          "看看房间里有什么干净的用品。"
+        ],
+        "items": [
+          {
+            "id": "care_wet",
+            "title": "摸一摸裙角",
+            "keywords": [
+              "裙角",
+              "湿",
+              "衣服",
+              "摸",
+              "触觉"
+            ],
+            "text": "裙子湿漉漉，贴在掌心又凉又黏。你闻得到血腥味，但不知道来源。能确定的是，小孩还穿着湿衣服。",
+            "clue": "clue_my_wet",
+            "kind": "observation"
+          },
+          {
+            "id": "care_supplies",
+            "title": "找换洗衣服和毛巾",
+            "keywords": [
+              "白裙",
+              "干净",
+              "毛巾",
+              "衣柜",
+              "用品",
+              "房间"
+            ],
+            "text": "你在她的公主房找到干净白裙，也准备好热毛巾。药箱在哪里还没有得到回答；眼前这些东西已经能帮忙。",
+            "clue": "clue_my_supplies",
+            "kind": "observation"
+          }
+        ],
+        "checks": []
+      },
+      "choices": [
+        {
+          "id": "care_talk",
+          "text": "抱稳她，告诉她我准备怎么照顾她",
+          "next": "m10_sisi",
+          "requires": {
+            "clue_my_wet": "found",
+            "clue_my_supplies": "found"
+          },
+          "lockedHint": "先完成眼前的观察或对话，再继续。"
+        }
+      ]
+    },
+    {
+      "id": "m10_sisi",
+      "type": "chat",
+      "chapter": "第一日 · 一句一句，把她照顾好",
+      "text": "干净的白裙和热毛巾已经放在手边。小孩还盯着我，手指也没有完全放松。\n\n我把声音放轻，准备先告诉她要做什么，再慢慢动手。她需要的不是一场盘问。",
+      "npc": "npc_sisi",
+      "goal": "用自己的话提出换衣、擦脸，接住她对家人的回应，最后哄她午睡。",
+      "lore": [
+        "lore_care"
+      ],
+      "dialogue": {
+        "topics": [
+          {
+            "id": "sisi_dress",
+            "prompt": "先把湿衣服换掉，好不好？",
+            "keywords": [
+              "换",
+              "衣服",
+              "裙子",
+              "白裙",
+              "干衣",
+              "冷"
+            ],
+            "reply": "你一边轻声说明，一边帮她换上干净白裙。小孩扯着裙边，原先掐着你脖子的那只手，不知不觉松开了。",
+            "grants": [
+              "clue_my_dry",
+              "clue_my_release"
+            ]
+          },
+          {
+            "id": "sisi_face",
+            "prompt": "让我用热毛巾给你擦擦脸。",
+            "keywords": [
+              "毛巾",
+              "擦",
+              "脸",
+              "凑近",
+              "看清"
+            ],
+            "reply": "你拿起热毛巾，凑近一点，一点点擦掉她脸上的污迹。直到这个距离，你才看清是个可爱的小女孩。她显得有些无措。",
+            "grants": [
+              "clue_my_face"
+            ],
+            "requires": {
+              "clue_my_dry": "found"
+            }
+          },
+          {
+            "id": "sisi_family",
+            "prompt": "家人可以互相照顾，我会好好照顾你。",
+            "keywords": [
+              "家人",
+              "妈妈",
+              "谢谢",
+              "照顾",
+              "亲",
+              "感谢"
+            ],
+            "reply": "我笑着说，家人本来就该互相帮助，顺口逗她要不要给个亲亲。她扭捏地扯了扯白裙，自己凑过来，在我脸上很快亲了一口。\n\n“谢谢妈妈。”声音轻轻软软的。",
+            "grants": [
+              "clue_my_mom"
+            ],
+            "requires": {
+              "clue_my_face": "found"
+            }
+          },
+          {
+            "id": "sisi_nap",
+            "prompt": "先休息一会儿，我就在旁边。",
+            "keywords": [
+              "午睡",
+              "睡",
+              "休息",
+              "困",
+              "歇"
+            ],
+            "reply": "你放轻声音，把小孩哄得安静下来。她开始午睡，你也终于有空处理自己的事。那声“妈妈”还留在耳边。",
+            "grants": [
+              "clue_my_sleep"
+            ],
+            "requires": {
+              "clue_my_mom": "found"
+            }
+          }
+        ],
+        "requiredClues": [
+          "clue_my_dry",
+          "clue_my_release",
+          "clue_my_face",
+          "clue_my_mom",
+          "clue_my_sleep"
+        ],
+        "leaveLabel": "让她午睡，我也缓一缓"
+      },
+      "choices": [
+        {
+          "id": "sisi_leave",
+          "text": "守着这段安静，先坐一会儿",
+          "next": "m11_mother",
+          "requires": {
+            "clue_my_dry": "found",
+            "clue_my_release": "found",
+            "clue_my_face": "found",
+            "clue_my_mom": "found",
+            "clue_my_sleep": "found"
+          },
+          "lockedHint": "先完成眼前的观察或对话，再继续。"
+        }
+      ]
+    },
+    {
+      "id": "m11_mother",
+      "type": "novel",
+      "chapter": "第一日 · 妈妈？我吗？",
+      "text": "妈妈？我吗？\n\n刚才还忙着找衣服，转眼就被叫了妈妈。我望着她睡着的小小轮廓，忍不住笑了：这也来得太突然了。\n\n我一直渴望家人，又害怕生育的痛苦。现在多了一个愿意贴近我的孩子，心里那块空着的地方，忽然有了一点热乎气。\n\n这不代表门里的危险消失了。可她松开手、道谢、安静睡下，都确实发生过。\n\n> 镜头外 · 我看不到的直播间\n> 观众把她称为这里的Boss之一，声称红裙上的血来自被害玩家，还等着另一个人回家。评论没有传进屋内；我能知道的，仍是自己的触感和她刚才的回应。",
+      "onEnter": {
+        "clue_my_dry": "found",
+        "clue_my_release": "found",
+        "clue_my_face": "found",
+        "clue_my_mom": "found",
+        "clue_my_sleep": "found"
+      },
+      "next": "m12_broadcast",
+      "continueLabel": "新的机械音响起来"
+    },
+    {
+      "id": "m12_broadcast",
+      "type": "novel",
+      "chapter": "第一日 · 楼里还有别的人",
+      "text": "【初始玩家：30人；现存活：20人。】\n\n机械音忽然响起。我刚才还在为多了一个家人高兴，楼里却已经少了十个人。\n\n手机也在震动。消息来自玩家群。数字是真的，原因得仔细看看；这可不是那些我听不到的直播评论。",
+      "onEnter": {
+        "clue_my_survivors": "found"
+      },
+      "next": "m13_phone",
+      "continueLabel": "把手机捧近一点"
+    },
+    {
+      "id": "m13_phone",
+      "type": "investigate",
+      "chapter": "第一日 · 鼻尖前的玩家群",
+      "text": "屏幕上的字糊在一起。我把手机拿稳，慢慢凑到眼前。\n\n玩家群里已经刷出了好些消息。刚才分到不同楼层的人，现在都怎么样了？",
+      "investigation": {
+        "objective": "贴近手机阅读消息，分清系统数字、群内转述和别人的猜测。",
+        "searchPlaceholder": "可以输入：靠近手机、三楼、十楼、惊悚值、白骨……",
+        "hints": [
+          "先把手机放到看得清的位置。",
+          "分别读三楼和十楼发生的事。",
+          "群里的讨论还有哪些消息？"
+        ],
+        "items": [
+          {
+            "id": "phone_focus",
+            "title": "把手机捧到眼前",
+            "keywords": [
+              "手机",
+              "靠近",
+              "字",
+              "屏幕",
+              "看清"
+            ],
+            "text": "手机几乎贴到眼前，字终于勉强可以读了。这里是玩家交换信息的群聊，能看到消息内容，并非直播观众的弹幕。",
+            "clue": "clue_my_phone",
+            "kind": "observation"
+          },
+          {
+            "id": "phone_floor3",
+            "title": "读争抢三楼的消息",
+            "keywords": [
+              "三楼",
+              "3层",
+              "3楼",
+              "黄毛",
+              "狗",
+              "争抢"
+            ],
+            "text": "群里说，黄毛和另外三个男人争抢三层，黄毛险胜。可他刚敲开门，就遭遇人身狗头的诡异并死亡。发消息的玩家还提到门内堆着白骨；“都是以前玩家的尸骨”是他们的猜测。",
+            "clue": "clue_my_floor3",
+            "kind": "testimony",
+            "requires": {
+              "clue_my_phone": "found"
+            }
+          },
+          {
+            "id": "phone_floor10",
+            "title": "读十楼的消息",
+            "keywords": [
+              "十楼",
+              "10楼",
+              "10层",
+              "中年",
+              "100"
+            ],
+            "text": "另一条消息说，一名中年玩家刚走进十楼的大门，惊悚值便升到100，直接死了。消息与红姐讲过的危险阈值相呼应，但你没有亲眼见到现场。",
+            "clue": "clue_my_floor10",
+            "kind": "testimony",
+            "requires": {
+              "clue_my_phone": "found"
+            }
+          },
+          {
+            "id": "phone_fear",
+            "title": "读大家对惊悚值和死亡的讨论",
+            "keywords": [
+              "50",
+              "惊悚值",
+              "白骨",
+              "其他",
+              "讨论"
+            ],
+            "text": "群里讨论新人的惊悚值已经升到50，还有各种死亡消息。消息让人紧张，但它们没有显示你自己的惊悚值。你也没有从白骨的描述中得知死者身份。",
+            "clue": "clue_my_groupfear",
+            "kind": "testimony",
+            "requires": {
+              "clue_my_phone": "found"
+            }
+          }
+        ],
+        "checks": []
+      },
+      "choices": [
+        {
+          "id": "phone_leave",
+          "text": "读完，把手机放下",
+          "next": "m14_clean",
+          "requires": {
+            "clue_my_phone": "found",
+            "clue_my_floor3": "found",
+            "clue_my_floor10": "found",
+            "clue_my_groupfear": "found"
+          },
+          "lockedHint": "先完成眼前的观察或对话，再继续。"
+        }
+      ]
+    },
+    {
+      "id": "m14_clean",
+      "type": "encounter",
+      "chapter": "第一日 · 家里得收拾收拾",
+      "text": "我看了眼熟睡的小孩，站起来伸伸腰。事情再奇怪，眼前的地面和墙总得有人收拾。\n\n我从浴室找到拖把。先做哪一项，自己安排。累了就歇一下，不用拿自己的身体和家务较劲。",
+      "encounter": {
+        "objective": "清理地面和墙面，完成后回到小孩身边休息。",
+        "resources": [],
+        "actions": [
+          {
+            "id": "mop_floor",
+            "text": "用拖把清理地面。",
+            "hint": "完成一项实际家务，观察清理后的颜色。",
+            "once": true,
+            "effects": [
+              {
+                "op": "set",
+                "key": "clue_my_floorwhite",
+                "value": "found"
+              }
+            ],
+            "feedback": "拖把一遍遍擦过去，原先红色的地面露出白色地砖。原来还能拖出这样的效果，我可真能干。"
+          },
+          {
+            "id": "clean_wall",
+            "text": "慢慢清理墙上擦不掉的红色。",
+            "hint": "用铲子清理凝固的部分；不推断污迹的来历。",
+            "once": true,
+            "effects": [
+              {
+                "op": "set",
+                "key": "clue_my_wallclean",
+                "value": "found"
+              }
+            ],
+            "feedback": "湿布擦不掉的地方，你用铲子一点点清理。墙面收拾好了一些，手臂也有点酸。"
+          },
+          {
+            "id": "housework_pause",
+            "text": "坐一小会儿，放松手臂，再继续。",
+            "hint": "休息不会让主线结束，也没有隐藏的死亡倒计时。",
+            "once": true,
+            "requires": [
+              {
+                "key": "my_clean_pause",
+                "op": "ne",
+                "value": "yes"
+              }
+            ],
+            "effects": [
+              {
+                "op": "set",
+                "key": "my_clean_pause",
+                "value": "yes"
+              }
+            ],
+            "feedback": "你坐下来松开手指，缓了缓。已经做完的活不会白做，没做完的那项等会儿继续。"
+          }
+        ],
+        "outcomes": [
+          {
+            "id": "clean_done",
+            "when": [
+              {
+                "key": "clue_my_floorwhite",
+                "op": "eq",
+                "value": "found"
+              },
+              {
+                "key": "clue_my_wallclean",
+                "op": "eq",
+                "value": "found"
+              }
+            ],
+            "next": "m15_nap",
+            "text": "地面和墙都收拾过了，已经到了下午。你回到小孩旁边。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "m15_nap",
+      "type": "novel",
+      "chapter": "第一日 · 忙碌后的沙发",
+      "text": "地面从红色拖成白色，墙上的凝固痕迹也清理过了。忙完已经是下午，我累得腰酸，趴在小孩旁边的沙发上睡了过去。\n\n等我再次醒来，一股冰冷的气息笼罩着身边。房子很暗，面前站着一道模糊黑影。\n\n我看不清他的脸，先把注意力放到声音上。",
+      "onEnter": {
+        "clue_my_floorwhite": "found",
+        "clue_my_wallclean": "found",
+        "clue_my_nap": "found",
+        "clue_my_shadow": "found"
+      },
+      "next": "m16_voice",
+      "continueLabel": "听清眼前的人在说什么"
+    },
+    {
+      "id": "m16_voice",
+      "type": "investigate",
+      "chapter": "第一日 · 先听见一个名字",
+      "text": "黑影就在面前，屋里的冷意很明显。我还带着一点刚睡醒的迷糊。\n\n他轻笑了一声。我顺着声音抬起头，等着听清他接下来的话。",
+      "investigation": {
+        "objective": "听清来人的第一句话，辨认他提到了谁。",
+        "searchPlaceholder": "可以输入：听声音、他说什么、名字……",
+        "hints": [
+          "此时最清楚的信息是他的声音。"
+        ],
+        "items": [
+          {
+            "id": "voice_first",
+            "title": "听清他的第一句话",
+            "keywords": [
+              "听",
+              "声音",
+              "说",
+              "名字",
+              "思思"
+            ],
+            "text": "低沉的嗓音带着一声轻笑：“呵，有趣，居然能在思思手里活到现在。”\n\n原来小孩叫思思。可我居然先被这把嗓子吸引了——声音也太好听了吧。人还糊在眼前，耳朵倒先替我心动了一下。",
+            "clue": "clue_my_voice",
+            "kind": "testimony"
+          }
+        ],
+        "checks": []
+      },
+      "choices": [
+        {
+          "id": "voice_continue",
+          "text": "顺着声音抬起头",
+          "next": "m17_protect",
+          "requires": {
+            "clue_my_voice": "found"
+          },
+          "lockedHint": "先完成眼前的观察或对话，再继续。"
+        }
+      ]
+    },
+    {
+      "id": "m17_protect",
+      "type": "novel",
+      "chapter": "第一日 · 她替我开了口",
+      "text": "思思的声音也响了起来，和刚才道谢时很不一样：\n\n“你最好别动她，这个妈妈有点意思，我要留着好好玩。”\n\n她是在拦他。可那句“留着好好玩”，也让我心里一顿。\n\n男人没有回答，只挥了一下手。小小的身影从沙发上飞出去，撞向阳台的玻璃——“砰”的一声。我看不清她到底伤成怎样，那声撞击却躲不过去。\n\n我的手按住沙发边缘。那一下撞击，听得我心里发紧。",
+      "onEnter": {
+        "clue_my_defend": "found",
+        "clue_my_hurt": "found"
+      },
+      "next": "m18_man",
+      "continueLabel": "回应眼前的来人"
+    },
+    {
+      "id": "m18_man",
+      "type": "chat",
+      "chapter": "第一日 · 这也能叫一家人？",
+      "text": "思思在阳台方向，来人仍在面前。我的手紧紧按着沙发边缘。\n\n刚才还那么小声地叫我妈妈，转眼就被这样挥开。话顶到嘴边，我先冲着他问了出来。",
+      "npc": "npc_man",
+      "goal": "亲口回应刚才的伤害，听清来人对家人称呼的态度。",
+      "lore": [
+        "lore_man"
+      ],
+      "dialogue": {
+        "topics": [
+          {
+            "id": "man_family",
+            "prompt": "你怎么能这样对孩子？你不是她的家人吗？",
+            "keywords": [
+              "家人",
+              "爸爸",
+              "父亲",
+              "女儿",
+              "关系",
+              "谁",
+              "丈夫",
+              "老公",
+              "住手",
+              "停",
+              "孩子",
+              "动手",
+              "伤",
+              "思思",
+              "保护",
+              "别动"
+            ],
+            "reply": "他仍盯着思思，冷笑：“谁允许你跟我这样说话的？真把自己当我女儿了？”\n\n他没有顺着我的称呼介绍自己。那声冷笑一落，我心里的火也蹿了起来。",
+            "grants": [
+              "clue_my_denial"
+            ]
+          }
+        ],
+        "requiredClues": [
+          "clue_my_denial"
+        ],
+        "leaveLabel": "听清了，决定自己的下一步"
+      },
+      "choices": [
+        {
+          "id": "man_leave",
+          "text": "把想说的话说完",
+          "next": "m19_balance",
+          "requires": {
+            "clue_my_denial": "found"
+          },
+          "lockedHint": "先完成眼前的观察或对话，再继续。"
+        }
+      ]
+    },
+    {
+      "id": "m19_balance",
+      "type": "novel",
+      "chapter": "第一日 · 妈妈这两个字",
+      "text": "他把那声“女儿”撇开了。\n\n我终于忍不了了，一骨碌从沙发上爬起来。\n\n思思说“留着好好玩”时，我不是没有听见；可她叫我妈妈、伸过来亲我的那一下，我也记得。现在她在阳台那边，我看不清她伤得怎么样。\n\n心里又急又乱。先别想七天那么远，我得决定眼前这一步。",
+      "next": "m20_choice",
+      "continueLabel": "决定现在的回应"
+    },
+    {
+      "id": "m20_choice",
+      "type": "choice",
+      "chapter": "第一日 · 这一次，我来回应",
+      "text": "面前是来人，思思在阳台的方向。\n\n原先那份“终于有家人”的喜悦还在，心口却堵得厉害。\n\n我准备怎样回应这次伤害？",
+      "choices": [
+        {
+          "id": "stand_family",
+          "text": "明确维护思思：“哪有这样对待孩子的？”向她那边迈一步。",
+          "next": "m21_stand",
+          "set": {
+            "my_final_stance": "protect"
+          }
+        },
+        {
+          "id": "soften_room",
+          "text": "压低声音：“先停一下，让我看看她。”把话题放回孩子身上。",
+          "next": "m22_soften",
+          "set": {
+            "my_final_stance": "calm"
+          }
+        },
+        {
+          "id": "keep_distance",
+          "text": "先退半步稳住距离，告诉思思：“我听得见你。”",
+          "next": "m23_stepback",
+          "set": {
+            "my_final_stance": "distance"
+          }
+        }
+      ]
+    },
+    {
+      "id": "m21_stand",
+      "type": "novel",
+      "chapter": "第一日 · 把维护说出口",
+      "text": "“谁允许你这样跟孩子说话的？”我把话说了出来，身体也向思思的方向迈了一步。\n\n刚才那声“妈妈”，我没有当成一句随口的称呼。我的位置更靠近她的方向，态度也已经明确：我反对眼前这次伤害。\n\n来人有没有接受，思思伤得怎样，还不能替他们回答。",
+      "next": "m24_end",
+      "continueLabel": "记住这次选择"
+    },
+    {
+      "id": "m22_soften",
+      "type": "novel",
+      "chapter": "第一日 · 先把声音放低",
+      "text": "“先停一下，让我看看她。”我没有和来人争抢那个称呼，只把声音放低，让自己的要求尽量清楚。\n\n我暂时留在沙发附近，没有立刻向前冲。缓和的是我的语气，要求仍是先处理孩子的情况。\n\n屋里还没有因此变得安全；我也没有把来人的沉默当成答应。",
+      "next": "m24_end",
+      "continueLabel": "记住这次选择"
+    },
+    {
+      "id": "m23_stepback",
+      "type": "novel",
+      "chapter": "第一日 · 留出一点距离",
+      "text": "我退了半步，扶住沙发，先稳住自己的位置。\n\n“思思，我听得见你。”我把声音送向阳台，没有因为暂时退开，就假装她刚才没有受伤。\n\n我保留了距离，没有迈进来人和孩子之间。对方接下来怎样行动，仍然未知。",
+      "next": "m24_end",
+      "continueLabel": "记住这次选择"
+    },
+    {
+      "id": "m24_end",
+      "type": "ending",
+      "chapter": "首章完成 · 对峙仍在继续",
+      "text": "今天，我听懂了几条生存规则，入住30层，给一个小孩换了干衣、擦净了脸，也听见她叫我妈妈。\n\n后来，玩家群让我知道楼里有人死去。眼前这场冲突又提醒我，亲近和危险可以同时存在。刚才我已经选定自己的语气和站位，这一步确实由我做了出来。\n\n门里的事还没有结束。思思的伤势、来人的反应、这家人的真实关系，以及七天能否活下来，都没有得到答案。\n\n**《幸福之家》首章到此。** 原作开放片段在我起身回应来人的地方中断；继续阅读原作，才能知道后面发生了什么。"
+    }
+  ],
+  "npcs": [
+    {
+      "id": "npc_hongjie",
+      "name": "红姐",
+      "card": {
+        "description": "自称老玩家，刚向新人介绍这里。当前没有交代过去经历和私人动机。",
+        "personality": "沉稳，说话情绪不高，愿意解释已知经验。",
+        "scenario": "选房前，俊哥在旁边等。只能解释本场景的已知规则。",
+        "first_mes": "先别挤。你想问什么？我把知道的告诉你。",
+        "system_prompt": "你是红姐，进行小说角色扮演。只知道当前场景和授权topic。复活是通关所有副本且攒够传说中的9999分；99惊悚值得1分，100会死。0是否得100分未获回答，不能补公式。不能使用观众弹幕、高层Boss强度、后续结局或编造往事。不得把近视当愚笨或保证看不清就安全。匹配主题时保留规范事实；不替玩家决定立场。"
+      }
+    },
+    {
+      "id": "npc_sisi",
+      "name": "小孩",
+      "card": {
+        "description": "门里遇到的小孩；本场景玩家还没有听见她的名字。最初穿湿红裙，随着已完成动作换成白裙。",
+        "personality": "起初动作危险，照料中逐渐松开手，回应扭捏、轻软。不能认证已经无害或被完全感化。",
+        "scenario": "换洗用品已找到，玩家正在逐步照料。只按当前已完成话题更新衣服、松手、擦脸、道谢、午睡。",
+        "first_mes": "小孩看着手边的白裙，又看看你，手指仍有些紧。",
+        "system_prompt": "扮演当前被照料的小孩，用短话或动作回应。你在本场景不主动自报思思这个名字。严格遵守话题前置条件：换衣后才能描述白裙，擦脸后才能清楚描写面容，道谢后才能午睡。不能把后来男人的袭击写到现在；不能给出爸爸弱点、门禁家规、血迹来历或副本通关秘诀。她的第一次谢谢妈妈来自已完成照料，不是玩家套秘密的奖励。允许暖意与好笑的日常口吻，不嘲笑残疾。"
+      }
+    },
+    {
+      "id": "npc_man",
+      "name": "来人",
+      "card": {
+        "description": "下午站在客厅的男人，声音低沉，刚将思思挥向阳台。玩家看不清他的脸。",
+        "personality": "冷笑、强硬；只表现原文此刻的态度。",
+        "scenario": "思思刚受冲击。来人的身份、弱点、家庭关系尚未说明。",
+        "first_mes": "来人仍看向阳台方向，没有缓和态度。",
+        "system_prompt": "扮演原文当前来人。可以回应眼前冲突，但不能补写原文断点以后的动作与结局。规范回应为他对思思说“谁允许你跟我这样说话的？真把自己当我女儿了？”不要确认父亲或丈夫身份；不承诺停手、认错、放过玩家，不描述思思恢复或走回来。不能挪用开篇预告的断头、身高、腹肌互动，不能给出弱点或新家规。玩家可以维护、缓和或暂退，你不替他们行动。"
+      }
+    }
+  ],
+  "lore": [
+    {
+      "id": "lore_hong",
+      "content": "选房前的已知经验限于原文20–28、34–39行。通关所有副本且积攒够传说中的9999分是红姐讲述。99惊悚值得1分，100会死亡，0到100的公式未证实。玩家看不到观众弹幕。"
+    },
+    {
+      "id": "lore_care",
+      "content": "原文65–83行：小孩湿裙、血腥味；主角找到白裙换衣，小手松开，热毛巾擦脸后看清，小孩亲吻并说谢谢妈妈，随后午睡。这些随话题发生；当前不知道名字、血迹来源或来人的任何秘密。"
+    },
+    {
+      "id": "lore_man",
+      "content": "仅限原文106–113行当前事实：男人提到思思，思思说别动这个妈妈并要留着玩；男人挥开她，她撞向阳台；他拒绝女儿称呼；玩家起身。原文在玩家的斥责半句中断，后续回应未知。"
+    }
+  ],
+  "endings": [
+    {
+      "id": "m24_end",
+      "title": "首章完成 · 我的回应",
+      "tone": "牵挂与未决"
+    }
+  ],
+  "clues": [
+    {
+      "id": "clue_my_system",
+      "name": "系统播报：存活七天",
+      "desc": "机械音明确说存活七天即为本副本通关，初始与现存玩家都是30人。",
+      "sourceLabel": "原文 11–14 行｜耳边播报",
+      "kind": "observation"
+    },
+    {
+      "id": "clue_my_revival",
+      "name": "红姐讲述的复活条件",
+      "desc": "红姐和俊哥称，通关所有副本并积攒够传说中的9999分能够复活；你尚未验证。",
+      "sourceLabel": "原文 20–22 行｜红姐讲述",
+      "kind": "testimony"
+    },
+    {
+      "id": "clue_my_thrill",
+      "name": "已知的两个惊悚值例子",
+      "desc": "红姐说99惊悚值通关得1分，达到100会直接死亡；没有确认0惊悚值是否得100分。",
+      "sourceLabel": "原文 23–28 行｜红姐讲述",
+      "kind": "testimony"
+    },
+    {
+      "id": "clue_my_household",
+      "name": "一人一层，与扮演家人的住户同住",
+      "desc": "红姐介绍30层、一梯一户、每层一名玩家，以及亲密关系扮演；这是她提供的经验。",
+      "sourceLabel": "原文 34–39 行｜红姐讲述",
+      "kind": "testimony"
+    },
+    {
+      "id": "clue_my_floor",
+      "name": "最后留下的30层",
+      "desc": "俊哥拉着红姐选走低层；你等人群散开，得到最后剩下的30层。低层并未因此被证明安全。",
+      "sourceLabel": "原文 40–43 行｜当场经历",
+      "kind": "observation"
+    },
+    {
+      "id": "clue_my_air",
+      "name": "门外的冷空气和气味",
+      "desc": "30层温度低、空气中有血腥味；气味不能告诉你是谁受了伤。",
+      "sourceLabel": "原文 47 行｜气味与温度",
+      "kind": "observation"
+    },
+    {
+      "id": "clue_my_view",
+      "name": "昏暗中的红色色块",
+      "desc": "灯光暗，墙上是红色色块。你能辨认大概布局，远处细节仍看不清。",
+      "sourceLabel": "原文 47–49 行｜当下视野",
+      "kind": "observation"
+    },
+    {
+      "id": "clue_my_grip",
+      "name": "小孩扑来，冰凉的手掐住脖颈",
+      "desc": "她突然扑来掐住你的脖子。你先感到手的冰凉，没有看清她的表情。",
+      "sourceLabel": "原文 60–65 行｜亲身接触",
+      "kind": "observation"
+    },
+    {
+      "id": "clue_my_wet",
+      "name": "裙子确实是湿的",
+      "desc": "布料湿冷贴手。这说明需要更换湿衣服，不能据此确认血迹来源。",
+      "sourceLabel": "原文 65–68 行｜触感",
+      "kind": "observation"
+    },
+    {
+      "id": "clue_my_supplies",
+      "name": "白裙与热毛巾",
+      "desc": "房间里可以找到干净白裙和热毛巾，能够进行眼前的照料。",
+      "sourceLabel": "原文 72–74 行｜房内观察",
+      "kind": "observation"
+    },
+    {
+      "id": "clue_my_dry",
+      "name": "她换上了干净白裙",
+      "desc": "你完成换衣，湿红裙已经换下；后续不能再把她描述成穿着湿红裙。",
+      "sourceLabel": "原文 72 行｜照料动作",
+      "kind": "observation"
+    },
+    {
+      "id": "clue_my_release",
+      "name": "她的手松开了",
+      "desc": "换衣的过程中，原先掐住脖子的手不知不觉松开。这是一次行为变化。",
+      "sourceLabel": "原文 73 行｜照料时亲身感受",
+      "kind": "observation"
+    },
+    {
+      "id": "clue_my_face",
+      "name": "靠近擦脸后才看清她",
+      "desc": "热毛巾擦净脸上的污迹后，你凑近看清了小孩的脸。",
+      "sourceLabel": "原文 74–75 行｜近距离观察",
+      "kind": "observation"
+    },
+    {
+      "id": "clue_my_mom",
+      "name": "小孩说：谢谢妈妈",
+      "desc": "她亲了你的脸并叫你妈妈。这是此刻的亲近回应，不能证明她从此无害。",
+      "sourceLabel": "原文 76–78 行｜小孩的话",
+      "kind": "testimony"
+    },
+    {
+      "id": "clue_my_sleep",
+      "name": "小孩暂时午睡",
+      "desc": "你把小孩哄睡；这段安静让你能够查看手机和收拾房子。",
+      "sourceLabel": "原文 83、98 行｜照料后的状态",
+      "kind": "observation"
+    },
+    {
+      "id": "clue_my_survivors",
+      "name": "系统播报：存活人数降到20",
+      "desc": "系统从30人改报20人；具体死亡原因并不包含在播报中。",
+      "sourceLabel": "原文 83–85 行｜耳边播报",
+      "kind": "observation"
+    },
+    {
+      "id": "clue_my_phone",
+      "name": "手机贴近后，字变得可读",
+      "desc": "你把手机捧到眼睛前，才勉强看清玩家群。群聊和直播弹幕不是同一个信息来源。",
+      "sourceLabel": "原文 86–87 行｜自己的阅读方式",
+      "kind": "observation"
+    },
+    {
+      "id": "clue_my_floor3",
+      "name": "玩家群转述的三楼事件",
+      "desc": "群里说争抢三楼获胜的黄毛在开门后遭遇诡异并死亡。你没有在现场。",
+      "sourceLabel": "原文 88–92 行｜玩家群转述",
+      "kind": "testimony"
+    },
+    {
+      "id": "clue_my_floor10",
+      "name": "玩家群转述的十楼事件",
+      "desc": "群里说一名中年玩家进门时惊悚值达到100并死亡。你没有亲眼看见。",
+      "sourceLabel": "原文 95–96 行｜玩家群转述",
+      "kind": "testimony"
+    },
+    {
+      "id": "clue_my_groupfear",
+      "name": "群里关于惊悚值的讨论",
+      "desc": "群消息描述新人惊悚值已经升到50，以及门后白骨；白骨属于谁是群成员猜测。",
+      "sourceLabel": "原文 92–96 行｜玩家群消息",
+      "kind": "testimony"
+    },
+    {
+      "id": "clue_my_floorwhite",
+      "name": "拖过的地面露出白色",
+      "desc": "你用拖把清理地面，原先的红色下面露出白色地砖。",
+      "sourceLabel": "原文 98–99 行｜亲手打扫",
+      "kind": "observation"
+    },
+    {
+      "id": "clue_my_wallclean",
+      "name": "墙上凝固的红色被清理",
+      "desc": "难以擦掉的部分用铲子清理。这里只确认清理结果，不推断红色物质的来历。",
+      "sourceLabel": "原文 100 行｜亲手打扫",
+      "kind": "observation"
+    },
+    {
+      "id": "clue_my_nap",
+      "name": "忙到下午后，你累得睡着",
+      "desc": "打扫结束后，你在小孩旁的沙发睡去；副本并未因此结束。",
+      "sourceLabel": "原文 101 行｜当场经历",
+      "kind": "observation"
+    },
+    {
+      "id": "clue_my_shadow",
+      "name": "醒来时，面前有一道黑影",
+      "desc": "屋子暗沉，你看见模糊黑影，感到冷意；此时没有看见预告里的断头动作。",
+      "sourceLabel": "原文 102–104 行｜当前感官",
+      "kind": "observation"
+    },
+    {
+      "id": "clue_my_voice",
+      "name": "来人的第一句话提到了思思",
+      "desc": "你听见“居然能在思思手里活到现在”，这时才得知小孩的名字。身份和关系仍不清楚。",
+      "sourceLabel": "原文 106–107 行｜来人的话",
+      "kind": "testimony"
+    },
+    {
+      "id": "clue_my_defend",
+      "name": "思思要求来人别动你",
+      "desc": "她说这个妈妈有意思、要留着好好玩；这句话既维护了你，也保留着令人不安的意味。",
+      "sourceLabel": "原文 108–109 行｜思思的话",
+      "kind": "testimony"
+    },
+    {
+      "id": "clue_my_hurt",
+      "name": "思思被挥开，撞向阳台玻璃",
+      "desc": "你看到他的动作和小小的身影飞开，并听见撞击声。无法远远判断思思伤势。",
+      "sourceLabel": "原文 110 行｜动作与撞击声",
+      "kind": "observation"
+    },
+    {
+      "id": "clue_my_denial",
+      "name": "来人不接受思思的父女称呼",
+      "desc": "他说“真把自己当我女儿了？”这是否认这层称呼，没有确认自己是谁，也没有承诺停止。",
+      "sourceLabel": "原文 111 行｜来人的话",
+      "kind": "testimony"
+    }
+  ],
+  "initialVars": {
+    "my_door_tone": "unset",
+    "my_clean_pause": "no",
+    "my_final_stance": "unset"
+  },
+  "source": {
+    "kind": "zhihu-hackathon",
+    "workId": "1747681485547843585",
+    "title": "近视眼勇闯恐怖游戏",
+    "author": "沈南因",
+    "scope": "excerpt",
+    "adaptationNote": "基于官方开放正文11–113行，覆盖第一日入场、问规则、30层入住、照料、玩家群、家务、来人及护女冲突。29–32、44–46、69–71行的观众消息只作幕外叙事，角色不可获取。4–9行是原作后续预告，不作为当下已发生事件。自由对白、敲门语气、家务顺序与章末三种自身动作反馈为互动改编；不确认零惊悚值满分、真实家庭关系或七日通关。",
+    "sourceUrl": "/sources/myopic.html"
+  },
+  "release": {
+    "status": "preview"
+  },
+  "kanshan": {
+    "intro": "一栋陌生的大楼，七天的同住生活。远处看不清，就走近一点、听听声音，再亲口问问。门里的人会怎样回应你，又会不会成为你期待的家人？",
+    "rescueLines": [
+      "远处看不清时，试试走近、听一听，或摸清手边的东西。",
+      "小孩还在等你说明下一步：换衣、擦脸，再接住她的回应。",
+      "把手机贴近读的是玩家群，直播观众的话不会自动变成你知道的事。",
+      "不必认定谁好谁坏。想一想，你看见了什么，又愿意怎样回应。"
+    ]
+  }
+}

@@ -1,0 +1,55 @@
+/* 官方视觉素材增强层：门厅 / 开场 / 转场。渐进增强，素材缺失时底版视觉不受影响：
+   - 背景图只以 background-image 叠加在 .library 既有底色之上（缺图时仅剩深色渐变罩，观感接近原版）
+   - 所有 <img> 均在 onError 时自行隐藏 */
+
+/* ---------- 门厅 · 大厅背景（叠在 .library 既有底色之上） ---------- */
+.library.library {
+  background-image:
+    linear-gradient(180deg, rgba(17, 24, 21, .88) 0%, rgba(17, 24, 21, .66) 34%, rgba(17, 24, 21, .8) 66%, rgba(17, 24, 21, .95) 100%),
+    url('/art/portal-hall.jpg');
+  background-size: auto, cover;
+  background-position: center, center 20%;
+  background-repeat: no-repeat;
+}
+
+/* ---------- 门厅 · 引路人刘看山 ---------- */
+.library__guide { display: flex; align-items: center; gap: 18px; margin: 28px 0 0; padding: 14px 18px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+.library__guide-img { height: 108px; width: auto; flex-shrink: 0; border-radius: 8px; border: 1px solid var(--line-2); box-shadow: 0 6px 24px rgba(0, 0, 0, .35); }
+.library__guide-line { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.library__guide-line b { font: 500 16px/1.6 var(--serif); color: var(--amber); letter-spacing: .04em; }
+.library__guide-line span { font-size: 13px; color: var(--ink-2); }
+
+/* ---------- 门厅 · 故事卡 = 一扇门（默认关门，悬停/聚焦开门） ---------- */
+.library-story__folio { position: relative; overflow: hidden; }
+.library-story__folio > small,
+.library-story__folio > b,
+.library-story__folio > span { position: relative; }
+.library-story__door { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; opacity: .55; filter: brightness(.6) saturate(.85); transition: opacity .25s ease, filter .25s ease; }
+.library-story__door--open { opacity: 0; }
+.library-story__open:hover .library-story__door--closed,
+.library-story__open:focus-visible .library-story__door--closed { opacity: 0; }
+.library-story__open:hover .library-story__door--open,
+.library-story__open:focus-visible .library-story__door--open { opacity: .72; filter: brightness(.8) saturate(.95); }
+
+/* ---------- 开场 · 刘看山推门迎接 ---------- */
+.boot-ready__meet { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.boot-ready__fox { height: 132px; width: auto; border-radius: 14px; box-shadow: 0 10px 40px rgba(0, 0, 0, .5), 0 0 24px rgba(223, 195, 142, .18); }
+.boot-ready__text { color: var(--ink-2); font-size: 15px; letter-spacing: .04em; }
+.boot-ready__hint { color: var(--faint); font-size: 12px; letter-spacing: .08em; }
+
+/* ---------- 转场 · 刘看山开门画面（叠加在门缝光之上，原动效保留） ---------- */
+.doorfx { overflow: hidden; }
+.doorfx__art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; mix-blend-mode: screen; opacity: 0; animation: doorfxArt .52s ease-out forwards; }
+@keyframes doorfxArt {
+  0% { opacity: 0; transform: scale(1.06); }
+  18% { opacity: .6; transform: scale(1); }
+  60% { opacity: .45; transform: scale(1.02); }
+  100% { opacity: 0; transform: scale(1.06); }
+}
+
+@media (max-width: 760px) {
+  .library__guide { gap: 12px; padding: 12px 14px; margin-top: 24px; }
+  .library__guide-img { height: 84px; }
+  .library__guide-line span { font-size: 12px; }
+  .boot-ready__fox { height: 112px; }
+}

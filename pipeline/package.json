@@ -1,0 +1,20 @@
+{
+  "name": "kanshan-portal-pipeline",
+  "version": "0.1.0",
+  "description": "看山任意门 · 编译管线：把中文短篇故事改编为互动叙事 game.json",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "ingest": "node steps/ingest.mjs",
+    "analyze": "node steps/analyze.mjs",
+    "design": "node steps/design.mjs",
+    "compile": "node steps/compile.mjs",
+    "validate": "node steps/validate.mjs",
+    "all": "node steps/run-all.mjs",
+    "demo": "node steps/run-all.mjs",
+    "test": "node --test test/*.test.mjs"
+  }
+}
