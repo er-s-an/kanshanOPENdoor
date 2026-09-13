@@ -1,6 +1,7 @@
 // Chapter closure keeps the result and next step ahead of optional records and keepsakes.
 import { useEffect, useRef, useState } from 'react';
 import type { Scene } from '../types';
+import { derivePersona } from '../lib/persona.mjs';
 import { buildReport } from '../lib/report';
 import { choiceLocked } from '../lib/rules.mjs';
 import { sfxChime } from '../lib/sound';
@@ -10,6 +11,7 @@ import { TypedProse } from './TypedProse';
 import { Poster, ENDING_RATING_LABEL } from './Poster';
 import { SceneVisual } from './SceneVisual';
 import '../ending-ux.css';
+import '../persona-ux.css';
 
 export function EndingView({ scene }: { scene: Scene }) {
   const { story, vars, memo, enterStory, backToDoor, chooseAndNav, navBusy } = useGame();
@@ -35,6 +37,7 @@ export function EndingView({ scene }: { scene: Scene }) {
 
   if (!story) return null;
   const report = buildReport(story, scene, vars, memo);
+  const persona = derivePersona(story, vars, memo);
   const records = report.lines.filter((line) => line.value.trim());
   const decisions = records.find((line) => line.label === '你作出的决定');
   const actions = records.find((line) => line.label === '行动与后果');
@@ -86,6 +89,29 @@ export function EndingView({ scene }: { scene: Scene }) {
               {report.clueFound > 0 ? <p className="ending-recap__note">已记下 {report.clueFound} 条线索。</p> : null}
             </section>
 
+            <section className={`persona-reveal persona-reveal--${persona.code.toLowerCase()}`} aria-labelledby="persona-title">
+              <div className="persona-reveal__character" aria-hidden="true">
+                <span>{persona.code}</span>
+                <img src={persona.asset} alt="" />
+              </div>
+              <div className="persona-reveal__copy">
+                <p className="persona-reveal__eyebrow">刘看山的本局判型</p>
+                <h2 id="persona-title">你是：{persona.name}</h2>
+                <p className="persona-reveal__route">{persona.route}</p>
+                <blockquote>{persona.roast}</blockquote>
+                <p className="persona-reveal__praise">{persona.praise}</p>
+              </div>
+              <div className="persona-reveal__basis">
+                <p>{persona.matchedChoices >= 2 ? `依据来自本局 ${persona.matchedChoices} 次关键选择` : '这一局留下的关键选择较少，结果是当前路线倾向'}</p>
+                <ul>{persona.proofLines.map((line) => <li key={line}>{line}</li>)}</ul>
+              </div>
+              <p className="persona-reveal__note">娱乐性结果，不是心理测量。换一种关键选择，刘看山也会换一种判法。</p>
+              <button className="btn btn--primary persona-reveal__open" aria-expanded={posterOpen} aria-controls="persona-poster" onClick={() => setPosterOpen((open) => !open)}>
+                {posterOpen ? '收起分享卡' : '打开我的分享卡'}
+              </button>
+              {posterOpen ? <div id="persona-poster" className="ending-keepsake"><Poster storyId={story.story.id} storyTitle={story.story.title} report={report} persona={persona} /></div> : null}
+            </section>
+
             {scene.choices?.length ? <section className="ending-next-choices" aria-labelledby="ending-next-title">
               <h2 id="ending-next-title">接下来，你决定</h2>
               <div className="ending-next-choices__list">{scene.choices.map((choice) => {
@@ -123,10 +149,6 @@ export function EndingView({ scene }: { scene: Scene }) {
                 <dl className="ending-records">{records.map((line, index) => <div key={index}>
                   <dt>{line.label}</dt><dd>{line.value}</dd>
                 </div>)}</dl>
-              </details>
-              <details className="ending-extra" onToggle={(event) => setPosterOpen(event.currentTarget.open)}>
-                <summary>生成本次纪念卡 <span>可选</span></summary>
-                {posterOpen ? <div className="ending-keepsake"><Poster storyTitle={story.story.title} report={report} /></div> : null}
               </details>
             </div>
           </> : null}
