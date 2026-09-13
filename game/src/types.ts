@@ -114,6 +114,11 @@ export interface Choice {
   text: string;
   next: string;
   set?: Record<string, string>;
+  /**
+   * 可解释的人格轴信号。字段名代表倾向，正数代表本次选择的权重。
+   * 只记录玩家明确选择；浏览量、停留时长和截图等行为不得写入这里。
+   */
+  personaSignals?: Partial<Record<'evidence' | 'testimony' | 'push' | 'restrain' | 'public' | 'private', number>>;
   /** 条件门：vars 全部匹配时才可选；不满足时灰显锁定（剧本杀「指认证据门槛」） */
   requires?: Record<string, string>;
   /** requires 未满足时的锁定提示（如「还缺关键证据」），缺省由引擎兜底 */
@@ -376,7 +381,7 @@ export interface BossDecision {
 }
 
 export type MemoEntry =
-  | { kind: 'choice'; sceneId: string; text: string }
+  | { kind: 'choice'; sceneId: string; choiceId?: string; text: string }
   | { kind: 'action'; sceneId: string; actionId: string; text: string; feedback: string; changes: Array<{ key: string; label: string; before: string; after: string }> }
   | { kind: 'boss'; sceneId: string; event: BossDecisionStatus; claimId?: string; suspectId?: string; caseId?: string; clue?: string;
       result?: 'supported' | 'partial' | 'overreach'; accepted: boolean; consumed: boolean;

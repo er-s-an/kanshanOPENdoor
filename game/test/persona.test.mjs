@@ -12,9 +12,9 @@ const routes = [
 
 function runFor(source, pace, voice) {
   const choices = [
-    { id: 'source', text: `来源选择-${source}`, next: 'pace', set: { persona_source: source } },
-    { id: 'pace', text: `推进选择-${pace}`, next: 'voice', set: { persona_pace: pace } },
-    { id: 'voice', text: `发声选择-${voice}`, next: 'end', set: { persona_voice: voice } },
+    { id: `source-${source}`, text: `来源选择-${source}`, next: 'pace', personaSignals: { [source]: 1 } },
+    { id: `pace-${pace}`, text: `推进选择-${pace}`, next: 'voice', personaSignals: { [pace]: 1 } },
+    { id: `voice-${voice}`, text: `发声选择-${voice}`, next: 'end', personaSignals: { [voice]: 1 } },
   ];
   const story = { story: { id: 'case', title: '无剧透测试', author: '', tags: [] }, start: 'source', scenes: [
     { id: 'source', type: 'choice', choices: [choices[0]] },
@@ -22,7 +22,7 @@ function runFor(source, pace, voice) {
     { id: 'voice', type: 'choice', choices: [choices[2]] },
     { id: 'end', type: 'ending' },
   ] };
-  const memo = choices.map((choice, index) => ({ kind: 'choice', sceneId: ['source', 'pace', 'voice'][index], text: choice.text }));
+  const memo = choices.map((choice, index) => ({ kind: 'choice', sceneId: ['source', 'pace', 'voice'][index], choiceId: choice.id, text: choice.text }));
   return { story, memo };
 }
 
@@ -33,12 +33,35 @@ test('all eight personas are reachable from three authored, replayable choice ax
     const first = derivePersona(story, {}, memo);
     const second = derivePersona(story, {}, structuredClone(memo));
     assert.equal(first.code, code);
-    assert.equal(first.confidence, 'compat');
+    assert.equal(first.confidence, 'explicit');
     assert.deepEqual(first, second, `${code} changed for the same saved choices`);
     assert.equal(first.proofLines.length, 3);
     assert.ok(Object.values(first.basis).every((entries) => entries.length > 0));
-    assert.ok(Object.values(first.basis).flat().every((entry) => memo.some((choice) => choice.sceneId === entry.sceneId && choice.text === entry.text)));
+    assert.ok(Object.values(first.basis).flat().every((entry) => memo.some((choice) => choice.sceneId === entry.sceneId && choice.choiceId === entry.choiceId && choice.text === entry.text)));
   }
+});
+
+test('stable choice ids survive copy edits while old text-only saves remain compatible', () => {
+  const { story, memo } = runFor('evidence', 'push', 'public');
+  const renamed = memo.map((entry) => ({ ...entry, text: `旧版文案-${entry.choiceId}` }));
+  const byId = derivePersona(story, {}, renamed);
+  assert.equal(byId.code, 'FIRE');
+  assert.equal(byId.confidence, 'explicit');
+  assert.deepEqual(Object.values(byId.basis).flat().map((entry) => entry.choiceId), memo.map((entry) => entry.choiceId));
+
+  const legacyMemo = memo.map(({ choiceId: _choiceId, ...entry }) => entry);
+  const byText = derivePersona(story, {}, legacyMemo);
+  assert.equal(byText.code, 'FIRE');
+  assert.equal(byText.confidence, 'explicit');
+});
+
+test('explicit signals own their axis even when legacy text and vars point elsewhere', () => {
+  const { story, memo } = runFor('evidence', 'restrain', 'private');
+  story.scenes[0].choices[0].text = '接受当事人证词并公开追问';
+  const result = derivePersona(story, { persona_source: 'testimony', persona_pace: 'push', persona_voice: 'public' }, memo);
+  assert.equal(result.code, 'CTRL');
+  assert.deepEqual(result.axes, { source: 'evidence', pace: 'restrain', voice: 'private' });
+  assert.equal(result.confidence, 'explicit');
 });
 
 test('optional exploration, screenshot-like vars and clue totals cannot change a main persona', () => {
@@ -68,22 +91,65 @@ test('old authored choice values are inferred but unknown axes are reported, not
   assert.equal(result.confidence, 'provisional');
 });
 
-test('the flagship story result is explained by replayable authored choices, not clue totals', () => {
+test('the flagship story exposes three natural binary axes and all eight types are reachable', () => {
   const story = JSON.parse(readFileSync(new URL('../stories/蓝血-2025684191967294692.json', import.meta.url), 'utf8'));
-  const selections = [
-    ['chat_zhangwei', '听见她的说法，仍把自己的想法保留'],
-    ['n_post_disguise', '先抄下已见事实，再删帖；给以后留一份记录'],
-    ['c_answer', '照这里的常识答题，交卷时再次询问题型差别'],
-    ['invest_final', '以这个假说为线索，隐去身份继续向社区提问'],
-  ];
-  const memo = selections.map(([sceneId, text]) => ({ kind: 'choice', sceneId, text }));
-  const result = derivePersona(story, { clue_everything: 'found', resolve: 'expose' }, memo);
-  assert.equal(result.code, 'ANON');
-  assert.equal(result.matchedChoices, 4);
-  assert.equal(result.unresolved.length, 0);
-  const referenced = new Set(Object.values(result.basis).flat().map((entry) => `${entry.sceneId}|${entry.text}`));
-  assert.ok(referenced.size >= 2);
-  for (const reference of referenced) assert.ok(selections.some(([sceneId, text]) => reference === `${sceneId}|${text}`));
+  const axisScenes = {
+    source: story.scenes.find((scene) => scene.id === 'chat_zhangwei'),
+    pace: story.scenes.find((scene) => scene.id === 'c_answer'),
+    voice: story.scenes.find((scene) => scene.id === 'n_post_disguise'),
+  };
+  const sides = {
+    source: ['evidence', 'testimony'],
+    pace: ['push', 'restrain'],
+    voice: ['public', 'private'],
+  };
+  for (const axis of Object.keys(axisScenes)) {
+    assert.equal(axisScenes[axis].choices.length, 2, `${axis} must remain a real binary decision`);
+    for (const side of sides[axis]) {
+      assert.ok(axisScenes[axis].choices.some((choice) => choice.personaSignals?.[side] > 0), `${axis} is missing ${side}`);
+    }
+  }
+
+  const convergesAt = (choice, target) => {
+    let sceneId = choice.next;
+    for (let hop = 0; hop < 4; hop += 1) {
+      if (sceneId === target) return true;
+      const scene = story.scenes.find((candidate) => candidate.id === sceneId);
+      if (!scene?.next) return false;
+      sceneId = scene.next;
+    }
+    return false;
+  };
+  for (const choice of axisScenes.source.choices) assert.ok(convergesAt(choice, 'n_restroom'));
+  for (const choice of axisScenes.pace.choices) assert.ok(convergesAt(choice, 'n_tail'));
+  for (const choice of axisScenes.voice.choices) assert.ok(convergesAt(choice, 'n_test'));
+
+  for (const [code, source, pace, voice] of routes) {
+    const picked = [
+      ['source', source], ['pace', pace], ['voice', voice],
+    ].map(([axis, side]) => {
+      const scene = axisScenes[axis];
+      const choice = scene.choices.find((candidate) => candidate.personaSignals?.[side] > 0);
+      return { kind: 'choice', sceneId: scene.id, choiceId: choice.id, text: choice.text };
+    });
+    const result = derivePersona(story, {
+      clue_everything: 'found', resolve: code === 'FIRE' ? 'pause' : 'expose', screenshot_taken: 'yes', dwell_seconds: '9000',
+    }, picked);
+    assert.equal(result.code, code);
+    assert.equal(result.confidence, 'explicit');
+    assert.equal(result.matchedChoices, 3);
+    assert.deepEqual(result.unresolved, []);
+    assert.equal(result.proofLines.length, 3);
+    for (const [axisIndex, [axis, entries]] of Object.entries(result.basis).entries()) {
+      assert.equal(entries.length, 1, `${code}.${axis} needs one authored proof choice`);
+      const proof = entries[0];
+      const memoEntry = picked.find((entry) => entry.sceneId === proof.sceneId && entry.choiceId === proof.choiceId && entry.text === proof.text);
+      assert.ok(memoEntry, `${code}.${axis} basis did not come from this run`);
+      const authored = story.scenes.find((scene) => scene.id === proof.sceneId)?.choices?.find((choice) => choice.id === proof.choiceId);
+      assert.equal(authored?.text, proof.text, `${code}.${axis} basis is not an authored choice`);
+      assert.ok(result.proofLines[axisIndex].includes(proof.text.slice(0, 13)), `${code}.${axis} proof copy must quote this run's choice`);
+    }
+  }
 });
 
 test('share links discard scene deep links and carry only anonymous routing fields', () => {

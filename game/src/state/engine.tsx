@@ -82,7 +82,7 @@ function reducer(s: GameState, a: Action): GameState {
       const applied = applyChoice(s.story, s.sceneId, a.choiceId, s.vars);
       if (!applied) return s;
       const memo: MemoEntry[] = [...s.memo];
-      memo.push({ kind: 'choice', sceneId: s.sceneId, text: applied.choice.text });
+      memo.push({ kind: 'choice', sceneId: s.sceneId, choiceId: applied.choice.id, text: applied.choice.text });
       memo.push({ kind: 'scene', sceneId: applied.sceneId, chapter: s.story.scenes.find((sc) => sc.id === applied.sceneId)?.chapter });
       return { ...s, sceneId: applied.sceneId, vars: applied.vars, memo: memo.slice(-240), bossRuns: resetBossAt(s.story, applied.sceneId, s.bossRuns) };
     }

@@ -65,16 +65,16 @@ const PERSONA_BY_ROUTE = Object.freeze({
 
 const AXIS_COPY = Object.freeze({
   source: {
-    evidence: '关键选择更常先核对材料，再形成判断',
-    testimony: '关键选择更常从当事人的说法继续推进',
+    evidence: '先核材料',
+    testimony: '先听证词',
   },
   pace: {
-    push: '遇到矛盾时，你更常选择继续追问或行动',
-    restrain: '证据未齐时，你更常收窄说法并保留余地',
+    push: '继续推进',
+    restrain: '收窄判断',
   },
   voice: {
-    public: '准备发声时，你倾向把可核验部分带到公开场',
-    private: '准备发声时，你倾向先控制公开范围与身份暴露',
+    public: '公开核验',
+    private: '控制公开范围',
   },
 });
 
@@ -178,52 +178,96 @@ function textSignals(choice) {
 
 function findChoice(story, entry) {
   const scene = story?.scenes?.find((candidate) => candidate.id === entry.sceneId);
-  return scene?.choices?.find((choice) => choice.text === entry.text) || null;
+  if (!scene?.choices) return null;
+  if (entry.choiceId) {
+    const stableMatch = scene.choices.find((choice) => choice.id === entry.choiceId);
+    if (stableMatch) return stableMatch;
+  }
+  // Compatibility for saves created before choiceId was recorded.
+  return scene.choices.find((choice) => choice.text === entry.text) || null;
 }
 
-function summarizeAxes(axes) {
-  return [AXIS_COPY.source[axes.source], AXIS_COPY.pace[axes.pace], AXIS_COPY.voice[axes.voice]];
+function summarizeAxes(axes, basis) {
+  return ['source', 'pace', 'voice'].map((axis) => {
+    const choice = basis[axis].at(-1);
+    if (!choice) return AXIS_COPY[axis][axes[axis]];
+    const excerpt = choice.text.length > 13 ? `${choice.text.slice(0, 13)}…` : choice.text;
+    return `你选了「${excerpt}」：${AXIS_COPY[axis][axes[axis]]}`;
+  });
 }
 
 export function derivePersona(story, vars = {}, memo = []) {
-  const totals = { source: 0, pace: 0, voice: 0 };
-  const last = { source: 0, pace: 0, voice: 0 };
-  const basis = { source: [], pace: [], voice: [] };
-  const origins = new Set();
-  let matchedChoices = 0;
+  const axesList = ['source', 'pace', 'voice'];
+  const explicitTotals = { source: 0, pace: 0, voice: 0 };
+  const explicitLast = { source: 0, pace: 0, voice: 0 };
+  const explicitSeen = { source: false, pace: false, voice: false };
+  const explicitBasis = { source: [], pace: [], voice: [] };
+  const compatTotals = { source: 0, pace: 0, voice: 0 };
+  const compatLast = { source: 0, pace: 0, voice: 0 };
+  const compatSeen = { source: false, pace: false, voice: false };
+  const compatBasis = { source: [], pace: [], voice: [] };
 
   for (const entry of memo) {
     if (entry?.kind !== 'choice') continue;
     const choice = findChoice(story, entry);
     if (!choice) continue;
-    matchedChoices += 1;
     const explicit = explicitChoiceSignals(choice);
     const structured = setSignals(choice);
     const semantic = textSignals(choice);
-    const seen = new Set();
-    for (const signal of [...explicit, ...structured, ...semantic]) {
-      if (seen.has(signal.axis)) continue;
-      seen.add(signal.axis);
-      totals[signal.axis] += signal.value;
-      last[signal.axis] = signal.value;
-      basis[signal.axis].push({ sceneId: entry.sceneId, choiceId: choice.id, text: choice.text });
-      origins.add(signal.origin);
+
+    // Explicit author signals are accumulated separately. If an axis has even
+    // one explicit signal in this run, legacy set/text inference cannot alter it.
+    for (const axis of axesList) {
+      const values = explicit.filter((signal) => signal.axis === axis).map((signal) => signal.value);
+      if (values.length) {
+        const value = values.reduce((sum, current) => sum + current, 0);
+        explicitSeen[axis] = true;
+        explicitTotals[axis] += value;
+        if (value !== 0) explicitLast[axis] = value;
+        explicitBasis[axis].push({ sceneId: entry.sceneId, choiceId: choice.id, text: choice.text });
+      }
+
+      // Legacy inference remains available for old stories and old saves. Keep
+      // its former first-signal-per-axis precedence (set before text).
+      const fallback = [...structured, ...semantic].find((signal) => signal.axis === axis);
+      if (fallback) {
+        compatSeen[axis] = true;
+        compatTotals[axis] += fallback.value;
+        compatLast[axis] = fallback.value;
+        compatBasis[axis].push({ sceneId: entry.sceneId, choiceId: choice.id, text: choice.text });
+      }
+    }
+  }
+
+  const totals = { source: 0, pace: 0, voice: 0 };
+  const last = { source: 0, pace: 0, voice: 0 };
+  const basis = { source: [], pace: [], voice: [] };
+  const resolvedBy = { source: null, pace: null, voice: null };
+  for (const axis of axesList) {
+    if (explicitSeen[axis]) {
+      totals[axis] = explicitTotals[axis];
+      last[axis] = explicitLast[axis];
+      basis[axis] = explicitBasis[axis];
+      resolvedBy[axis] = 'explicit';
+    } else if (compatSeen[axis]) {
+      totals[axis] = compatTotals[axis];
+      last[axis] = compatLast[axis];
+      basis[axis] = compatBasis[axis];
+      resolvedBy[axis] = 'compat';
     }
   }
 
   // Old saves can lose their memo tail. Only final vars that were authored by a
   // choice are used as a compatibility signal; clue and exploration vars are ignored.
-  if (Object.values(totals).some((value) => value === 0)) {
-    const virtualChoice = { text: '', set: vars };
-    for (const signal of setSignals(virtualChoice)) {
-      if (totals[signal.axis] !== 0) continue;
-      totals[signal.axis] += signal.value;
-      last[signal.axis] = signal.value;
-      origins.add('compat');
-    }
+  const virtualChoice = { text: '', set: vars };
+  for (const signal of setSignals(virtualChoice)) {
+    if (resolvedBy[signal.axis]) continue;
+    totals[signal.axis] = signal.value;
+    last[signal.axis] = signal.value;
+    resolvedBy[signal.axis] = 'compat';
   }
 
-  const unresolved = Object.entries(totals).filter(([, value]) => value === 0).map(([axis]) => axis);
+  const unresolved = axesList.filter((axis) => !resolvedBy[axis]);
   const signed = (axis) => totals[axis] || last[axis] || -1;
   const axes = {
     source: signed('source') > 0 ? 'evidence' : 'testimony',
@@ -232,14 +276,16 @@ export function derivePersona(story, vars = {}, memo = []) {
   };
   const code = PERSONA_BY_ROUTE[`${axes.source}|${axes.pace}|${axes.voice}`];
   const persona = PERSONAS[code];
+  const matchedChoices = new Set(Object.values(basis).flat()
+    .map((entry) => `${entry.sceneId}|${entry.choiceId}`)).size;
   return {
     ...persona,
     axes,
-    proofLines: summarizeAxes(axes),
+    proofLines: summarizeAxes(axes, basis),
     basis,
     matchedChoices,
     unresolved,
-    confidence: unresolved.length ? 'provisional' : origins.has('compat') ? 'compat' : 'explicit',
+    confidence: unresolved.length ? 'provisional' : axesList.every((axis) => resolvedBy[axis] === 'explicit') ? 'explicit' : 'compat',
   };
 }
 
