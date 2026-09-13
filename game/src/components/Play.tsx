@@ -2,7 +2,9 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { Scene } from '../types';
 import { useGame } from '../state/engine';
 import { usePrefs } from '../state/prefs';
+import { loadSave } from '../lib/store';
 import { StoryView } from './StoryView';
+import { StoryBriefing } from './StoryBriefing';
 import { ChatView } from './ChatView';
 import { EndingView } from './EndingView';
 import { SettingsSheet } from './SettingsSheet';
@@ -23,7 +25,13 @@ const modes: Record<Scene['type'], string> = { novel: '阅读', choice: '抉择'
 
 export function Play() {
   const { prefs } = usePrefs();
-  const { story, scene, sceneId, vars, backToDoor } = useGame();
+  const { story, scene, sceneId, vars, backToDoor, judge } = useGame();
+  // Play mounts afresh after the door transition. At that instant a genuine
+  // new run has no save yet; resumes already do. Capture the distinction before
+  // the provider's first autosave so refreshes and returns never replay a gate.
+  const [briefingOpen, setBriefingOpen] = useState(() => Boolean(
+    story && scene && !judge && scene.id === story.start && !loadSave(story.story.id),
+  ));
   const [settings, setSettings] = useState(false);
   const [clueOpen, setClueOpen] = useState(false);
   const [newRecords, setNewRecords] = useState('');
@@ -51,8 +59,18 @@ export function Play() {
       element.scrollLeft = 0;
     });
     sceneTitle.current?.focus({ preventScroll: true });
-  }, [sceneId]);
+  }, [sceneId, briefingOpen]);
   if (!story || !scene) return <main className="play"><div className="play__lost"><p>暂时没找到这一幕。</p><button className="btn btn--primary" onClick={() => backToDoor(true)}>返回门厅</button></div></main>;
+  if (briefingOpen) {
+    return <StoryBriefing
+      story={story}
+      scene={scene}
+      calm={prefs.calm}
+      onContinue={() => setBriefingOpen(false)}
+      onSkip={() => setBriefingOpen(false)}
+      onBack={() => backToDoor(true)}
+    />;
+  }
   const chapterParts = (scene.chapter || story.story.title).split('·').map((part) => part.trim());
   const chapterTitle = chapterParts.at(-1);
   const chapterLead = chapterParts.length > 1 ? chapterParts[0] : '';
