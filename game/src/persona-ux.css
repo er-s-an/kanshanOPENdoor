@@ -21,7 +21,7 @@
 .persona-reveal__route{margin:8px 0 0;color:var(--dim,#a0ada0);font-size:13px;letter-spacing:.08em}
 .persona-reveal blockquote{margin:20px 0 10px;padding:14px 16px;border-left:3px solid var(--persona-accent);background:rgba(0,0,0,.12);color:var(--ink,#f0eee5);font:600 17px/1.75 var(--serif,serif)}
 .persona-reveal__praise{margin:0;color:var(--ink-2,#c0c7bd);font-size:15px;line-height:1.8}
-.persona-reveal__character{grid-column:2;grid-row:1;position:relative;display:grid;place-items:center;align-self:start;min-height:190px;border-radius:999px;background:color-mix(in srgb,var(--persona-accent) 23%,transparent)}
+.persona-reveal__character{grid-column:2;grid-row:1;position:relative;display:grid;place-items:center;align-self:start;min-height:190px;border:1px solid color-mix(in srgb,var(--persona-accent) 42%,#e3d9c3);border-radius:999px;background:radial-gradient(circle at 50% 38%,#f3ecdc,#e3d9c3 72%);box-shadow:inset 0 0 32px color-mix(in srgb,var(--persona-accent) 12%,transparent)}
 .persona-reveal__character span{position:absolute;top:12px;right:10px;color:color-mix(in srgb,var(--persona-accent) 68%,white);font-size:12px;font-weight:800;letter-spacing:.12em}
 .persona-reveal__character img{display:block;width:176px;height:176px;object-fit:contain;filter:drop-shadow(0 12px 18px rgba(0,0,0,.25))}
 .persona-reveal__basis{grid-column:1/-1;padding-top:18px;border-top:1px solid color-mix(in srgb,var(--persona-accent) 28%,transparent)}
