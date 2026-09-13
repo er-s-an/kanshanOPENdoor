@@ -10,3 +10,6 @@
     url('/art/clue-board-texture.jpg') center / cover no-repeat;
   pointer-events: none;
 }
+.records-sheet__document { margin:0 auto; width:min(100%, 360px); }
+.records-sheet .record-entry__content { padding:4px 0 24px; }
+.records-sheet .record-entry__content .evidence-document__body { white-space:pre-wrap; }
