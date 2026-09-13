@@ -20,5 +20,11 @@ export interface PersonaResult extends PersonaDefinition {
 }
 
 export const PERSONAS: Readonly<Record<PersonaCode, Readonly<PersonaDefinition>>>;
+export function choicePersonaSignals(choice: unknown): Array<{
+  axis: PersonaAxis;
+  side: 'evidence' | 'testimony' | 'push' | 'restrain' | 'public' | 'private';
+  weight: number;
+  origin: 'explicit' | 'compat';
+}>;
 export function derivePersona(story: GameJson, vars: Vars, memo: MemoEntry[]): PersonaResult;
 export function buildPersonaShareUrl(storyId: string, personaCode: PersonaCode, baseHref?: string): string;

@@ -109,6 +109,16 @@ export function BossView({ scene }: { scene: Scene }) {
     () => currentCase?.counters.filter((counter) => heldIds.has(counter.clue) && counter.result !== 'overreach') || [],
     [currentCase, heldIds],
   );
+  const heldForDrawer = useMemo(() => {
+    const counters = new Map((currentCase?.counters || []).map((counter) => [counter.clue, counter]));
+    const usedClues = bossRun?.usedClues || [];
+    const rank = (clue: ClueMeta) => {
+      if (usedClues.includes(clue.id)) return 5;
+      const result = counters.get(clue.id)?.result || (counters.has(clue.id) ? 'supported' : 'miss');
+      return result === 'supported' ? 0 : result === 'partial' ? 1 : result === 'overreach' ? 2 : 3;
+    };
+    return [...held].sort((a, b) => rank(a) - rank(b));
+  }, [currentCase, held, bossRun?.usedClues]);
 
   const chooseClaim = useCallback((claimId: string) => {
     const decision = bossSelectClaim(claimId);
@@ -387,17 +397,25 @@ export function BossView({ scene }: { scene: Scene }) {
               <small>无关或越界的尝试不会永久消耗线索，可以重新选择。</small>
             </div>
             <div className="boss__drawer-list">
-              {held.length ? held.map((clue) => {
+              {heldForDrawer.length ? heldForDrawer.map((clue) => {
                 const used = bossRun.usedClues.includes(clue.id);
+                const counter = currentCase?.counters.find((candidate) => candidate.clue === clue.id);
+                const fit = used ? 'used' : counter?.result || (counter ? 'supported' : 'miss');
+                const fitLabel = used ? '已用于前面的论证'
+                  : fit === 'supported' ? '直接回应本轮'
+                    : fit === 'partial' ? '只能部分回应'
+                      : fit === 'overreach' ? '会越过证据边界'
+                        : '与本轮无直接关系';
                 return (
                   <button
                     key={clue.id}
-                    className="boss__clue"
+                    className={`boss__clue boss__clue--${fit}`}
                     disabled={used}
                     onClick={() => presentEvidence(clue)}
                     aria-label={`${used ? '已用于论证：' : '出示证据：'}${clue.name}`}
                   >
-                    <EvidenceDocument clue={clue} selected={false} />
+                    <span className="boss__clue-fit">{fitLabel}</span>
+                    <EvidenceDocument clue={clue} selected={false} compact />
                     <span>{used ? '已用于论证' : '出示这份证据'}</span>
                   </button>
                 );

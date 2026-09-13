@@ -669,7 +669,7 @@
 
 .boss__clue {
   display: flex;
-  min-height: 44px;
+  min-height: 312px;
   flex-direction: column;
   align-items: center;
   gap: 10px;
@@ -680,6 +680,23 @@
   color: var(--ink);
   transition: border-color .16s ease, background .16s ease, transform .16s ease;
 }
+.boss__clue-fit {
+  display:block;
+  width:100%;
+  margin:0 0 8px;
+  color:var(--dim);
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.05em;
+  text-align:left;
+}
+.boss__clue--supported { border-color:rgba(118,201,156,.45); }
+.boss__clue--supported .boss__clue-fit { color:#9de3bc; }
+.boss__clue--partial { border-color:rgba(255,180,84,.42); }
+.boss__clue--partial .boss__clue-fit { color:var(--amber); }
+.boss__clue--overreach { border-color:rgba(218,112,103,.38); }
+.boss__clue--overreach .boss__clue-fit { color:#f0aaa4; }
+.boss__clue--miss { opacity:.82; }
 
 .boss__clue:hover:not(:disabled) {
   transform: translateY(-2px);
@@ -692,17 +709,20 @@
   opacity: .46;
 }
 
-.boss__clue .evidence-document {
-  width: min(100%, 230px);
+.boss__clue .evidence-document.is-compact {
+  flex:0 0 auto;
+  width:126px;
+  min-width:126px;
 }
 
-.boss__clue > span {
+.boss__clue > span:not(.boss__clue-fit) {
   display: grid;
   min-height: 44px;
   place-items: center;
   color: var(--amber);
   font-size: 13px;
   font-weight: 700;
+  margin-top:auto;
 }
 
 .boss__drawer-empty {
@@ -796,8 +816,9 @@
     grid-template-columns: 1fr;
   }
 
-  .boss__clue .evidence-document {
-    width: min(76vw, 290px);
+  .boss__clue .evidence-document.is-compact {
+    width:126px;
+    min-width:126px;
   }
 }
 

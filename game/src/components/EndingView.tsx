@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Scene } from '../types';
 import { derivePersona } from '../lib/persona.mjs';
+import { buildCounterfactual } from '../lib/counterfactual.mjs';
 import { buildReport } from '../lib/report';
 import { choiceLocked } from '../lib/rules.mjs';
 import { sfxChime } from '../lib/sound';
@@ -38,6 +39,7 @@ export function EndingView({ scene }: { scene: Scene }) {
   if (!story) return null;
   const report = buildReport(story, scene, vars, memo);
   const persona = derivePersona(story, vars, memo);
+  const counterfactual = buildCounterfactual(story, memo);
   const records = report.lines.filter((line) => line.value.trim());
   const decisions = records.find((line) => line.label === '你作出的决定');
   const actions = records.find((line) => line.label === '行动与后果');
@@ -88,6 +90,19 @@ export function EndingView({ scene }: { scene: Scene }) {
               <ul>{recap.map((line, index) => <li key={index}>{line}</li>)}</ul>
               {report.clueFound > 0 ? <p className="ending-recap__note">已记下 {report.clueFound} 条线索。</p> : null}
             </section>
+
+            {counterfactual ? <section className="ending-counterfactual" aria-labelledby="ending-counterfactual-title">
+              <div className="ending-counterfactual__head">
+                <p>本局反事实复盘 · {counterfactual.chapter}</p>
+                <h2 id="ending-counterfactual-title">如果回到最后一个真实分歧点</h2>
+              </div>
+              <div className="ending-counterfactual__routes">
+                <article><small>你实际选择</small><strong>{counterfactual.selected}</strong><span>{counterfactual.axisFrom}</span></article>
+                <span aria-hidden>⇄</span>
+                <article><small>另一条可走路线</small><strong>{counterfactual.alternative}</strong><span>{counterfactual.axisTo}</span></article>
+              </div>
+              <p>{counterfactual.note}</p>
+            </section> : null}
 
             <section className={`persona-reveal persona-reveal--${persona.code.toLowerCase()}`} aria-labelledby="persona-title">
               <div className="persona-reveal__character" aria-hidden="true">

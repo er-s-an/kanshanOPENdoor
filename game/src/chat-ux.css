@@ -8,7 +8,8 @@
   --chat-accent: var(--amber, #dfc38e);
   display: grid;
   grid-template-columns: minmax(0, 1fr) 296px;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  /* Keep a cinematic stage without allowing it to collapse the actual conversation. */
+  grid-template-rows: minmax(190px, 42%) minmax(160px, 1fr) auto;
   grid-template-areas: 'visual guide' 'conversation guide' 'compose guide';
   height: 100%; min-height: 0; overflow: hidden;
   background: var(--chat-bg);

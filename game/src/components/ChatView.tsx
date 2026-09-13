@@ -89,6 +89,14 @@ export function ChatView({ scene }: { scene: Scene }) {
   const liveLen = turns.at(-1)?.content.length || 0;
   useStickToBottom(scrollRef, [turns.length, liveLen, busy, deckOpen]);
   useEffect(() => {
+    if (!deckOpen) return;
+    window.requestAnimationFrame(() => {
+      const first = scrollRef.current?.querySelector<HTMLButtonElement>('.deckbar__btn:not(:disabled)');
+      if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      first?.focus({ preventScroll: true });
+    });
+  }, [deckOpen]);
+  useEffect(() => {
     if (!inputRef.current) return;
     inputRef.current.style.height = '50px';
     inputRef.current.style.height = `${Math.min(112, Math.max(50, inputRef.current.scrollHeight + 2))}px`;

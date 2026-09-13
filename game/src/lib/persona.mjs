@@ -176,6 +176,32 @@ function textSignals(choice) {
   return signals;
 }
 
+// One authored choice can be reused by other experience layers (for example,
+// the ending counterfactual) without giving those layers a second, drifting
+// interpretation of legacy story metadata. Explicit author signals win; old
+// stories fall back to the same structured/text compatibility rules used by
+// derivePersona.
+export function choicePersonaSignals(choice) {
+  const explicit = explicitChoiceSignals(choice);
+  const candidates = explicit.length ? explicit : [...setSignals(choice), ...textSignals(choice)];
+  const byAxis = new Map();
+  for (const signal of candidates) {
+    if (!signal?.value) continue;
+    const current = byAxis.get(signal.axis);
+    if (!current || Math.abs(signal.value) > Math.abs(current.value)) byAxis.set(signal.axis, signal);
+  }
+  return [...byAxis.values()].map((signal) => ({
+    axis: signal.axis,
+    side: signal.axis === 'source'
+      ? (signal.value > 0 ? 'evidence' : 'testimony')
+      : signal.axis === 'pace'
+        ? (signal.value > 0 ? 'push' : 'restrain')
+        : (signal.value > 0 ? 'public' : 'private'),
+    weight: Math.abs(signal.value),
+    origin: signal.origin,
+  }));
+}
+
 function findChoice(story, entry) {
   const scene = story?.scenes?.find((candidate) => candidate.id === entry.sceneId);
   if (!scene?.choices) return null;
