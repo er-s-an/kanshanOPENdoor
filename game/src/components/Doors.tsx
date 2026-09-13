@@ -8,7 +8,7 @@ import { useGame } from '../state/engine';
 import { usePrefs } from '../state/prefs';
 
 const BLUE_STORY_ID = '蓝血-2025684191967294692';
-const TRANSITION_ART = '/art/portal/liu-kanshan-opening-door-transition.jpg';
+const TRANSITION_ART = '/art/portal/liu-kanshan-opening-door-transition-v2.png';
 const BLUE_COVER = '/art/blue/blue-cover.jpg';
 const BLUE_FIRST_SCENE = '/art/blue/blue-training-hall.jpg';
 const CLOSED_DOOR = '/art/portal/door-card-closed.jpg';
