@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
-import { copyFile, mkdir, mkdtemp, rm, utimes, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, mkdtemp, readFile, readdir, rm, utimes, writeFile } from 'node:fs/promises';
 import http from 'node:http';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -78,19 +78,28 @@ function catalogFixtures() {
 async function fakeUpstream(t) {
   const requests = [];
   let reply = '这是一条本地测试回复。\n{"goalAchieved":false}';
+  let delayMs = 0;
+  let status = 200;
+  let rawStream = null;
   const server = http.createServer(async (req, res) => {
     try {
       const chunks = [];
       for await (const chunk of req) chunks.push(chunk);
       const body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
       requests.push({ path: req.url, authorization: req.headers.authorization, timestamp: req.headers['x-request-timestamp'], bodyKeys: Object.keys(body).sort(), ...body });
+      if (delayMs) await new Promise((resolve) => setTimeout(resolve, delayMs));
+      if (status !== 200) {
+        res.writeHead(status, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: { message: `fixture HTTP ${status}` } }));
+        return;
+      }
       if (body.stream === false) {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ choices: [{ message: { content: '{"goalAchieved":true}' } }] }));
         return;
       }
       res.writeHead(200, { 'Content-Type': 'text/event-stream' });
-      res.end(`data: ${JSON.stringify({ choices: [{ delta: { content: reply } }] })}\n\ndata: [DONE]\n\n`);
+      res.end(rawStream || `data: ${JSON.stringify({ choices: [{ delta: { content: reply } }] })}\n\ndata: [DONE]\n\n`);
     } catch (error) {
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: { message: error.message } }));
@@ -106,6 +115,9 @@ async function fakeUpstream(t) {
     requests,
     baseUrl: `http://127.0.0.1:${server.address().port}/v1`,
     setReply(value) { reply = value; },
+    setDelay(value) { delayMs = value; },
+    setStatus(value) { status = value; },
+    setRawStream(value) { rawStream = value; },
   };
 }
 
@@ -140,7 +152,16 @@ async function sandbox(t, fixtures = { '00-valid.json': storyFixture() }) {
     await Promise.all([...children].map(stop));
     await rm(directory, { recursive: true, force: true });
   });
-  const start = async ({ upstream, configured = true, includeDev = false, model = SERVER_MODEL, baseUrl = upstream.baseUrl } = {}) => {
+  const start = async ({
+    upstream,
+    configured = true,
+    includeDev = false,
+    model = SERVER_MODEL,
+    baseUrl = upstream.baseUrl,
+    rateLimit,
+    rateWindowMs,
+    dailyLimit,
+  } = {}) => {
     // Intentionally do not inherit process.env: all upstream traffic is local and secrets are fake.
     const env = {
       CHAT_HOST: '127.0.0.1',
@@ -150,6 +171,9 @@ async function sandbox(t, fixtures = { '00-valid.json': storyFixture() }) {
       ZHIHU_SECRET_FILE: path.join(directory, 'intentionally-missing-access-secret'),
       ...(configured ? { ZHIHU_ACCESS_SECRET: FAKE_SECRET } : {}),
       ...(includeDev ? { KANSHAN_INCLUDE_DEV_STORIES: '1' } : {}),
+      ...(rateLimit !== undefined ? { KANSHAN_CHAT_RATE_LIMIT: String(rateLimit) } : {}),
+      ...(rateWindowMs !== undefined ? { KANSHAN_CHAT_RATE_WINDOW_MS: String(rateWindowMs) } : {}),
+      ...(dailyLimit !== undefined ? { KANSHAN_CHAT_DAILY_LIMIT: String(dailyLimit) } : {}),
     };
     const child = spawn(process.execPath, [path.join(serverDirectory, 'gateway.mjs')], { cwd: gameDirectory, env, stdio: ['ignore', 'pipe', 'pipe'] });
     children.add(child);
@@ -176,8 +200,8 @@ async function sandbox(t, fixtures = { '00-valid.json': storyFixture() }) {
         const response = await request(route);
         return { status: response.status, body: await response.json() };
       },
-      chat: async (body) => {
-        const response = await request('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      chat: async (body, headers = {}) => {
+        const response = await request('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body: JSON.stringify(body) });
         const raw = await response.text();
         const events = raw.split('\n').filter((line) => line.startsWith('data:')).map((line) => JSON.parse(line.slice(5).trim()));
         assert.ok(events.length > 0, `Expected SSE events, received ${response.status}: ${raw}`);
@@ -185,7 +209,7 @@ async function sandbox(t, fixtures = { '00-valid.json': storyFixture() }) {
       },
     };
   };
-  return { start, writeStory };
+  return { start, writeStory, cacheDirectory: path.join(serverDirectory, '.cache') };
 }
 
 const chatRequest = (overrides = {}) => ({ storyId: 'preview-story', sceneId: 'chat', history: [{ role: 'user', content: '你好。' }], ...overrides });
@@ -448,4 +472,85 @@ test('a shared disk cache is isolated by server model and upstream base URL', as
   assert.equal(upstream.requests[2].path, '/v2/chat/completions');
   assert.equal(doneEvent(await third.chat(chatRequest())).cache, 'hit');
   assert.equal(upstream.requests.length, 3);
+});
+
+test('concurrent cache misses share one upstream call and leave one complete atomic cache file', async (t) => {
+  const upstream = await fakeUpstream(t);
+  upstream.setDelay(150);
+  const files = await sandbox(t);
+  const gateway = await files.start({ upstream });
+  const [first, second] = await Promise.all([
+    gateway.chat(chatRequest()),
+    gateway.chat(chatRequest()),
+  ]);
+  assert.equal(doneEvent(first).cache, 'miss');
+  assert.equal(doneEvent(second).cache, 'miss');
+  assert.equal(upstream.requests.length, 1, 'single-flight must collapse identical concurrent misses');
+
+  const cacheFiles = await readdir(files.cacheDirectory);
+  assert.equal(cacheFiles.filter((name) => name.endsWith('.json')).length, 1);
+  assert.equal(cacheFiles.some((name) => name.endsWith('.tmp')), false);
+  const cached = JSON.parse(await readFile(path.join(files.cacheDirectory, cacheFiles.find((name) => name.endsWith('.json'))), 'utf8'));
+  assert.equal(cached.reply, '这是一条本地测试回复。');
+  assert.equal(doneEvent(await gateway.chat(chatRequest())).cache, 'hit');
+  assert.equal(upstream.requests.length, 1);
+});
+
+test('a partial reply with an embedded finish error is delivered but never cached', async (t) => {
+  const upstream = await fakeUpstream(t);
+  upstream.setRawStream([
+    `data: ${JSON.stringify({ choices: [{ delta: { content: '只传到一半的台词' } }] })}`,
+    `data: ${JSON.stringify({ error: { message: 'fixture stream failure' } })}`,
+    'data: [DONE]',
+    '',
+  ].join('\n\n'));
+  const files = await sandbox(t);
+  const gateway = await files.start({ upstream });
+  const first = doneEvent(await gateway.chat(chatRequest()));
+  const second = doneEvent(await gateway.chat(chatRequest()));
+  assert.equal(first.note, 'upstream_finish_error');
+  assert.equal(second.note, 'upstream_finish_error');
+  assert.equal(first.reply, '只传到一半的台词');
+  assert.equal(upstream.requests.length, 2, 'a later request must retry instead of replaying a partial cache');
+  const cacheFiles = await readdir(files.cacheDirectory).catch(() => []);
+  assert.equal(cacheFiles.some((name) => name.endsWith('.json') || name.endsWith('.tmp')), false);
+});
+
+test('upstream 429 remains a recoverable RATE_LIMIT error and is not cached', async (t) => {
+  const upstream = await fakeUpstream(t);
+  upstream.setStatus(429);
+  const files = await sandbox(t);
+  const gateway = await files.start({ upstream });
+  assertError(await gateway.chat(chatRequest()), 'RATE_LIMIT');
+  upstream.setStatus(200);
+  doneEvent(await gateway.chat(chatRequest()));
+  assert.equal(upstream.requests.length, 2);
+});
+
+test('local quota guards trust Cloudflare client IP only over loopback and enforce a global reserve', async (t) => {
+  const upstream = await fakeUpstream(t);
+  const files = await sandbox(t);
+  const gateway = await files.start({ upstream, rateLimit: 1, rateWindowMs: 60_000, dailyLimit: 2 });
+  const from = (ip, text) => gateway.chat(chatRequest({ history: [{ role: 'user', content: text }] }), { 'CF-Connecting-IP': ip });
+
+  doneEvent(await from('203.0.113.10', '第一位玩家的问题'));
+  assertError(await from('203.0.113.10', '同一位玩家立即追问'), 'RATE_LIMIT');
+  doneEvent(await from('203.0.113.11', '第二位玩家的问题'));
+  assertError(await from('203.0.113.12', '第三位玩家触发全局保留线'), 'RATE_LIMIT');
+  assert.equal(upstream.requests.length, 2, 'locally limited requests must never reach upstream');
+});
+
+test('spoofed X-Forwarded-For cannot bypass the direct-peer rate limit', async (t) => {
+  const upstream = await fakeUpstream(t);
+  const files = await sandbox(t);
+  const gateway = await files.start({ upstream, rateLimit: 1, rateWindowMs: 60_000, dailyLimit: 10 });
+  doneEvent(await gateway.chat(
+    chatRequest({ history: [{ role: 'user', content: '第一次请求' }] }),
+    { 'X-Forwarded-For': '198.51.100.20' },
+  ));
+  assertError(await gateway.chat(
+    chatRequest({ history: [{ role: 'user', content: '伪造另一个地址' }] }),
+    { 'X-Forwarded-For': '198.51.100.21' },
+  ), 'RATE_LIMIT');
+  assert.equal(upstream.requests.length, 1);
 });
