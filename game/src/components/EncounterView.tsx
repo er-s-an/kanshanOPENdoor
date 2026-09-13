@@ -3,6 +3,7 @@ import type { Scene } from '../types';
 import { actionLocked, completedOutcome } from '../lib/rules.mjs';
 import { streamChat } from '../lib/api';
 import { useGame } from '../state/engine';
+import { SceneVisual } from './SceneVisual';
 
 /** Optional character performance. It has no access to dispatch or state effects. */
 function CharacterAside({ scene }: { scene: Scene }) {
@@ -71,6 +72,7 @@ export function EncounterView({ scene }: { scene: Scene }) {
   const last = log.at(-1);
   return (
     <section className="encounter">
+      {scene.image ? <SceneVisual scene={scene} fallbackLabel={story?.story.title || '行动现场'} variant="encounter" className="encounter__visual" /> : null}
       <header className="encounter__head">
         <span className="encounter__eyebrow">章节试玩 · 你来决定怎么做</span>
         <h1>{scene.chapter}</h1>

@@ -2,6 +2,7 @@
 .ending.ending--refined { min-height:0; background:var(--bg, #111815); }
 .ending--refined .ending__scroll { padding:28px 24px calc(var(--sab, 0px) + 40px); }
 .ending--refined .ending__body { max-width:660px; }
+.ending--refined .ending__visual { width:100%; }
 .ending-read { padding-bottom:24px; }
 .ending-result { border-top:1px solid var(--line, #344239); padding:28px 0 24px; }
 .ending-result__eyebrow { margin:0 0 12px; color:var(--amber, #dfc38e); font-size:14px; }
