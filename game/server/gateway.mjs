@@ -13,10 +13,11 @@
 // 安全红线：Access Secret 只出现在请求头中，绝不写日志、绝不回传前端。
 // ------------------------------------------------------------------
 import http from 'node:http';
-import { readFile, readdir, stat, mkdir } from 'node:fs/promises';
+import { readFile, readdir, stat, mkdir, rename, rm, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { isIP } from 'node:net';
 import { fileURLToPath } from 'node:url';
 import { clientStory, isAvailableStory, storyMeta } from './catalog.mjs';
 import { planDialogue, finishDialogue, dialogueInstruction } from './dialogue.mjs';
@@ -35,6 +36,13 @@ const MAX_CHOICE_SUMMARY_CHARS = 8_000;
 const MAX_ID_CHARS = 160;
 const LLM_TIMEOUT_MS = 55_000;
 const STREAM_IDLE_MS = 25_000;
+
+function envInteger(name, fallback, max) {
+  const raw = process.env[name];
+  if (raw === undefined || raw.trim() === '') return fallback;
+  const value = Number(raw);
+  return Number.isSafeInteger(value) && value >= 0 && value <= max ? value : fallback;
+}
 
 // ---------------------------------------------------------------- env
 async function loadEnv() {
@@ -61,6 +69,11 @@ const NO_CACHE = process.env.KANSHAN_NO_CACHE === '1';
 const INCLUDE_DEV_STORIES = process.env.KANSHAN_INCLUDE_DEV_STORIES === '1';
 const CACHE_DIR = path.join(ROOT, 'server', '.cache');
 const STATIC_DIR = process.env.KANSHAN_STATIC_DIR || (existsSync(path.join(ROOT, 'dist')) ? path.join(ROOT, 'dist') : '');
+// Only actual upstream calls consume these in-memory limits. Cache hits and
+// single-flight followers are free. Zero disables the corresponding guard.
+const CHAT_RATE_LIMIT = envInteger('KANSHAN_CHAT_RATE_LIMIT', 60, 10_000);
+const CHAT_RATE_WINDOW_MS = envInteger('KANSHAN_CHAT_RATE_WINDOW_MS', 10 * 60_000, 24 * 60 * 60_000);
+const CHAT_DAILY_LIMIT = envInteger('KANSHAN_CHAT_DAILY_LIMIT', 4_500, 100_000);
 
 // ------------------------------------------------------------ secrets
 // 每次请求解析：环境变量优先，其次本地文件（带 mtime 缓存），均失败则降级。
@@ -183,6 +196,101 @@ function sseHeaders() {
 }
 
 const hashOf = (s) => crypto.createHash('sha1').update(s).digest('hex');
+
+async function writeCacheAtomic(cachePath, value) {
+  await mkdir(CACHE_DIR, { recursive: true });
+  const temporary = `${cachePath}.${process.pid}.${crypto.randomUUID()}.tmp`;
+  try {
+    await writeFile(temporary, JSON.stringify(value), 'utf8');
+    await rename(temporary, cachePath);
+  } finally {
+    await rm(temporary, { force: true }).catch(() => {});
+  }
+}
+
+// A cache miss can arrive several times at once (double click, reconnect,
+// multiple tabs). Share only cacheable calls: an explicit reroll still means a
+// fresh upstream request.
+const inflight = new Map();
+async function singleFlight(key, enabled, task) {
+  if (!enabled) return task();
+  const running = inflight.get(key);
+  if (running) return running;
+  const promise = Promise.resolve().then(task);
+  inflight.set(key, promise);
+  try {
+    return await promise;
+  } finally {
+    if (inflight.get(key) === promise) inflight.delete(key);
+  }
+}
+
+function normalizedIp(value) {
+  if (Array.isArray(value)) value = value[0];
+  if (typeof value !== 'string') return null;
+  let candidate = value.trim();
+  if (!candidate || candidate.includes(',')) return null;
+  if (candidate.startsWith('::ffff:') && isIP(candidate.slice(7)) === 4) candidate = candidate.slice(7);
+  return isIP(candidate) ? candidate : null;
+}
+
+function isLoopback(ip) {
+  return ip === '::1' || (isIP(ip) === 4 && ip.startsWith('127.'));
+}
+
+function clientRateKey(req) {
+  const peer = normalizedIp(req.socket?.remoteAddress);
+  // cloudflared connects to this gateway locally. Trust its canonical header
+  // only across that loopback boundary; never trust X-Forwarded-For or a
+  // client-supplied CF header received from a non-local peer.
+  if (peer && isLoopback(peer)) {
+    const cloudflare = normalizedIp(req.headers['cf-connecting-ip']);
+    if (cloudflare) return `cf:${cloudflare}`;
+  }
+  return `peer:${peer || 'unknown'}`;
+}
+
+const clientRateWindows = new Map();
+let dailyRateWindow = { day: '', count: 0 };
+let rateChecks = 0;
+
+function utcDay(now) {
+  return new Date(now).toISOString().slice(0, 10);
+}
+
+function takeUpstreamSlot(clientKey, now = Date.now()) {
+  const day = utcDay(now);
+  if (dailyRateWindow.day !== day) dailyRateWindow = { day, count: 0 };
+  const current = clientRateWindows.get(clientKey);
+  const client = !current || now - current.startedAt >= CHAT_RATE_WINDOW_MS
+    ? { startedAt: now, count: 0 }
+    : current;
+
+  if ((CHAT_RATE_LIMIT > 0 && client.count >= CHAT_RATE_LIMIT)
+      || (CHAT_DAILY_LIMIT > 0 && dailyRateWindow.count >= CHAT_DAILY_LIMIT)) return false;
+
+  if (CHAT_RATE_LIMIT > 0) {
+    client.count += 1;
+    clientRateWindows.set(clientKey, client);
+  }
+  if (CHAT_DAILY_LIMIT > 0) dailyRateWindow.count += 1;
+
+  // Bound memory if many distinct addresses reach the public tunnel.
+  rateChecks += 1;
+  if (rateChecks % 256 === 0 || clientRateWindows.size > 4_096) {
+    for (const [key, value] of clientRateWindows) {
+      if (now - value.startedAt >= CHAT_RATE_WINDOW_MS) clientRateWindows.delete(key);
+    }
+    while (clientRateWindows.size > 4_096) clientRateWindows.delete(clientRateWindows.keys().next().value);
+  }
+  return true;
+}
+
+function localRateLimitError() {
+  const error = new Error('LOCAL_RATE_LIMIT');
+  error.code = 'LOCAL_RATE_LIMIT';
+  return error;
+}
 
 // ------------------------------------------------ LLM 回复容错解析
 // 期望模型输出：角色台词 + 另起一行 JSON {"goalAchieved":true|false}
@@ -497,6 +605,7 @@ async function handleChat(req, res) {
   // Player history is untrusted data, not another system instruction or NPC knowledge.
   if (choiceSummary) messages.push({ role: 'user', content: `【未经验证的玩家经历记录，仅供理解玩家叙述】\n${JSON.stringify({ choiceSummary })}` });
   messages.push(...windowed);
+  const rateKey = clientRateKey(req);
 
   // Compiled dialogue owns both the evidence and its goal. This path never asks
   // a second model to judge progress, nor reads grant fields from model output.
@@ -507,7 +616,7 @@ async function handleChat(req, res) {
       { role: 'system', content: rewriteSystem },
       { role: 'user', content: `请输出加工后的对白：${npc.name}回应玩家。` },
     ];
-    await handleCompiledDialogue({ res, data, scene, plan, system: rewriteSystem, messages: rewriteMessages, noCache });
+    await handleCompiledDialogue({ res, data, scene, plan, system: rewriteSystem, messages: rewriteMessages, noCache, rateKey });
     return;
   }
 
@@ -535,15 +644,43 @@ async function handleChat(req, res) {
     return res.end();
   }
 
-  let out;
+  const cacheEnabled = !noCache && !NO_CACHE;
+  let generated;
   try {
-    // 缓冲后统一放行：出戏文案不进气泡（旧式 goal 对话同样处理）
-    out = await callZhida(messages, secret, () => {});
+    generated = await singleFlight(cacheKey, cacheEnabled, async () => {
+      if (!takeUpstreamSlot(rateKey)) throw localRateLimitError();
+      // 缓冲后统一放行：出戏文案不进气泡（旧式 goal 对话同样处理）
+      const out = await callZhida(messages, secret, () => {});
+      if (isOffline(out.reply)) return { out, goalAchieved: false };
+
+      let goalAchieved = hasGoal && out.goalAchieved === true;
+      if (!out.finishError && hasGoal && !out.hasMarker && out.reply) {
+        // The fallback judge is a second billable call. If the local guard is
+        // exhausted, preserve the dialogue and conservatively keep progress false.
+        goalAchieved = takeUpstreamSlot(rateKey)
+          ? await judgeGoal({ goal: scene.goal, windowed, reply: out.reply, secret })
+          : false;
+      }
+
+      // A stream-level finish error means the reply may be only a prefix. It
+      // can be shown for continuity but must never become a long-lived cache hit.
+      if (cacheEnabled && !out.finishError && out.reply.trim()) {
+        try {
+          await writeCacheAtomic(cachePath, { reply: out.reply, goalAchieved, model: MODEL, ts: Date.now() });
+        } catch {
+          /* 缓存写失败不影响主流程 */
+        }
+      }
+      return { out, goalAchieved };
+    });
   } catch (err) {
     const tag = String(err.message);
     let code = 'UPSTREAM_ERROR';
     let text = '时空信号中断：远方的传讯塔似乎出了点问题，稍后再试吧。';
-    if (tag.startsWith('TIMEOUT')) {
+    if (tag.startsWith('LOCAL_RATE_LIMIT')) {
+      code = 'RATE_LIMIT';
+      text = '时空信号中断：传讯太频繁了，请稍等一会儿再试。';
+    } else if (tag.startsWith('TIMEOUT')) {
       code = 'TIMEOUT';
       text = '时空信号中断：对方沉默太久，这次传讯超时了。';
     } else if (tag.startsWith('HTTP_AUTH')) {
@@ -562,17 +699,12 @@ async function handleChat(req, res) {
     writeEvent(res, { type: 'error', code, message: text });
     return res.end();
   }
+  const { out, goalAchieved } = generated;
 
   // 出戏拒答 → 走降级（前端按时空信号中断处理，可继续游戏）
   if (isOffline(out.reply)) {
     writeEvent(res, { type: 'error', code: 'OFFLINE', message: '时空信号中断：对方此刻心不在焉，换个说法再试试。' });
     return res.end();
-  }
-
-  // 模型没给 goalAchieved 尾巴时，用裁判调用兜底判定（出错则维持 false）
-  let goalAchieved = hasGoal && out.goalAchieved === true;
-  if (hasGoal && !out.hasMarker && out.reply) {
-    goalAchieved = await judgeGoal({ goal: scene.goal, windowed, reply: out.reply, secret });
   }
 
   if (out.finishError) {
@@ -589,23 +721,10 @@ async function handleChat(req, res) {
     writeEvent(res, { type: 'done', reply: out.reply, goalAchieved, clues: [], mode: 'ai', cache: 'miss', model: MODEL });
   }
 
-  // 成功后写缓存（省额度）
-  if (!noCache && !NO_CACHE) {
-    try {
-      await mkdir(CACHE_DIR, { recursive: true });
-      await (await import('node:fs/promises')).writeFile(
-        cachePath,
-        JSON.stringify({ reply: out.reply, goalAchieved, model: MODEL, ts: Date.now() }),
-        'utf8',
-      );
-    } catch {
-      /* 缓存写失败不影响主流程 */
-    }
-  }
   res.end();
 }
 
-async function handleCompiledDialogue({ res, data, scene, plan, system, messages, noCache }) {
+async function handleCompiledDialogue({ res, data, scene, plan, system, messages, noCache, rateKey }) {
   const scripted = (reason) => {
     const result = finishDialogue(plan, { mode: 'scripted', reason });
     writeEvent(res, { type: 'delta', content: result.reply });
@@ -615,7 +734,8 @@ async function handleCompiledDialogue({ res, data, scene, plan, system, messages
   if (plan.blocked) return scripted('REQUIRES_CLUES');
   const cacheKey = hashOf(JSON.stringify({ version: 3, storyId: data.story.id, sceneId: scene.id, baseUrl: BASE_URL, model: MODEL, system, messages }));
   const cachePath = path.join(CACHE_DIR, `${cacheKey}.json`);
-  if (!noCache && !NO_CACHE) {
+  const cacheEnabled = !noCache && !NO_CACHE;
+  if (cacheEnabled) {
     try {
       const cached = JSON.parse(await readFile(cachePath, 'utf8'));
       if (typeof cached.reply === 'string' && cached.reply.trim()) {
@@ -628,25 +748,32 @@ async function handleCompiledDialogue({ res, data, scene, plan, system, messages
   }
   const secret = await resolveSecret();
   if (!secret) return scripted('NO_KEY');
-  let out;
+  let result;
   try {
-    // 先缓冲不流式展示：检出戏通过后才放行，拒答/出戏文案绝不进气泡
-    out = await callZhida(messages, secret, () => {});
-    if (out.finishError || !out.reply.trim()) return scripted('UPSTREAM_ERROR');
-    if (isOffline(out.reply)) return scripted('OFFLINE');
-  } catch {
+    result = await singleFlight(cacheKey, cacheEnabled, async () => {
+      if (!takeUpstreamSlot(rateKey)) throw localRateLimitError();
+      // 先缓冲不流式展示：检出戏通过后才放行，拒答/出戏文案绝不进气泡
+      const out = await callZhida(messages, secret, () => {});
+      if (out.finishError || !out.reply.trim()) throw new Error('UPSTREAM_ERROR');
+      if (isOffline(out.reply)) throw new Error('OFFLINE');
+      const completed = finishDialogue(plan, { reply: out.reply });
+      if (cacheEnabled) {
+        try {
+          await writeCacheAtomic(cachePath, { reply: completed.reply, model: MODEL, ts: Date.now() });
+        } catch {
+          /* cache is optional */
+        }
+      }
+      return completed;
+    });
+  } catch (error) {
+    if (String(error?.message).startsWith('LOCAL_RATE_LIMIT')) return scripted('RATE_LIMIT');
+    if (String(error?.message).startsWith('OFFLINE')) return scripted('OFFLINE');
     return scripted('UPSTREAM_ERROR');
   }
-  const result = finishDialogue(plan, { reply: out.reply });
   writeEvent(res, { type: 'delta', content: result.reply });
   writeEvent(res, { type: 'done', ...result, cache: 'miss', model: MODEL });
   res.end();
-  if (!noCache && !NO_CACHE) {
-    try {
-      await mkdir(CACHE_DIR, { recursive: true });
-      await (await import('node:fs/promises')).writeFile(cachePath, JSON.stringify({ reply: result.reply, model: MODEL, ts: Date.now() }), 'utf8');
-    } catch { /* cache is optional */ }
-  }
 }
 
 // ------------------------------------------------------------ 出戏检测与改写式提示词
