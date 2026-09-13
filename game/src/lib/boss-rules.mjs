@@ -154,8 +154,10 @@ export function advanceBossCase(scene, run) {
     return decision(current, 'case-locked', { caseId: bossCase?.id });
   }
   if (current.caseIndex + 1 >= cases.length) {
-    const next = { ...current, phase: 'resolved', outcome: 'truth' };
-    return decision(next, 'truth', { accepted: true, destination: scene.boss.endings.truth, caseId: bossCase.id });
+    const selectedClaim = scene.boss.claims?.find((claim) => claim.id === current.claimId);
+    const outcome = selectedClaim?.resolution === 'fold' ? 'fold' : 'truth';
+    const next = { ...current, phase: 'resolved', outcome };
+    return decision(next, outcome, { accepted: true, destination: scene.boss.endings[outcome], caseId: bossCase.id });
   }
   const next = { ...current, caseIndex: current.caseIndex + 1 };
   return decision(next, 'advanced', { accepted: true, caseId: cases[next.caseIndex].id });

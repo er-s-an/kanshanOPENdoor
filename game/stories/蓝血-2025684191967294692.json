@@ -1695,9 +1695,10 @@
             "id": "overreach",
             "certainty": "hypothesis",
             "statement": "培训组织正在甄别特定人群，并安排人跟踪我。",
-            "summary": "传播感更强，但越过了现有证据的边界。",
-            "credibility": -18,
-            "exposure": 28
+        "summary": "传播感更强，但越过了现有证据的边界。",
+        "credibility": -18,
+        "exposure": 28,
+        "resolution": "fold"
           },
           {
             "id": "record",

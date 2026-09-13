@@ -196,6 +196,8 @@ export interface BossClaimOption {
   certainty: 'fact' | 'hypothesis';
   credibility?: number;
   exposure?: number;
+  /** A claim that already exceeds the evidence must be revised even if every case is answered. */
+  resolution?: 'truth' | 'fold';
 }
 export interface BossData {
   /** 问题页标题（知乎形态） */

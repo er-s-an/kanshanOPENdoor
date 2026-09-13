@@ -45,3 +45,18 @@ test('蓝血：强证据推进，越界呈证不消耗记录也不阻断复核',
   assert.equal(completed.status, 'truth');
   assert.equal(completed.destination, 'e_true');
 });
+
+test('蓝血：越界主张即使逐项回应，也必须先回到草稿收窄', () => {
+  let run = createBossRun(scene);
+  run = selectBossClaim(scene, run, 'overreach').run;
+
+  for (const clue of ['clue_physical', 'clue_test_difference', 'clue_tail_pattern']) {
+    const step = presentBossEvidence(scene, run, clue, held);
+    assert.equal(step.status, 'supported');
+    const advanced = advanceBossCase(scene, step.run);
+    run = advanced.run;
+  }
+
+  assert.equal(run.outcome, 'fold');
+  assert.equal(run.phase, 'resolved');
+});
