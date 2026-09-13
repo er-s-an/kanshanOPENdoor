@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import type { Scene } from '../types';
 import { colorFor } from './Art';
@@ -52,12 +52,25 @@ export function sceneVisualAlt(scene: Scene, fallbackLabel: string): string {
 export function SceneVisual({ scene, fallbackLabel, variant = 'narrative', className = '' }: SceneVisualProps) {
   const colors = useMemo(() => colorFor(scene.id), [scene.id]);
   const [state, setState] = useState<'loading' | 'ready' | 'failed'>(scene.image ? 'loading' : 'failed');
+  const imageRef = useRef<HTMLImageElement>(null);
   const alt = sceneVisualAlt(scene, fallbackLabel);
   const image = scene.image ? resolveImage(scene.image) : '';
 
   useEffect(() => {
-    setState(scene.image ? 'loading' : 'failed');
-  }, [scene.id, scene.image]);
+    const element = imageRef.current;
+    if (!image) {
+      setState('failed');
+      return;
+    }
+    // Cached images can finish before React attaches onLoad; use the intrinsic
+    // dimensions as the authoritative settled state rather than leaving the
+    // reserved frame in its loading placeholder forever.
+    if (element?.complete) {
+      setState(element.naturalWidth > 0 ? 'ready' : 'failed');
+      return;
+    }
+    setState('loading');
+  }, [image]);
 
   const style = {
     '--scene-visual-a': colors.a,
@@ -70,6 +83,7 @@ export function SceneVisual({ scene, fallbackLabel, variant = 'narrative', class
       style={style}
     >
       {image && state !== 'failed' ? <img
+        ref={imageRef}
         src={image}
         alt={alt}
         width="1600"
