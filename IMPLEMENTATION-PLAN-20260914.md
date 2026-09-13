@@ -4,7 +4,7 @@
 
 把已入库素材从“背景装饰”变成玩家可感知、可操作、可推理的游戏对象，优先完成《蓝血》从门厅进入到阶段结局的完整竖切，同时保持另外两个故事可进入、可游玩。
 
-玩家旅程以 [docs/PLAYER-JOURNEY.md](docs/PLAYER-JOURNEY.md) 为基线；调查人格与分享卡以 [docs/INVESTIGATOR-PERSONAS.md](docs/INVESTIGATOR-PERSONAS.md) 为基线。主流程按状态推进，不规定目标游玩时长。
+玩家旅程以 [docs/PLAYER-JOURNEY.md](docs/PLAYER-JOURNEY.md) 为基线；调查人格与分享卡以 [docs/INVESTIGATOR-PERSONAS.md](docs/INVESTIGATOR-PERSONAS.md) 为基线；最终以 [docs/PLAYER-QA-20260914.md](docs/PLAYER-QA-20260914.md) 做新玩家验收。主流程按状态推进，不规定目标游玩时长。
 
 本轮不改 `pipeline/stories/api/**`，不替原作开放片段补写幕后真相，也不把模型自由文本作为线索授予或胜负裁决依据。
 
