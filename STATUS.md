@@ -1,78 +1,100 @@
 # 看山任意门 · 开发状态
 
-> **当前版本：GDD 垂直切片 v3（2026-09-14，kanshan-v2 副本）**。在 v2.2 手作章节之上叠加「评论区对线 Boss 战」：调查员世界观（刘看山=系统）、三段式循环、三通道线索、折叠轮回、彩蛋指控。以 [GDD.md](GDD.md) 为玩法权威。
-> **并行副本**：施工在 `/Users/xiejiachen/zhihu-hackathon-2026/kanshan-v2`，原 kanshan-portal 保持可演示不动。
-> **已实玩验证（ego space 18，8790→8791 端口）**：错选嫌疑人→折叠→e_fold（普通结局徽章）→轮回差分；选对→3 轮呈证（赞同 47→1071→3119→4143）→收网→e_true（传说 ★★★ 徽章）；彩蛋 clue_landmark→e_egg（彩蛋 ✦）。全链路 PASS。
-> **关键修复**：合并版引擎 GOTO reducer 白名单只认 next/goto，boss 场景多目的地被静默拒绝——已加 boss 分支（truth/fold/egg  endings）。
-> **素材（9/14 已全量上线）**：GPT Image 19 张蓝血场景图+3 张 NPC 头像（`/art/blue/*.jpg`，1600 宽）已接 24 个场景；官方刘看山素材（6 GIF+立绘）进门厅引导/Boot 迎接/DoorFx 转场；portal-hall 门厅背景、门卡片故事卡（悬停开门）；Boss 战物证卡（clue→试卷/网页/目击/陈述底板精确映射）+线索簿软木板底纹。62MB→20MB。全链路浏览器复检 PASS（门厅/对话/Boss 呈证气泡物证卡/无效呈证反驳）。
-> **部署（9/14 已上线）**：公网 **https://kanshan.makebook.hk2048.online**（主）+ https://kanshan.hk2048.online（备用，同服务）—— cloudflared 命名隧道 `kanshan-hackathon`（id 8e520862，config `~/.cloudflared/kanshan.yml`，knowfeed 隧道与 makebook 主站均未动）。本地 8791 网关（kimi）经隧道出公网。重启：`bash kanshan-v2/game/start-demo.sh`。注意：/api/chat 无鉴权，公开后 LLM 用量走 kimi 额度，磁盘缓存吸收重复提问；如出现异常用量再限流。
-> **待办**：项目广场提交占位（用户手动，需公网链接=已有）；计划书（9/15 10:00 必交）；提交包过滤；西游/近视眼 Boss 化推广（如时间允许）。
+> 更新时间：2026-09-14
+>
+> 当前代码基线：`main@dc8bed6` 本地集成快照。
+>
+> 发布口径：本地核心流程已实现并进入验收；最终新存档 Ego 全流程和 canonical 公网版本尚未验收完成，不能宣称今天的整条链路已经发布。
 
-> **LLM 现状（9/14 定案）**：zhida 全系（fast/thinking）拒绝角色扮演（产品层「AI 搜索」对齐，冒烟实测）；用户拍板**演示用 kimi**（赛事规则允许任选模型）。网关提示词架构改为「文本加工」：事实素材+玩家原话→对白（buildRewritePrompt），模型只加工不扮演；出戏检测（OFFLINE_RE）+ 缓冲放行，拒答文案绝不进气泡；剧本主题确定性授线索。实测：张薇能直接回应玩家具体提问且证言事实完整保留（kimi-for-coding，8791 网关运行中）。zhida 留作非扮演用途（人格侧写/复盘解读，roadmap）。
+## 当前结论
 
----
+《蓝血》已经具备“刘看山接站 → 玩家选门 → 开门 → 故事简报 → 社区/私信 → 搜证/查证 → 公开论证 → 阶段结局 → 八型人格 → 保存/分享”的本地核心路径。自动化 76/76、TypeScript 检查和生产构建通过。
 
-> **历史版本：完整首章重做 v2.2（2026-09-13）**。此前两段 playable 小样例退出默认入口。新版恢复三篇官方多幕故事；蓝血 27 节点、近视眼 24 节点，主线聊天／搜证／查证／行动／结算已接通。以 [PRD-v2.2](PRD-v2.2.md) 和 [本次修复验收](docs/archive/REBUILD-ACCEPTANCE-20260913.md) 为历史事实，下面旧记录按历史阅读。（文档体系 9/14 已整理：过期件入 docs/archive/，索引见 README）
+这仍不是最终 Release PASS。事实/证言/假设统一关系板、反事实复盘、OAuth/真实热榜、5–8 人盲测，以及最终 Ego 和公网验收尚未完成。
 
+## 2026-09-14 已实现
 
-> 2026-09-13 更新：产品方向以 [PRD-v2.1.md](docs/archive/PRD-v2.1.md) 的「玩法库 × 前人留痕」为准；已验证实现及后续交接见 [开发记录](docs/archive/DEVELOPMENT-20260913.md)。下文保留凌晨的 V1 开发历史，不代表 V2 已全部实现。
+### 入口与入戏
 
-## 项目
-- 知乎黑客松 2026 校园新锐季，赛道：跨次元游乐场（AI 游戏与互动叙事）
-- 当前产品方向：多类型故事适配不同主玩法；剧本杀是玩法库的一类。V1 搜证/指认路径保留兼容，V2.1 补充异步互助设计。
-- 演示形态不变：盐选壳页 + "穿进这个故事"入口 → 刘看山带路 → 剧本杀循环（入局→搜证→指认→复盘）
-- 赛程：9/13 10:00 开赛 → 9/15 10:00 交件 → 9/19 决赛（798/腾讯会议）
-- 模型选择：用户补充的赛事规则明确底层模型自由选择。当前已验证知乎直答；模型与凭证由服务端配置。
+- 根路径先显示刘看山接站，不默认进入故事。
+- 玩家确认后才进入故事库并亲手选门；普通 `?story=` 只突出目标故事，`?scene=` 仅作内部评审暗门。
+- 选择故事后播放刘看山开门转场；新存档第一幕前出现“身份 / 异常 / 第一步”三句故事简报。
+- 续玩不会重复简报；素材失败时保留文字入口与可继续路径。
 
-## 两档文本框架（PRD §4，诚实框架）
-- A 档完整闭环：完整故事 → 指认全书真凶 → 真相复盘
-- B 档序章模式：API 试读（~3000 字截断）→ 指认降级为"本章内可解疑点"（从试读文本实有内容提取，不发明）→ 推理报告+站队+引流原文
-- 管线 analyze 自动检测截断（completeness）→ design 自动选档；API 若放出完整章节则自动升 A 档
+### 社区、搜证与公开论证
 
-## 凭证与 API 事实（9/13 实测）
-- Access Secret：`~/zhihu-hackathon-2026/.access_secret`（600），已配 zhihu-cli 钥匙串
-- zhihu-cli **0.6.0**：`"$HOME/Library/Application Support/zhihu-cli/current/zhihu-cli"`（search/hot/answer/me/knowledge/question/quota；**无 story 命令**，故事走裸 HTTP）
-- 配额口径存在冲突，不能把旧快照当当前余额：凌晨历史快照记录过**直答 5000**、搜索 5000×2、热榜 100；仓库内当前开放平台说明则写搜索 5000×2、热榜 100、**直答 100**。上线设计暂按更保守的直答 100 次/日，实际剩余额度只以个人中心「用量统计」为准。
-- **zhida-agent 不支持多轮上下文**——NPC chat 只能用 fast/thinking；thinking 流式先吐 reasoning_content；`--output text` 必须配 `--stream`
-- 故事接口（无需鉴权不占额度）：`GET https://api.zhihu.com/km-indep-home/hackathon/v2/story/list`（20 篇）+ `/story/{work_id}`。**关键事实：正文全部截断在恰好 ~3000 字、断在剧情中段**（19/20 恰好 3000 字；字段名 `chapter_name`）——付费连载试读章节，坐实"互动预告片"定位
-- 知识详情接口 `/knowledge/list` 10 条全 400；按官方文档 **9/13 10:00 才完全开放 CLI/API**，到点再验证
-- 文档在 skill 0.7.1：`/tmp/skill071/zhihu/references/hackathon-content-api.md`；本轮已读 Skill 0.7.2 的 OAuth 与用户资料文档，见 docs/ZHIHU-SOCIAL-API-NOTES.md
-- 官方 skill 包：~/zhihu-hackathon-2026/skill/zhihu-hackathon/；OAuth 应用未注册（人气奖登录数用）
+- 《蓝血》新增可玩 `post` 社区场景：14 条帖子回应、4 个可追查虚构账号，以及各自的评论/私信详情。
+- 账号身份、知情边界、气氛楼与可行动楼层分开；选错人不授证、不扣资源、不锁死。
+- 未发现物件不预列；确定性搜索、场景热点、消歧、证据纸、查证和无结果反馈已经接通。
+- 原 Boss 已重构为有边界的公开论证；无关或越界证据不消耗，可信度与暴露度承担真实玩法反馈。
 
-## 故事缓存纪律（硬性）
-- 接口用一次少一次，**已全部落盘，禁止再调**：`pipeline/stories/api/` 下 `list.json` + `raw/<work_id>.json` + `<标题>-<work_id>.txt`（管线直接可吃）
-- 20 篇题材：悬疑惊悚 4（蓝血/西游之众佛腐烂/李冬原著/近视眼勇闯恐怖游戏）、言情甜宠 ~8、仙侠玄幻 ~5、科幻末世 2、现实情感 1
+### 八型调查人格与分享
 
-## 代码（~/zhihu-hackathon-2026/kanshan-portal/）
-- `game/`：Vite6+React19+TS。`npm start` 单进程 8790；typecheck+build 绿
-- `pipeline/`：txt→game.json 五步（ingest/analyze/design/compile/validate），mock-first+LLM 缓存，**29/29 测试绿**
+- 《蓝血》三处必经二选一分别写入证物/人证、追击/克制、公开/隐蔽三轴。
+- 新存档记录稳定 `choiceId`；旧存档继续按选择文本兼容。判型不使用截图、停留时间、线索数量或可选探索冒充主轴。
+- 穷举测试证明正式《蓝血》八种人格全部可达，三条依据均能回指本局真实选择。
+- 8 张专属刘看山透明人格图已接入：FIRE、ANON、CLEAN、CTRL、ECHO、ASKR、FAIR、FEEL。
+- 分享卡使用 Canvas 导出 `1080×1440` PNG，支持 Web Share；系统分享不可用时降级复制链接。
+- 回流链接只携带 `story`、`from=persona-card` 和人格代码，不携带存档、账号、OAuth token 或剧情答案。朋友打开后先由刘看山接站，再决定是否进入被突出显示的故事。
+- 无 LLM 时使用固定名称、吐槽、鼓励和本局依据，仍可完整判型、保存与分享。
 
-### 剧本杀生成器改造（9/13 凌晨，全部完成）
-- **契约**：`Choice.requires`（条件门）+ `Choice.lockedHint` + `GameJson.clues`（线索元数据，从 clue_* 变量派生）——types.ts / compile-lib / schemas 三处同步
-- **analyze**：+`completeness`（complete/truncated/unknown 截断检测）+`discoveries`（fact/secret/feeling/rule + criticalForClimax 标记）
-- **design**：条件附加规则——①通用门控（critical 发现 → clue_* 变量 → 真相/隐藏结局选项带 requires）；②剧本杀模式（悬疑标签激活：案发→搜证→指认→复盘节拍、审讯目标、具体指认选项）；③序章模式（truncated 激活：段落全覆盖、结局序章收束+引流、严禁编造真相）
-- **validate**：`gateProblems` 门控可满足性检查（变量有上游设置者 + 设置者可达门场景），LLM 重试可自纠
-- **引擎**：锁定选项灰显+🔒提示；顶栏 🔎x/n 线索簿抽屉（未发现的显示？？？不剧透）；复盘报告+线索收集+结局稀有度（全门控=稀有★★/双门控=传说★★★）；海报同步稀有度与线索统计
+### 网关稳定性与额度保护
 
-## 故事库存
-- 自采 3 篇（听听我的故事吧，**仅开发测试，不进提交包**）：story-04《上岸》3.8k 情感 / story-03《如果最后都要分离》12k 悬疑 / story-01《雾夜解剖台》22k 法医悬疑（全链路实玩 PASS；三篇构成法医宇宙）
-- 官方池三篇已编译+仿真验证，全入 `game/stories/`：**蓝血**（都市悬疑，4 线索 4 重门→传说结局）、**西游之众佛腐烂**（克苏鲁西游，3 线索门）、**近视眼勇闯恐怖游戏**（喜剧无限流，2 线索门）；裸奔路线均自动落普通结局不死局；蓝血另过浏览器 UI 实测（锁选项/toast/线索簿 1/4）
-- design 加固（9/13）：retries 2→4 + prompt 显式连通性（"数组顺序不等于连通"）——西游首跑失败（s1-s5 缺 next）即被此修复；近视眼用到第 3 次重试才过，加固见效
-- 标题修正已固化：txt 首部 `标题：`/`作者：` 元信息行，ingest 支持
+- 请求指纹磁盘缓存已包含故事、场景、上游地址、模型、系统提示词和完整消息。
+- 相同 cache miss 使用 single-flight 合并为一次上游调用；缓存采用临时文件加原子重命名，避免并发写出半截 JSON。
+- 缓存命中和同键等待者不占上游计数；不完整流、上游 429 和失败响应不写长期缓存。
+- 默认单来源地址 10 分钟最多 60 次实际上游调用。
+- 知乎直答上游默认单实例每日最多 80 次，按文档 100 次/日预留 20 次余量；兼容模型端点默认每日 4,500 次。阈值可由服务端环境变量收紧。
+- 只有本机回环连接才信任 Cloudflare 规范来源头；伪造 `X-Forwarded-For` 不能绕过直接访问的限流。
+- 上游不可用、配额不足或无密钥时走预写降级，关键剧情不依赖模型成功。
 
-## 开发期 LLM 配置（用户授权）
-- 管线 dev 跑法：`ZHIHU_BASE_URL=https://api.kimi.com/coding/v1 ZHIHU_MODEL_THINKING=kimi-for-coding ZHIHU_MODEL_FAST=kimi-for-coding ZHIHU_TEMPERATURE=omit ZHIHU_TIMEOUT_MS=900000 ZHIHU_ACCESS_SECRET="$KIMI_CODE_API_KEY" npm run all -- --story stories/api/xxx.txt`
-- 网关 dev 跑法：`ZHIDA_BASE_URL=https://api.kimi.com/coding/v1 ZHIDA_MODEL=kimi-for-coding ZHIHU_ACCESS_SECRET="$KIMI_CODE_API_KEY" npm start`
-- kimi-for-coding 只允许 temperature=1；单 call 1-3 分钟；长文编译需 ZHIHU_TIMEOUT_MS=900000
-- 切换兼容模型端点通过服务端 env；正式是否选直答由效果、时延和额度决定，不是赛事强制要求。
+## 验证状态
 
-## 待办（按优先级）
-1. **9/13 10:00 后**：验证 API 全开（知识详情/完整章节？）；zhida 真实 chat 冒烟（限 1-2 次，验 {"goalAchieved"} 格式自觉性）
-2. 《蓝血》实玩验证 → 再编译 1-2 篇差异化悬疑（西游克苏鲁/无限流）证明生成器
-3. **部署占位（人气奖 9/13 起算）**：先放封面+idea 攒赞 → 需读 hackathon-oauth.md 走 OAuth 注册
-4. 刘看山官方素材替换 🦊 emoji（素材包在飞书文档，需用户手动下载）
-5. 产品说明计划书（必交，初审重点）——GDD.md 是内核，强化社区契合度表述
-6. 演示视频（选交加分）
+| 验证项 | 当前结果 | 边界 |
+|---|---|---|
+| `npm test` | PASS，76/76 | 覆盖社区、搜证、论证、八型穷举、匿名链接、缓存、并发、限流与每日预算 |
+| `npm run typecheck` | PASS | `main@dc8bed6` 本地工作树 |
+| `npm run build` | PASS | Vite 生产构建成功 |
+| 人格卡局部浏览器验证 | PASS | 已验证 1080×1440 Canvas、PNG 保存、复制链接、键盘操作和 375px 无横向溢出；不替代最终整链复验 |
+| 最终 Ego 新存档全流程 | 进行中 | 必须从根路径开始，不使用 `?scene=` |
+| canonical 公网当前版本 | 进行中 | 需要确认服务已同步到本地集成版本并复走关键路径 |
+| 5–8 人盲测 | NOT_RUN | 不能用开发者自测代替“玩法有趣”的证据 |
 
-## 评分抓手（计划书要点）
-初审=知乎业务线负责人：主打"盐言 IP 库存互动化改编管线"（对比短剧授权，边际成本趋零）；生成器证明=现场喂新故事；人气奖=9.13-9.23 项目广场点赞+使用+评论，越早挂越好；最佳游戏创意奖=赛道专属 ¥2000。
+## 仍未完成
+
+1. **事实/证言/工作假设统一可视化关系板**：当前线索簿、社区信息与公开论证已经存在，但材料关系仍没有在同一张板上表达。
+2. **反事实复盘**：阶段结局会回放本局选择，但尚不能明确指出“另一条路线差在哪一个真实分歧点”。
+3. **OAuth 与真实热榜**：仍未接入，且必须保持可选，不能成为首局门槛。
+4. **5–8 名目标玩家盲测**：需记录卡住位置、错误理解、是否愿意保存/分享，以及是否需要开发者口头补救。
+5. **最终 Ego 验收**：新存档从接站走到分享回流；补测 375px/768px/1440px、键盘、输入法、弹层、失败降级和减少动态。
+6. **公网验收**：同步运行副本、精确重启网关，并验证 canonical URL 的首页、故事数据、代表性素材、bundle、人格保存与匿名回流均来自当前版本。
+
+## 外部接口状态
+
+- 开放故事正文已经落盘在 `pipeline/stories/api/`；游戏运行时读取本地编译结果，不重复消耗故事接口。
+- 当前 NPC 自由对白使用兼容模型端点，关键授证与目标完成由本地契约决定。
+- 知乎直答文档额度按 100 次/日保守设计；实际余额只以个人中心「用量统计」为准。
+- OAuth 应用未接入。未来 token 只能保留在服务端会话，不得进入 localStorage、共享磁盘缓存或日志。
+- 真实热榜未接入。若接入，计划使用 6 小时本地缓存、失败沿用最后成功结果并显示数据日期。
+
+## 部署状态
+
+- 已有 canonical 地址：`https://kanshan.makebook.hk2048.online`。
+- 该地址此前可访问，但“地址存在”不证明 `main@dc8bed6` 已完成同步或整链验收。
+- 当前发布状态保持 **验收中**；只有运行副本同步、服务重启、资源指纹核对和公网关键流程复走完成后，才能更新为“当前版本已上线”。
+
+## 下一步顺序
+
+1. 完成统一关系板与反事实复盘。
+2. 用 Ego 从根路径新建存档复走《蓝血》，覆盖社区选错人、无结果搜证、越界呈证、人格保存与匿名回流。
+3. 完成 375px/768px/1440px、键盘、输入法、失败降级与减少动态复验。
+4. 同步并重启运行副本，核对 canonical 公网资源与关键路径。
+5. 组织 5–8 人盲测；OAuth 和真实热榜只在不影响主路径的前提下追加。
+
+## 文档入口
+
+- 玩家旅程：[docs/PLAYER-JOURNEY.md](docs/PLAYER-JOURNEY.md)
+- 实施计划：[IMPLEMENTATION-PLAN-20260914.md](IMPLEMENTATION-PLAN-20260914.md)
+- 人格规格：[docs/INVESTIGATOR-PERSONAS.md](docs/INVESTIGATOR-PERSONAS.md)
+- 玩家验收：[docs/PLAYER-QA-20260914.md](docs/PLAYER-QA-20260914.md)
+- 旧版重做验收：[docs/archive/REBUILD-ACCEPTANCE-20260913.md](docs/archive/REBUILD-ACCEPTANCE-20260913.md)
