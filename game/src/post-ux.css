@@ -20,7 +20,7 @@
 .post-question__tags span { padding:3px 9px; border-radius:4px; color:#52657d; background:#eef3f7; font-size:12px; }
 .post-question footer { display:flex; gap:18px; padding-top:14px; border-top:1px solid #edf0f2; color:#8a919f; font-size:12px; }
 .post-feed__filters { position:sticky; top:0; z-index:4; display:flex; gap:8px; padding:18px 0 12px; background:linear-gradient(#f7f8fa 78%,rgba(247,248,250,0)); }
-.post-feed__filters button { min-height:42px; padding:7px 14px; border:1px solid #dfe3e8; border-radius:999px; background:#fff; color:#616873; font-size:13px; }
+.post-feed__filters button { min-height:44px; padding:7px 14px; border:1px solid #dfe3e8; border-radius:999px; background:#fff; color:#616873; font-size:13px; }
 .post-feed__filters button[aria-pressed="true"] { border-color:#8a7349; background:#282d32; color:#fff; }
 .post-feed { display:grid; gap:10px; }
 .post-entry { position:relative; padding:18px 20px 15px; background:#fff; border:1px solid #e4e7eb; border-radius:10px; }
@@ -81,7 +81,7 @@
   .post-entry { padding:17px 15px 14px; }
   .post-entry__foot { align-items:flex-end; }
   .post-entry__foot .post-action { min-width:128px; }
-  .post-action { min-height:46px; }
+  .post-feed__filters button,.post-action { min-height:46px; }
   .post-action small { display:none; }
   .post-thread__head,.post-thread__messages,.post-thread__choices { padding-left:15px; padding-right:15px; }
   .post-thread__head > p { margin-left:0; }
