@@ -16,15 +16,18 @@ for (const [label, filename, expectedEndings] of packages) {
   const sceneOf = (id) => story.scenes.find((scene) => scene.id === id);
   const completedRuns = () => journey().states.filter((run) => sceneOf(run.sceneId).type === 'ending');
 
-  test(`${label}: rebuilt official package retains a complete multi-chapter route to all three results`, () => {
-    assert.match(story.version || '', /^2\.2(?:\b|[.-])/, 'This suite must run against the rebuilt 2.2 story');
+  test(`${label}: rebuilt official package retains a complete multi-chapter route to each non-argument stage result`, () => {
+    assert.match(story.version || '', /^2\.3(?:\b|[.-])/, 'This suite must run against the argument-flow 2.3 story');
     assert.equal(story.release?.status, 'preview');
     assert.equal(story.source?.kind, 'zhihu-hackathon');
-    assert.equal(story.endings.length, 3);
+    assert.ok(story.endings.length >= 3);
     const expected = expectedEndings || story.endings.map((ending) => ending.id);
     assert.deepEqual([...journey().endings.keys()].sort(), [...expected].sort());
     const visited = new Set(journey().states.map((run) => run.sceneId));
-    assert.deepEqual(story.scenes.filter((scene) => !visited.has(scene.id)).map((scene) => scene.id), [], 'A chapter or branch is unreachable');
+    const argumentOutcomes = new Set(story.scenes.filter((scene) => scene.type === 'boss').flatMap((scene) => [
+      scene.boss?.endings.truth, scene.boss?.endings.fold, scene.boss?.egg?.ending,
+    ].filter(Boolean)));
+    assert.deepEqual(story.scenes.filter((scene) => !visited.has(scene.id) && !argumentOutcomes.has(scene.id)).map((scene) => scene.id), [], 'A chapter or branch is unreachable');
     for (const [endingId, run] of journey().endings) {
       const { path } = run;
       assert.ok(path.length >= 12, `${endingId} shortcuts the chapter in only ${path.length} scenes: ${path.join(' → ')}`);
