@@ -4,6 +4,23 @@ import { useGame } from '../state/engine';
 export function Boot() {
   const { booted } = useGame();
   const [meetOk, setMeetOk] = useState(true);
-  useEffect(() => { booted(); }, [booted]);
-  return <main className="boot-ready" role="status"><span className="boot-ready__meet">{meetOk ? <img className="boot-ready__fox" src="/art/character/motion/liu-kanshan-wave.gif" alt="" onError={() => setMeetOk(false)} /> : null}<span className="boot-ready__text">正在打开故事…</span><span className="boot-ready__hint">刘看山正在门后向你招手</span></span></main>;
+  useEffect(() => {
+    // The judge deep-link must remain instant; the normal entrance gets one
+    // stable paint so the official guide is an introduction, not a flash.
+    if (new URLSearchParams(window.location.search).has('scene')) {
+      booted();
+      return;
+    }
+    const timer = window.setTimeout(booted, 720);
+    return () => window.clearTimeout(timer);
+  }, [booted]);
+
+  return <main className="boot-ready" role="status" aria-live="polite">
+    <span className="boot-ready__meet">
+      {meetOk ? <img className="boot-ready__fox" src="/art/character/motion/liu-kanshan-wave.gif" alt="" loading="eager" decoding="async" onError={() => setMeetOk(false)} /> : null}
+      <strong className="boot-ready__brand">看山任意门</strong>
+      <span className="boot-ready__text">系统引导·刘看山正在连接故事库…</span>
+      <span className="boot-ready__hint">刘看山会在门厅等你</span>
+    </span>
+  </main>;
 }
