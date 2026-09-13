@@ -89,6 +89,22 @@
       "sourceLabel": "第五幕 · 社区回复"
     },
     {
+      "desc": "一个故事内的虚构账号保存过两年前相似问题的公开索引；只能确认页面存在过，不知道作者身份和删除原因。",
+      "art": { "template": "web" },
+      "id": "clue_similar_post",
+      "kind": "testimony",
+      "name": "相似旧帖的索引",
+      "sourceLabel": "第五幕 · 虚构账号的公开存档"
+    },
+    {
+      "desc": "帖子同时暴露了城市地标、公司培训和凌晨在线时间；这些公开细节可被拼接来缩小发帖人范围。",
+      "art": { "template": "statement" },
+      "id": "clue_post_exposure",
+      "kind": "inference",
+      "name": "公开细节可被拼接",
+      "sourceLabel": "第五幕 · 虚构社区安全提示"
+    },
+    {
       "desc": "你卷首问血液颜色和婴儿头发颜色。",
       "art": { "template": "exam" },
       "id": "clue_my_test",
@@ -573,7 +589,7 @@
         {
           "id": "desktop_on",
           "lockedHint": "看完血液与地理记录，并完成地标对照。",
-          "next": "n_post_disguise",
+          "next": "post_feed",
           "requires": {
             "clue_mismatch": "found",
             "clue_river": "found",
@@ -692,6 +708,403 @@
       "chapter": "05 · 删除之前",
       "choices": [
         {
+          "id": "open_archive",
+          "next": "post_archive_thread",
+          "set": {
+            "post_archive_checked": "yes",
+            "post_contacted": "yes"
+          },
+          "text": "回复旧页拾荒者：那条旧帖还剩下什么？"
+        },
+        {
+          "id": "open_safety",
+          "next": "post_safety_thread",
+          "set": {
+            "post_contacted": "yes",
+            "post_safety_checked": "yes"
+          },
+          "text": "打开私信：哪些内容会暴露我？"
+        },
+        {
+          "id": "open_skeptic",
+          "next": "post_skeptic_thread",
+          "set": {
+            "post_contacted": "yes",
+            "post_skeptic_checked": "yes"
+          },
+          "text": "回复柠檬色说明书：你有看到别的证据吗？"
+        },
+        {
+          "id": "open_unknown",
+          "next": "post_unknown_thread",
+          "set": {
+            "post_contacted": "yes",
+            "post_unknown_checked": "yes"
+          },
+          "text": "回复空白头像_17：你知道我从哪里来？"
+        },
+        {
+          "id": "leave_post_feed",
+          "lockedHint": "先打开至少一条可回复内容，确认对方的知情范围。",
+          "next": "n_post_disguise",
+          "requires": {
+            "post_contacted": "yes"
+          },
+          "text": "收起社区页面，决定怎样保留记录"
+        }
+      ],
+      "id": "post_feed",
+      "post": {
+        "author": {
+          "avatarText": "匿",
+          "handle": "night-window-23",
+          "label": "匿名提问者",
+          "name": "夜里还醒着"
+        },
+        "community": "故事内社区 · 异常经验",
+        "entries": [
+          {
+            "actionChoiceId": "open_archive",
+            "actionLabel": "追问旧帖",
+            "avatarText": "拾",
+            "handle": "page-salvager",
+            "id": "archive",
+            "identity": "story-fictional",
+            "knowledge": "只保存过公开页面索引；不知道旧帖作者身份或删除原因。",
+            "likes": 47,
+            "name": "旧页拾荒者",
+            "pinned": true,
+            "text": "两年前我好像收过一条相似问题的页面索引，现在打开只有失效提示。别先把它当成同一件事。",
+            "time": "03:19",
+            "visitedVar": "post_archive_checked"
+          },
+          {
+            "actionChoiceId": "open_safety",
+            "actionLabel": "打开私信",
+            "avatarText": "安",
+            "channel": "dm",
+            "handle": "safe-post-alan",
+            "id": "safety",
+            "identity": "story-fictional",
+            "knowledge": "只看得到你发在公开页面上的文字；不知道你线下遇到了什么。",
+            "name": "社区安全员-阿岚",
+            "pinned": true,
+            "text": "你的描述里有城市地标、公司培训和凌晨时间。如果还要问，先备份内容，再去掉能定位你的细节。",
+            "time": "03:23",
+            "visitedVar": "post_safety_checked"
+          },
+          {
+            "actionChoiceId": "open_skeptic",
+            "actionLabel": "问她证据",
+            "avatarText": "檬",
+            "handle": "lemon-manual",
+            "id": "skeptic",
+            "identity": "story-fictional",
+            "knowledge": "只读过这篇帖子；没见过你、教材或洗手间现场。",
+            "likes": 62,
+            "name": "柠檬色说明书",
+            "pinned": true,
+            "text": "先排除显示器色偏、教材版本和记忆偏差吧。只看这段描述，谁也验证不了你当时看到的东西。",
+            "time": "03:11",
+            "visitedVar": "post_skeptic_checked"
+          },
+          {
+            "actionChoiceId": "open_unknown",
+            "actionLabel": "追问来历",
+            "avatarText": "17",
+            "handle": "blank-17",
+            "id": "unknown",
+            "identity": "story-fictional",
+            "knowledge": "账号身份未验证；这句反问没有证明它掌握帖子之外的信息。",
+            "likes": 3,
+            "name": "空白头像_17",
+            "pinned": true,
+            "text": "你该不会是从哪里逃出来的吧？",
+            "time": "03:21",
+            "visitedVar": "post_unknown_checked"
+          },
+          {
+            "avatarText": "杯",
+            "handle": "warm-cup",
+            "id": "ambient_01",
+            "identity": "story-fictional",
+            "knowledge": "只看过帖子正文。",
+            "likes": 18,
+            "name": "热水杯先生",
+            "text": "楼主先睡一觉。凌晨三点做世界观对照，人很容易越搜越慌。",
+            "time": "03:14"
+          },
+          {
+            "avatarText": "猫",
+            "handle": "orange-cat-on-duty",
+            "id": "ambient_02",
+            "identity": "story-fictional",
+            "knowledge": "只知道自己的日常常识。",
+            "likes": 31,
+            "name": "橘猫值班中",
+            "text": "我这边学到的也是蓝色，但这只能说我和页面一致，不能解释你的经历。",
+            "time": "03:15"
+          },
+          {
+            "avatarText": "页",
+            "handle": "refresh-again",
+            "id": "ambient_03",
+            "identity": "story-fictional",
+            "knowledge": "只看到当前网页，不能确认网页的历史版本。",
+            "likes": 9,
+            "name": "又刷新了一次",
+            "text": "我刚搜了三个网页，写法都一样。没有旧快照，所以也没法帮你比较“以前”。",
+            "time": "03:16"
+          },
+          {
+            "avatarText": "早",
+            "handle": "early-bird-404",
+            "id": "ambient_04",
+            "identity": "story-fictional",
+            "knowledge": "只看过正文和已公开的评论。",
+            "likes": 7,
+            "name": "早起失败者",
+            "text": "建议把“我看到的”和“我猜的”分开写，要不然大家只会对着最夸张的部分吵。",
+            "time": "03:17"
+          },
+          {
+            "avatarText": "江",
+            "handle": "river-walk",
+            "id": "ambient_05",
+            "identity": "story-fictional",
+            "knowledge": "没有现场经历，只对帖子里的地名感到奇怪。",
+            "likes": 12,
+            "name": "沿江散步的人",
+            "text": "血液那段我不懂，但你列的地名也和我记得的不一样。记忆相同不等于我们就是对的。",
+            "time": "03:18"
+          },
+          {
+            "avatarText": "版",
+            "handle": "edition-first",
+            "id": "ambient_06",
+            "identity": "story-fictional",
+            "knowledge": "只熟悉教材版本管理，不知道发帖人的培训现场。",
+            "likes": 24,
+            "name": "先看版本号",
+            "text": "如果能确认教材版本和发行时间，至少可以排除一部分印刷错误。但网页也这么写，就不是一页错字那么简单。",
+            "time": "03:19"
+          },
+          {
+            "avatarText": "门",
+            "handle": "door-is-closed",
+            "id": "ambient_07",
+            "identity": "story-fictional",
+            "knowledge": "仅表达情绪，没有提供来源。",
+            "likes": 5,
+            "name": "门已经关了",
+            "text": "这帖看得我后背发冷。先蹲一个后续，但楼主别把公司名字说出来。",
+            "time": "03:20"
+          },
+          {
+            "avatarText": "记",
+            "handle": "note-before-theory",
+            "id": "ambient_08",
+            "identity": "story-fictional",
+            "knowledge": "只能建议记录方法，不能判断帖子内容真假。",
+            "likes": 35,
+            "name": "先记录再解释",
+            "text": "把时间、地点、看到的颜色分开记。解释可以换，原始记录别追着猜测改。",
+            "time": "03:22"
+          },
+          {
+            "avatarText": "医",
+            "handle": "not-a-diagnosis",
+            "id": "ambient_09",
+            "identity": "story-fictional",
+            "knowledge": "没有看过发帖人的身体状况，不能做医疗判断。",
+            "likes": 28,
+            "name": "这不是诊断",
+            "text": "如果你真的身体不舒服就寻求帮助。但仅凭一条帖子，网友既不能诊断你，也不能证明你所说的世界错位。",
+            "time": "03:24"
+          },
+          {
+            "avatarText": "灯",
+            "handle": "one-lamp-on",
+            "id": "ambient_10",
+            "identity": "story-fictional",
+            "knowledge": "只看到发帖人留在页面上的内容。",
+            "likes": 11,
+            "name": "三点还亮着的灯",
+            "text": "你不用今晚就解释世界。先想想这个公开页面会让谁看到你。",
+            "time": "03:25"
+          }
+        ],
+        "fictionNotice": "下方账号均为本故事虚构角色，不是你的真实知乎关注、好友或私信对象。重点账号已置顶，你不需要读完全部楼层。",
+        "questionBody": "今天公司培训时，教材和所有网页都说，人的血是蓝色的，接触空气后才会变红。\n但我明明记得不是这样。我还查了几个熟悉的地标，结果也和记忆对不上。有人遇到过类似情况吗？",
+        "questionTitle": "为什么所有资料都说人的血是蓝色，但我记得不是？",
+        "stats": {
+          "comments": 13,
+          "dms": 1,
+          "views": 146
+        },
+        "tags": ["异常经验", "记忆", "查证"],
+        "view": "feed"
+      },
+      "type": "post"
+    },
+    {
+      "chapter": "05 · 删除之前",
+      "choices": [
+        { "id": "archive_back", "next": "post_feed", "text": "返回全部回应" },
+        { "id": "archive_finish", "next": "n_post_disguise", "text": "记下这条索引，收起社区页面" }
+      ],
+      "id": "post_archive_thread",
+      "onEnter": {
+        "clue_reply": "found",
+        "clue_similar_post": "found"
+      },
+      "post": {
+        "activeAccountId": "archive",
+        "author": { "avatarText": "匿", "handle": "night-window-23", "label": "匿名提问者", "name": "夜里还醒着" },
+        "community": "故事内社区 · 评论对话",
+        "entries": [
+          {
+            "avatarText": "拾", "handle": "page-salvager", "id": "archive", "identity": "story-fictional",
+            "knowledge": "只保存过公开页面索引；不知道旧帖作者身份或删除原因。",
+            "name": "旧页拾荒者", "text": "两年前收过相似页面的索引。", "time": "03:19"
+          }
+        ],
+        "feedback": {
+          "label": "可记录的范围",
+          "text": "可以记下“相似公开页面曾存在”。不能据此断言旧帖与你属于同一事件。",
+          "tone": "useful"
+        },
+        "fictionNotice": "当前对话账号为故事内虚构角色，其回复已由编剧写定，不会从真实关注列表取人或自由生成证据。",
+        "questionBody": "教材、网页与我的记忆对不上。有人遇到过类似情况吗？",
+        "questionTitle": "为什么所有资料都说人的血是蓝色，但我记得不是？",
+        "stats": { "comments": 13, "dms": 1, "views": 149 },
+        "thread": [
+          { "id": "a1", "side": "account", "text": "两年前我好像收过一条相似问题的页面索引，现在打开只有失效提示。", "time": "03:19" },
+          { "id": "a2", "side": "player", "text": "那条旧帖还剩下什么？", "time": "03:20" },
+          { "id": "a3", "side": "account", "text": "只剩标题、大约时间和一个失效地址。我没存作者名，也不知道为什么删。这能说明有过类似页面，不能说它和你是同一件事。", "time": "03:21" }
+        ],
+        "view": "thread"
+      },
+      "type": "post"
+    },
+    {
+      "chapter": "05 · 删除之前",
+      "choices": [
+        { "id": "safety_back", "next": "post_feed", "text": "返回全部回应" },
+        { "id": "safety_finish", "next": "n_post_disguise", "text": "保存定位风险，收起社区页面" }
+      ],
+      "id": "post_safety_thread",
+      "onEnter": {
+        "clue_post_exposure": "found",
+        "clue_reply": "found"
+      },
+      "post": {
+        "activeAccountId": "safety",
+        "author": { "avatarText": "匿", "handle": "night-window-23", "label": "匿名提问者", "name": "夜里还醒着" },
+        "community": "故事内社区 · 私信",
+        "entries": [
+          {
+            "avatarText": "安", "channel": "dm", "handle": "safe-post-alan", "id": "safety", "identity": "story-fictional",
+            "knowledge": "只看得到你发在公开页面上的文字；不知道你线下遇到了什么。",
+            "name": "社区安全员-阿岚", "text": "先去掉能定位你的细节。", "time": "03:23"
+          }
+        ],
+        "feedback": {
+          "label": "已缩小的问题",
+          "text": "对方没有证明隐藏身份，但指出了一个可复核风险：你公开的信息可被拼接成大致行踪。",
+          "tone": "useful"
+        },
+        "fictionNotice": "当前对话账号为故事内虚构角色，不是真实知乎用户；私信内容仅来自编剧预设。",
+        "questionBody": "教材、网页与我的记忆对不上。有人遇到过类似情况吗？",
+        "questionTitle": "为什么所有资料都说人的血是蓝色，但我记得不是？",
+        "stats": { "comments": 13, "dms": 1, "views": 151 },
+        "thread": [
+          { "id": "s1", "side": "account", "text": "你的描述里有城市地标、公司培训和凌晨时间。如果还要问，先备份内容，再去掉定位细节。", "time": "03:23" },
+          { "id": "s2", "side": "player", "text": "哪些内容会暴露我？", "time": "03:24" },
+          { "id": "s3", "side": "account", "text": "单看一条都很宽，但“某城市地标、今天的公司急救培训、凌晨三点发帖”一起出现，就可能缩小范围。我只看到你自己公开的这些。", "time": "03:25" }
+        ],
+        "view": "thread"
+      },
+      "type": "post"
+    },
+    {
+      "chapter": "05 · 删除之前",
+      "choices": [
+        { "id": "skeptic_back", "next": "post_feed", "text": "返回全部回应" },
+        { "id": "skeptic_finish", "next": "n_post_disguise", "text": "记下这条回应的边界，继续故事" }
+      ],
+      "id": "post_skeptic_thread",
+      "onEnter": { "clue_reply": "found" },
+      "post": {
+        "activeAccountId": "skeptic",
+        "author": { "avatarText": "匿", "handle": "night-window-23", "label": "匿名提问者", "name": "夜里还醒着" },
+        "community": "故事内社区 · 评论对话",
+        "entries": [
+          {
+            "avatarText": "檬", "handle": "lemon-manual", "id": "skeptic", "identity": "story-fictional",
+            "knowledge": "只读过这篇帖子；没见过你、教材或洗手间现场。",
+            "name": "柠檬色说明书", "text": "先排除色偏、版本和记忆偏差。", "time": "03:11"
+          }
+        ],
+        "feedback": {
+          "label": "线索到此为止",
+          "text": "她没有额外见证，只是提供了替代解释。这次追问没有新证据，也不会消耗你继续查看其他账号的机会。",
+          "tone": "boundary"
+        },
+        "fictionNotice": "当前对话账号为故事内虚构角色，回复只表达其公开立场，不会由模型自由生成证据。",
+        "questionBody": "教材、网页与我的记忆对不上。有人遇到过类似情况吗？",
+        "questionTitle": "为什么所有资料都说人的血是蓝色，但我记得不是？",
+        "stats": { "comments": 13, "dms": 1, "views": 147 },
+        "thread": [
+          { "id": "k1", "side": "account", "text": "先排除显示器色偏、教材版本和记忆偏差吧。", "time": "03:11" },
+          { "id": "k2", "side": "player", "text": "你有看到别的证据吗？", "time": "03:12" },
+          { "id": "k3", "side": "account", "text": "没有，我只看见你写的这些。我是在列还没有排除的可能，不是说我知道发生了什么。", "time": "03:13" }
+        ],
+        "view": "thread"
+      },
+      "type": "post"
+    },
+    {
+      "chapter": "05 · 删除之前",
+      "choices": [
+        { "id": "unknown_back", "next": "post_feed", "text": "返回全部回应" },
+        { "id": "unknown_finish", "next": "n_post_disguise", "text": "不把反问当证据，继续故事" }
+      ],
+      "id": "post_unknown_thread",
+      "onEnter": { "clue_reply": "found" },
+      "post": {
+        "activeAccountId": "unknown",
+        "author": { "avatarText": "匿", "handle": "night-window-23", "label": "匿名提问者", "name": "夜里还醒着" },
+        "community": "故事内社区 · 评论对话",
+        "entries": [
+          {
+            "avatarText": "17", "handle": "blank-17", "id": "unknown", "identity": "story-fictional",
+            "knowledge": "账号身份未验证；这句反问没有证明它掌握帖子之外的信息。",
+            "name": "空白头像_17", "text": "你该不会是从哪里逃出来的吧？", "time": "03:21"
+          }
+        ],
+        "feedback": {
+          "label": "已排除一次过度解读",
+          "text": "这个账号没有报出你的地点或身份，只重复了帖子本身能推出的事。口气可疑不等于它知情。",
+          "tone": "boundary"
+        },
+        "fictionNotice": "当前对话账号为故事内虚构角色，不是你的真实关注或私信对象。",
+        "questionBody": "教材、网页与我的记忆对不上。有人遇到过类似情况吗？",
+        "questionTitle": "为什么所有资料都说人的血是蓝色，但我记得不是？",
+        "stats": { "comments": 13, "dms": 1, "views": 150 },
+        "thread": [
+          { "id": "u1", "side": "account", "text": "你该不会是从哪里逃出来的吧？", "time": "03:21" },
+          { "id": "u2", "side": "player", "text": "你知道我从哪里来？", "time": "03:22" },
+          { "id": "u3", "side": "account", "text": "不知道。是你自己说“只有我记得不同”，我就随口一问。别把我的反问当证据。", "time": "03:23" }
+        ],
+        "view": "thread"
+      },
+      "type": "post"
+    },
+    {
+      "chapter": "05 · 删除之前",
+      "choices": [
+        {
           "id": "post_copy",
           "next": "n_days",
           "set": {
@@ -710,10 +1123,7 @@
       ],
       "id": "n_post_disguise",
       "image": "",
-      "onEnter": {
-        "clue_reply": "found"
-      },
-      "text": "你发帖质疑这些常识，很快收到两条回复。\n\n一条劝你去看医生；另一条问，你该不会是从哪里逃出来的吧。\n\n第二句话让你重新想到白天所有人看你的眼神。一个陌生人的揣测不能证明危险已经来临，却提醒你：公开讲出差异，也会把你自己留在别人的视线里。\n\n你决定删除帖子，接下来像一个“正常”的人那样生活。但你可以决定，怎样保留今天的经历。",
+      "text": "你关掉回复列表，没有从口气中挑出一个“知道真相的人”。\n\n你确定的只有两件事：帖子已经被陌生人看到；而每个人真正知道多少，必须看他能否说出公开页面以外的细节。\n\n你决定删除帖子，接下来像一个“正常”的人那样生活。但在删除前，你还可以决定怎样保留今夜的经历。",
       "type": "novel"
     },
     {
@@ -1584,5 +1994,5 @@
     ],
     "title": "蓝血"
   },
-  "version": "2.3.0-argument-slice"
+  "version": "2.3.1-post-scene"
 }

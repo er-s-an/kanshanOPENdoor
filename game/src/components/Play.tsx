@@ -12,16 +12,18 @@ import { ClueSheet } from './ClueSheet';
 import { InvestigationView } from './InvestigationView';
 import { EncounterView } from './EncounterView';
 import { BossView } from './BossView';
+import { PostView } from './PostView';
 
 function SceneView({ scene }: { scene: Scene }) {
   if (scene.type === 'investigate') return <InvestigationView scene={scene} />;
   if (scene.type === 'encounter') return <EncounterView scene={scene} />;
   if (scene.type === 'chat') return <ChatView scene={scene} />;
+  if (scene.type === 'post') return <PostView scene={scene} />;
   if (scene.type === 'boss') return <BossView scene={scene} />;
   if (scene.type === 'ending') return <EndingView scene={scene} />;
   return <StoryView scene={scene} />;
 }
-const modes: Record<Scene['type'], string> = { novel: '阅读', choice: '抉择', chat: '交谈', investigate: '调查', encounter: '行动', boss: '对线', ending: '本章收束' };
+const modes: Record<Scene['type'], string> = { novel: '阅读', choice: '抉择', chat: '交谈', investigate: '调查', encounter: '行动', post: '社区', boss: '对线', ending: '本章收束' };
 
 export function Play() {
   const { prefs } = usePrefs();
@@ -54,7 +56,7 @@ export function Play() {
   }, [newRecords]);
   useLayoutEffect(() => {
     window.scrollTo(0, 0);
-    sceneRoot.current?.querySelectorAll<HTMLElement>('.reading-scene__scroll, .chat__scroll, .chat__guide, .investigation, .boss__scroll, .ending__scroll, .encounter').forEach((element) => {
+    sceneRoot.current?.querySelectorAll<HTMLElement>('.reading-scene__scroll, .chat__scroll, .chat__guide, .investigation, .post-scene__scroll, .boss__scroll, .ending__scroll, .encounter').forEach((element) => {
       element.scrollTop = 0;
       element.scrollLeft = 0;
     });

@@ -1,5 +1,5 @@
 // game.json 契约类型（与编译管线共享，严格遵守）
-export type SceneType = 'novel' | 'chat' | 'choice' | 'ending' | 'encounter' | 'investigate' | 'boss';
+export type SceneType = 'novel' | 'chat' | 'choice' | 'ending' | 'encounter' | 'investigate' | 'post' | 'boss';
 
 export interface DialogueTopic {
   id: string; prompt: string; keywords: string[]; reply: string;
@@ -53,6 +53,53 @@ export interface StorySource {
   kind: string; workId: string; title: string; author: string;
   authorStatus?: 'not_provided';
   scope: 'excerpt'; adaptationNote: string; sourceUrl?: string;
+}
+
+export type PostChannel = 'comment' | 'dm';
+export interface PostAuthor {
+  name: string;
+  handle?: string;
+  avatarText?: string;
+  label?: string;
+}
+export interface PostEntry {
+  id: string;
+  name: string;
+  handle?: string;
+  avatarText?: string;
+  text: string;
+  time?: string;
+  likes?: number;
+  channel?: PostChannel;
+  /** Every visible community identity is authored fiction, never an imported Zhihu followee. */
+  identity: 'story-fictional';
+  /** What this account can actually know. Always visible before the player replies. */
+  knowledge: string;
+  /** Maps an authored account response to a normal deterministic scene choice. */
+  actionChoiceId?: string;
+  actionLabel?: string;
+  visitedVar?: string;
+  pinned?: boolean;
+}
+export interface PostThreadMessage {
+  id: string;
+  side: 'player' | 'account' | 'system';
+  text: string;
+  time?: string;
+}
+export interface PostData {
+  view: 'feed' | 'thread';
+  community: string;
+  questionTitle: string;
+  questionBody: string;
+  author: PostAuthor;
+  tags?: string[];
+  stats?: { views?: number; comments?: number; dms?: number };
+  fictionNotice: string;
+  entries: PostEntry[];
+  activeAccountId?: string;
+  thread?: PostThreadMessage[];
+  feedback?: { label: string; text: string; tone?: 'useful' | 'boundary' };
 }
 
 export interface StoryMeta {
@@ -205,6 +252,8 @@ export interface Scene {
   clueDrops?: ClueDrop[];
   goto?: string;
   encounter?: Encounter;
+  /** Authored community browsing. Account replies resolve only through scene choices/onEnter. */
+  post?: PostData;
   /** boss 场景数据（type==='boss' 时必填） */
   boss?: BossData;
   /** 评论区氛围评论（chat 场景楼层化展示用） */
