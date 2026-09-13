@@ -1,6 +1,7 @@
 import type { GameJson, MemoEntry, Vars } from '../types';
 
 export type PersonaCode = 'FIRE' | 'ANON' | 'CLEAN' | 'CTRL' | 'ECHO' | 'ASKR' | 'FAIR' | 'FEEL';
+export type PersonaAxis = 'source' | 'pace' | 'voice';
 export interface PersonaDefinition {
   code: PersonaCode;
   name: string;
@@ -12,9 +13,9 @@ export interface PersonaDefinition {
 export interface PersonaResult extends PersonaDefinition {
   axes: { source: 'evidence' | 'testimony'; pace: 'push' | 'restrain'; voice: 'public' | 'private' };
   proofLines: string[];
-  basis: Record<'source' | 'pace' | 'voice', Array<{ sceneId: string; choiceId: string; text: string }>>;
+  basis: Record<PersonaAxis, Array<{ sceneId: string; choiceId: string; text: string }>>;
   matchedChoices: number;
-  unresolved: string[];
+  unresolved: PersonaAxis[];
   confidence: 'explicit' | 'compat' | 'provisional';
 }
 
