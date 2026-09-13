@@ -5,10 +5,31 @@ export interface DialogueTopic {
   id: string; prompt: string; keywords: string[]; reply: string;
   grants?: string[]; requires?: Vars;
 }
+export type InvestigationMode = 'look' | 'listen' | 'touch' | 'compare' | 'ask';
+export interface InvestigationHotspot {
+  /** 0..1 normalized coordinates, independent of the rendered image size. */
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+export interface InvestigationDiscover {
+  /** Omitted means the item is discoverable through every mode (legacy-compatible). */
+  modes?: InvestigationMode[];
+  /** Human-authored search phrases; never exposed until this item is discovered. */
+  aliases?: string[];
+  /** Optional non-spoiler affordance shown by the investigation UI. */
+  hint?: string;
+  /** Optional accessible image hotspot. Search/list controls remain an equivalent path. */
+  hotspot?: InvestigationHotspot;
+}
 export interface InvestigationItem {
   id: string; title: string; keywords: string[]; text: string; clue: string;
-  requires?: Vars; kind?: 'observation' | 'testimony' | 'record';
+  requires?: Vars; kind?: 'observation' | 'testimony' | 'record'; discover?: InvestigationDiscover;
 }
+export type InvestigationSearchResult =
+  | { status: 'found'; item: InvestigationItem; vars: Vars }
+  | { status: 'empty' | 'miss' | 'ambiguous'; item: null };
 export interface InvestigationCheck {
   id: string; prompt: string; claim: string; answer: string[]; grants: string[]; candidates?: string[];
   success: string; failure: string;
@@ -63,7 +84,7 @@ export interface ClueDrop {
 // ---------------------------------------------------------------- Boss 战
 // 评论区对线：结构化指认 + 编译期反驳脚本 + 赞同数演出。判定全确定性（选中即判定），
 // 运行时零自由文本解析（GDD §3.3）。
-export interface BossSlot {
+export interface BossCounter {
   /** 呈上这条线索时触发（玩家须已持有） */
   clue: string;
   /** 你的呈证台词（回怼语气） */
@@ -74,7 +95,17 @@ export interface BossSlot {
   speaker?: string;
   /** 有效呈证的赞同增量 */
   likes?: number;
+  /** 有效呈证造成的可信度变化；缺省为 +1 */
+  credibility?: number;
+  /** 有效呈证造成的暴露度变化；缺省为 0 */
+  exposure?: number;
+  /** 证据对当前论点的边界结论。Legacy slots default to supported. */
+  result?: 'supported' | 'partial' | 'overreach';
+  /** Explains why the evidence fully, partly, or does not support the claim. */
+  explanation?: string;
 }
+/** Legacy name retained for existing compiled stories and views. */
+export interface BossSlot extends BossCounter {}
 export interface BossRound {
   id: string;
   /** 本轮引导语（系统/群众催促） */
@@ -82,12 +113,37 @@ export interface BossRound {
   /** 本轮有效线索 id 列表；呈上无效线索会被反驳且不推进 */
   accept: string[];
   slots: BossSlot[];
+  /** New schema: the assertion the player must dismantle. */
+  claim?: string;
+  /** New schema alias; when present it takes precedence over slots. */
+  counters?: BossCounter[];
+}
+export interface BossCase {
+  id: string;
+  claim: string;
+  cue?: string;
+  counters: BossCounter[];
+}
+export interface BossMeterConfig {
+  initial?: number;
+  min?: number;
+  max?: number;
+  /** Exposure change for an irrelevant-but-held clue. */
+  miss?: number;
 }
 export interface BossSuspect {
   id: string;
   name: string;
   desc: string;
   correct: boolean;
+}
+export interface BossClaimOption {
+  id: string;
+  statement: string;
+  summary?: string;
+  certainty: 'fact' | 'hypothesis';
+  credibility?: number;
+  exposure?: number;
 }
 export interface BossData {
   /** 问题页标题（知乎形态） */
@@ -100,10 +156,18 @@ export interface BossData {
   introLoop?: string;
   /** 轮回标记变量名（折叠结局的「再来一次」选项负责置位） */
   loopVar?: string;
+  /** New main flow: choose a bounded claim, then test it case by case. */
+  claims?: BossClaimOption[];
+  /** Legacy fallback only when claims are absent. */
   suspects: BossSuspect[];
   /** 选错指控对象时的折叠文案 */
   foldWrong: string;
+  /** Legacy rounds; normalized into cases by boss-rules.mjs. */
   rounds: BossRound[];
+  /** Claim/counter schema used by the new deterministic boss engine. */
+  cases?: BossCase[];
+  credibility?: BossMeterConfig;
+  exposure?: BossMeterConfig;
   /** 彩蛋：任何轮次呈上该线索 → 隐藏指控 → 彩蛋结局 */
   egg?: { clue: string; present: string; ending: string };
   endings: { truth: string; fold: string };
@@ -120,6 +184,8 @@ export interface Scene {
   chapter?: string;
   /** 场景氛围图路径（绝对/相对 URL，空串则用渐变+噪点占位） */
   image?: string;
+  /** 描述画面信息而非文件名；场景图存在时供读屏和失败占位使用。 */
+  imageAlt?: string;
   /** markdown 叙事文本 */
   text?: string;
   objective?: string;
@@ -183,6 +249,12 @@ export interface ClueMeta {
   desc?: string;
   sourceLabel?: string;
   kind?: 'observation' | 'testimony' | 'inference';
+  art?: {
+    /** Paper/card treatment; all visible prose remains live text rendered by the UI. */
+    template: 'statement' | 'exam' | 'web' | 'witness';
+    image?: string;
+    imageAlt?: string;
+  };
 }
 
 export interface Kanshan {
@@ -219,9 +291,47 @@ export interface ChatTurn {
 
 export type Vars = Record<string, string>;
 
+export type BossRunPhase = 'claim' | 'counter' | 'resolved';
+export type BossOutcome = 'truth' | 'fold' | 'egg';
+export interface BossRunState {
+  v: 1;
+  sceneId: string;
+  phase: BossRunPhase;
+  claimId?: string;
+  /** Legacy suspect selection, retained for old compiled stories. */
+  suspectId?: string;
+  caseIndex: number;
+  credibility: number;
+  exposure: number;
+  /** Only accepted counters are consumed. Misses never enter this list. */
+  usedClues: string[];
+  clearedCases: string[];
+  outcome?: BossOutcome;
+}
+export type BossDecisionStatus =
+  | 'claim-selected' | 'suspect-selected' | 'wrong-suspect' | 'not-held' | 'miss'
+  | 'supported' | 'partial' | 'overreach' | 'countered'
+  | 'already-used' | 'already-cleared' | 'case-locked' | 'advanced'
+  | 'truth' | 'egg' | 'inactive';
+export interface BossDecision {
+  status: BossDecisionStatus;
+  accepted: boolean;
+  consumed: boolean;
+  run: BossRunState;
+  destination?: string;
+  caseId?: string;
+  clue?: string;
+  counter?: BossCounter;
+  result?: 'supported' | 'partial' | 'overreach';
+  explanation?: string;
+}
+
 export type MemoEntry =
   | { kind: 'choice'; sceneId: string; text: string }
   | { kind: 'action'; sceneId: string; actionId: string; text: string; feedback: string; changes: Array<{ key: string; label: string; before: string; after: string }> }
+  | { kind: 'boss'; sceneId: string; event: BossDecisionStatus; claimId?: string; suspectId?: string; caseId?: string; clue?: string;
+      result?: 'supported' | 'partial' | 'overreach'; accepted: boolean; consumed: boolean;
+      credibility: number; exposure: number; outcome?: BossOutcome }
   | { kind: 'scene'; sceneId: string; chapter?: string };
 
 export interface StorySummary {
@@ -243,6 +353,8 @@ export interface SaveData {
   sceneId: string;
   vars: Vars;
   memo: MemoEntry[];
+  /** Deterministic boss progress, keyed by boss scene id. Optional for V1 saves. */
+  bossRuns?: Record<string, BossRunState>;
   /** 正在进行的 chat 场景最近窗口，刷新续玩用 */
   chat?: { sceneId: string; turns: ChatTurn[]; goalMet: boolean; failedStreak: number };
   chats?: Record<string, { sceneId: string; turns: ChatTurn[]; goalMet: boolean; failedStreak: number }>;

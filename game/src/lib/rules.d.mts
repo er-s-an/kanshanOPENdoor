@@ -1,6 +1,7 @@
-import type { Choice, EncounterAction, EncounterCondition, EncounterOutcome, GameJson, Scene, Vars, InvestigationItem, InvestigationCheck } from '../types';
+import type { Choice, EncounterAction, EncounterCondition, EncounterOutcome, GameJson, Scene, Vars, InvestigationItem, InvestigationCheck, InvestigationMode, InvestigationSearchResult } from '../types';
 export function applyEntry(story: GameJson, sceneId: string, vars: Vars): Vars;
 export function inspectItem(story: GameJson, sceneId: string, itemId: string, vars: Vars): { vars: Vars; item: InvestigationItem } | null;
+export function searchInvestigation(story: GameJson, sceneId: string, query: string, vars: Vars, mode?: InvestigationMode): InvestigationSearchResult;
 export function verifyEvidence(story: GameJson, sceneId: string, checkId: string, evidenceIds: string[], vars: Vars): { vars: Vars; check: InvestigationCheck; correct: boolean } | null;
 export function outcomeKey(sceneId: string): string;
 export function matches(conditions: EncounterCondition[] | undefined, vars: Vars): boolean;

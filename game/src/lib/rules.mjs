@@ -45,6 +45,32 @@ export function inspectItem(story, sceneId, itemId, vars) {
   return { item, vars: { ...vars, [item.clue]: 'found' } };
 }
 
+// Search is deliberately narrow: a failure exposes neither candidate ids nor hidden item metadata.
+// NFKC plus punctuation/space folding keeps keyboard input deterministic across full-/half-width text.
+const normalizeSearchText = (value) => typeof value === 'string'
+  ? value.normalize('NFKC').toLocaleLowerCase('zh-CN').replace(/[\p{P}\p{S}\s]+/gu, '')
+  : '';
+
+export function searchInvestigation(story, sceneId, query, vars, mode) {
+  const needle = normalizeSearchText(query);
+  if (!needle) return { status: 'empty', item: null };
+  const scene = story.scenes.find((candidate) => candidate.id === sceneId);
+  if (scene?.type !== 'investigate' || !scene.investigation) return { status: 'miss', item: null };
+  const normalizedMode = typeof mode === 'string' ? mode : null;
+  const matchesQuery = scene.investigation.items.filter((item) => {
+    if (choiceLocked(item, vars)) return false;
+    if (normalizedMode && item.discover?.modes?.length && !item.discover.modes.includes(normalizedMode)) return false;
+    const terms = [item.title, ...(item.keywords || []), ...(item.discover?.aliases || [])]
+      .map(normalizeSearchText)
+      .filter(Boolean);
+    return terms.some((term) => term.includes(needle) || needle.includes(term));
+  });
+  if (matchesQuery.length === 0) return { status: 'miss', item: null };
+  if (matchesQuery.length !== 1) return { status: 'ambiguous', item: null };
+  const result = inspectItem(story, sceneId, matchesQuery[0].id, vars);
+  return result ? { status: 'found', item: result.item, vars: result.vars } : { status: 'miss', item: null };
+}
+
 export function verifyEvidence(story, sceneId, checkId, evidenceIds, vars) {
   const scene = story.scenes.find((s) => s.id === sceneId);
   const check = scene?.type === 'investigate' && scene.investigation?.checks.find((c) => c.id === checkId);

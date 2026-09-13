@@ -1,9 +1,13 @@
 // 全局状态引擎：故事加载 / 场景导航（带 300ms 过渡）/ 变量 / 抉择回放 / 自动存档 / URL 暗门
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import type { ChatTurn, Choice, GameJson, MemoEntry, Scene, StorySummary, Vars } from '../types';
+import type {
+  BossDecision, BossRunState, ChatTurn, Choice, GameJson, InvestigationMode,
+  InvestigationSearchResult, MemoEntry, Scene, StorySummary, Vars,
+} from '../types';
 import { fetchStory, fetchStories } from '../lib/api';
 import { archiveSave, clearSave, loadSave, persistSave } from '../lib/store';
-import { applyAction, applyChoice, completedOutcome, applyEntry, inspectItem, verifyEvidence } from '../lib/rules.mjs';
+import { applyAction, applyChoice, completedOutcome, applyEntry, inspectItem, searchInvestigation, verifyEvidence } from '../lib/rules.mjs';
+import { advanceBossCase, createBossRun, presentBossEvidence, restoreBossRun, selectBossClaim, selectBossSuspect } from '../lib/boss-rules.mjs';
 
 export type Phase = 'boot' | 'door' | 'play';
 export type NavPhase = 'idle' | 'out' | 'in';
@@ -16,20 +20,37 @@ export interface GameState {
   sceneId: string;
   vars: Vars;
   memo: MemoEntry[];
+  bossRuns: Record<string, BossRunState>;
   judge: boolean; // 评委暗门：?scene= 直达，不读档不写档
 }
 
 type Action =
   | { type: 'BOOTED' }
   | { type: 'STORIES'; stories: StorySummary[]; error: string }
-  | { type: 'ENTER'; story: GameJson; sceneId: string; vars: Vars; memo: MemoEntry[]; judge: boolean }
+  | { type: 'ENTER'; story: GameJson; sceneId: string; vars: Vars; memo: MemoEntry[]; bossRuns: Record<string, BossRunState>; judge: boolean }
   | { type: 'GOTO'; sceneId: string; from: string }
   | { type: 'CHOOSE'; choiceId: string; from: string }
   | { type: 'ACT'; actionId: string; from: string }
   | { type: 'GRANT'; vars: Vars; from?: string }
   | { type: 'INSPECT'; itemId: string; from: string }
   | { type: 'VERIFY'; checkId: string; evidenceIds: string[]; from: string }
+  | { type: 'BOSS'; result: BossDecision; from: string }
   | { type: 'TO_DOOR'; keepSave: boolean };
+
+function resetBossAt(story: GameJson, sceneId: string, runs: Record<string, BossRunState>) {
+  const scene = story.scenes.find((candidate) => candidate.id === sceneId);
+  const run = scene ? createBossRun(scene) : null;
+  return run ? { ...runs, [sceneId]: run } : runs;
+}
+
+function resumeBossRuns(story: GameJson, saved: Record<string, BossRunState> | undefined, sceneId: string) {
+  const runs: Record<string, BossRunState> = {};
+  for (const scene of story.scenes) {
+    const restored = saved?.[scene.id] ? restoreBossRun(scene, saved[scene.id]) : null;
+    if (restored) runs[scene.id] = restored;
+  }
+  return runs[sceneId] ? runs : resetBossAt(story, sceneId, runs);
+}
 
 function reducer(s: GameState, a: Action): GameState {
   switch (a.type) {
@@ -38,7 +59,7 @@ function reducer(s: GameState, a: Action): GameState {
     case 'STORIES':
       return { ...s, stories: a.stories, storyError: a.error };
     case 'ENTER':
-      return { ...s, phase: 'play', story: a.story, sceneId: a.sceneId, vars: a.vars, memo: a.memo, judge: a.judge };
+      return { ...s, phase: 'play', story: a.story, sceneId: a.sceneId, vars: a.vars, memo: a.memo, bossRuns: a.bossRuns, judge: a.judge };
     case 'GOTO': {
       if (!s.story || s.phase !== 'play' || s.sceneId !== a.from || !s.story.scenes.some((sc) => sc.id === a.sceneId) || s.sceneId === a.sceneId) return s;
       const current = s.story.scenes.find((sc) => sc.id === s.sceneId);
@@ -54,7 +75,7 @@ function reducer(s: GameState, a: Action): GameState {
       if (prev?.kind !== 'scene' || prev.sceneId !== a.sceneId) {
         memo.push({ kind: 'scene', sceneId: a.sceneId, chapter: s.story.scenes.find((sc) => sc.id === a.sceneId)?.chapter });
       }
-      return { ...s, sceneId: a.sceneId, vars: applyEntry(s.story, a.sceneId, s.vars), memo: memo.slice(-240) };
+      return { ...s, sceneId: a.sceneId, vars: applyEntry(s.story, a.sceneId, s.vars), memo: memo.slice(-240), bossRuns: resetBossAt(s.story, a.sceneId, s.bossRuns) };
     }
     case 'CHOOSE': {
       if (!s.story || s.phase !== 'play' || s.sceneId !== a.from) return s;
@@ -63,7 +84,7 @@ function reducer(s: GameState, a: Action): GameState {
       const memo: MemoEntry[] = [...s.memo];
       memo.push({ kind: 'choice', sceneId: s.sceneId, text: applied.choice.text });
       memo.push({ kind: 'scene', sceneId: applied.sceneId, chapter: s.story.scenes.find((sc) => sc.id === applied.sceneId)?.chapter });
-      return { ...s, sceneId: applied.sceneId, vars: applied.vars, memo: memo.slice(-240) };
+      return { ...s, sceneId: applied.sceneId, vars: applied.vars, memo: memo.slice(-240), bossRuns: resetBossAt(s.story, applied.sceneId, s.bossRuns) };
     }
     case 'ACT': {
       if (!s.story || s.phase !== 'play' || s.sceneId !== a.from) return s;
@@ -88,6 +109,18 @@ function reducer(s: GameState, a: Action): GameState {
       const entry: MemoEntry = { kind: 'action', sceneId: s.sceneId, actionId: `verify:${a.checkId}`, text: `查证：${result.check.prompt}`, feedback: result.correct ? result.check.success : result.check.failure, changes: [] };
       return { ...s, vars: result.vars, memo: [...s.memo, entry].slice(-240) };
     }
+    case 'BOSS': {
+      if (!s.story || s.phase !== 'play' || s.sceneId !== a.from || a.result.run.sceneId !== s.sceneId) return s;
+      const scene = s.story.scenes.find((candidate) => candidate.id === s.sceneId);
+      if (scene?.type !== 'boss' || !scene.boss) return s;
+      const entry: MemoEntry = {
+        kind: 'boss', sceneId: s.sceneId, event: a.result.status, claimId: a.result.run.claimId,
+        suspectId: a.result.run.suspectId, caseId: a.result.caseId, clue: a.result.clue, result: a.result.result,
+        accepted: a.result.accepted, consumed: a.result.consumed,
+        credibility: a.result.run.credibility, exposure: a.result.run.exposure, outcome: a.result.run.outcome,
+      };
+      return { ...s, bossRuns: { ...s.bossRuns, [s.sceneId]: a.result.run }, memo: [...s.memo, entry].slice(-240) };
+    }
     case 'GRANT': {
       if (!s.story || (a.from && a.from !== s.sceneId)) return s;
       const current = s.story.scenes.find((sc) => sc.id === s.sceneId);
@@ -100,7 +133,7 @@ function reducer(s: GameState, a: Action): GameState {
     }
     case 'TO_DOOR': {
       if (!a.keepSave) clearSave(s.story?.story.id);
-      return { ...s, phase: 'door', story: null, sceneId: '', vars: {}, memo: [], judge: false };
+      return { ...s, phase: 'door', story: null, sceneId: '', vars: {}, memo: [], bossRuns: {}, judge: false };
     }
     default:
       return s;
@@ -133,7 +166,14 @@ export interface Engine extends GameState {
   /** Preserved V1 clue integration. Encounter actions never call this. */
   grantVars: (vars: Vars, fromSceneId?: string) => void;
   inspect: (itemId: string) => void;
+  /** Search grants only after one unique eligible match; misses reveal no item metadata. */
+  searchInvestigation: (query: string, mode?: InvestigationMode) => InvestigationSearchResult;
   verify: (checkId: string, evidenceIds: string[]) => boolean;
+  bossRun: BossRunState | null;
+  bossSelectClaim: (claimId: string) => BossDecision | null;
+  bossSelectSuspect: (suspectId: string) => BossDecision | null;
+  bossPresentEvidence: (clue: string) => BossDecision | null;
+  bossAdvance: () => BossDecision | null;
   backToDoor: (keepSave?: boolean) => void;
   resetRun: () => void;
   saveChat: (chat?: { sceneId: string; turns: ChatTurn[]; goalMet: boolean; failedStreak: number }) => void;
@@ -150,6 +190,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     sceneId: '',
     vars: {},
     memo: [],
+    bossRuns: {},
     judge: false,
   });
 
@@ -209,9 +250,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const saveSnapshot = useCallback(() => {
     if (!state.story || state.judge || state.phase !== 'play') return;
     const existing = loadSave(state.story.story.id);
-    persistSave({ v: 1, storyVersion: state.story.version, storyId: state.story.story.id, sceneId: state.sceneId, vars: state.vars, memo: state.memo,
+    persistSave({ v: 1, storyVersion: state.story.version, storyId: state.story.story.id, sceneId: state.sceneId, vars: state.vars, memo: state.memo, bossRuns: state.bossRuns,
       ...(existing && existing.storyVersion === state.story.version ? { chats: existing.chats, chat: existing.chats?.[state.sceneId] || (existing.chat?.sceneId === state.sceneId ? existing.chat : undefined) } : {}) });
-  }, [state.story, state.judge, state.phase, state.sceneId, state.vars, state.memo]);
+  }, [state.story, state.judge, state.phase, state.sceneId, state.vars, state.memo, state.bossRuns]);
 
   // 自动存档
   useEffect(() => {
@@ -235,7 +276,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
         // 评委暗门：强制场景直达，不读档不写档
         if (forcedOk) {
-          dispatch({ type: 'ENTER', story, sceneId: forced as string, vars: applyEntry(story, forced as string, { ...story.initialVars }), memo: [], judge: true });
+          dispatch({ type: 'ENTER', story, sceneId: forced as string, vars: applyEntry(story, forced as string, { ...story.initialVars }), memo: [], bossRuns: resetBossAt(story, forced as string, {}), judge: true });
           return;
         }
         if (opts.fresh) clearSave(storyId);
@@ -251,6 +292,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           sceneId: target,
           vars: applyEntry(story, target, resumeOk ? save.vars : { ...story.initialVars }),
           memo: resumeOk ? save.memo : [{ kind: 'scene', sceneId: target, chapter: story.scenes.find((sc) => sc.id === target)?.chapter }],
+          bossRuns: resumeOk ? resumeBossRuns(story, save.bossRuns, target) : resetBossAt(story, target, {}),
           judge: false,
         });
       } catch (err) {
@@ -279,6 +321,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const inspect = useCallback((itemId: string) => {
     if (!busyRef.current) dispatch({ type: 'INSPECT', itemId, from: state.sceneId });
   }, [state.sceneId]);
+  const searchInvestigationAtScene = useCallback((query: string, mode?: InvestigationMode): InvestigationSearchResult => {
+    const current = stateRef.current;
+    if (!current.story || current.phase !== 'play' || busyRef.current) return { status: 'miss', item: null };
+    const result = searchInvestigation(current.story, current.sceneId, query, current.vars, mode);
+    if (result.status === 'found') dispatch({ type: 'INSPECT', itemId: result.item.id, from: current.sceneId });
+    return result;
+  }, []);
   const verify = useCallback((checkId: string, evidenceIds: string[]) => {
     if (!state.story || busyRef.current) return false;
     const result = verifyEvidence(state.story, state.sceneId, checkId, evidenceIds, state.vars);
@@ -291,6 +340,37 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     if (busyRef.current) return;
     dispatch({ type: 'ACT', actionId, from: state.sceneId });
   }, [state.sceneId]);
+
+  const commitBoss = useCallback((result: BossDecision | null, from: string) => {
+    if (result && !['inactive', 'not-held', 'already-used', 'already-cleared', 'case-locked'].includes(result.status)) {
+      dispatch({ type: 'BOSS', result, from });
+    }
+    return result;
+  }, []);
+  const bossSelectClaim = useCallback((claimId: string) => {
+    const current = stateRef.current;
+    const scene = current.story?.scenes.find((candidate) => candidate.id === current.sceneId);
+    const run = scene && (current.bossRuns[scene.id] || createBossRun(scene));
+    return scene && run ? commitBoss(selectBossClaim(scene, run, claimId), scene.id) : null;
+  }, [commitBoss]);
+  const bossSelectSuspect = useCallback((suspectId: string) => {
+    const current = stateRef.current;
+    const scene = current.story?.scenes.find((candidate) => candidate.id === current.sceneId);
+    const run = scene && (current.bossRuns[scene.id] || createBossRun(scene));
+    return scene && run ? commitBoss(selectBossSuspect(scene, run, suspectId), scene.id) : null;
+  }, [commitBoss]);
+  const bossPresentEvidence = useCallback((clue: string) => {
+    const current = stateRef.current;
+    const scene = current.story?.scenes.find((candidate) => candidate.id === current.sceneId);
+    const run = scene && (current.bossRuns[scene.id] || createBossRun(scene));
+    return scene && run ? commitBoss(presentBossEvidence(scene, run, clue, current.vars), scene.id) : null;
+  }, [commitBoss]);
+  const bossAdvance = useCallback(() => {
+    const current = stateRef.current;
+    const scene = current.story?.scenes.find((candidate) => candidate.id === current.sceneId);
+    const run = scene && (current.bossRuns[scene.id] || createBossRun(scene));
+    return scene && run ? commitBoss(advanceBossCase(scene, run), scene.id) : null;
+  }, [commitBoss]);
 
   const backToDoor = useCallback((keepSave = true) => {
     timers.current.forEach(clearTimeout);
@@ -313,12 +393,16 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       const chats = existing && existing.storyVersion === current.story.version ? { ...existing.chats } : {};
       chats[chat.sceneId] = chat;
       persistSave({ v: 1, storyVersion: current.story.version, storyId: current.story.story.id, sceneId: current.sceneId,
-        vars: current.vars, memo: current.memo, chats, chat: chats[current.sceneId] });
+        vars: current.vars, memo: current.memo, bossRuns: current.bossRuns, chats, chat: chats[current.sceneId] });
     }, [],
   );
 
   const sceneList = state.story?.scenes || [];
   const scene = state.story ? state.story.scenes.find((sc) => sc.id === state.sceneId) || null : null;
+  const bossRun = useMemo(
+    () => scene?.type === 'boss' ? state.bossRuns[scene.id] || createBossRun(scene) : null,
+    [scene, state.bossRuns],
+  );
 
   const nextSceneOf = useCallback(
     (sc: Scene) => {
@@ -355,12 +439,18 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       act,
       grantVars,
       inspect,
+      searchInvestigation: searchInvestigationAtScene,
       verify,
+      bossRun,
+      bossSelectClaim,
+      bossSelectSuspect,
+      bossPresentEvidence,
+      bossAdvance,
       backToDoor,
       resetRun,
       saveChat,
     }),
-    [state, scene, sceneList, nextSceneOf, continueKind, navBusy, navToken, booted, refreshStories, enterStory, fireNav, chooseAndNav, act, grantVars, inspect, verify, backToDoor, resetRun, saveChat],
+    [state, scene, sceneList, nextSceneOf, continueKind, navBusy, navToken, booted, refreshStories, enterStory, fireNav, chooseAndNav, act, grantVars, inspect, searchInvestigationAtScene, verify, bossRun, bossSelectClaim, bossSelectSuspect, bossPresentEvidence, bossAdvance, backToDoor, resetRun, saveChat],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
