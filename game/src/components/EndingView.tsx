@@ -8,6 +8,7 @@ import { useGame } from '../state/engine';
 import { usePrefs } from '../state/prefs';
 import { TypedProse } from './TypedProse';
 import { Poster, ENDING_RATING_LABEL } from './Poster';
+import { SceneVisual } from './SceneVisual';
 import '../ending-ux.css';
 
 export function EndingView({ scene }: { scene: Scene }) {
@@ -67,6 +68,7 @@ export function EndingView({ scene }: { scene: Scene }) {
     <section className="ending ending--refined">
       <div className="ending__scroll">
         <div className="ending__body">
+          {scene.image ? <SceneVisual scene={scene} fallbackLabel={report.meta.title || story.story.title} variant="ending" className="ending__visual" /> : null}
           {scene.text ? <div className="ending-read"><TypedProse md={scene.text} autoTick onDone={setTyped} /></div> : null}
 
           {typed ? <>

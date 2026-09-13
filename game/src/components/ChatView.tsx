@@ -11,8 +11,8 @@ import { loadSave } from '../lib/store';
 import { sfxClick } from '../lib/sound';
 import { useGame } from '../state/engine';
 import { usePrefs } from '../state/prefs';
-import Art from './Art';
 import { ChoiceDeck } from './ChoiceDeck';
+import { SceneVisual } from './SceneVisual';
 import '../chat-ux.css';
 
 interface BubbleTurn extends ChatTurn { stream?: boolean; topicId?: string }
@@ -27,11 +27,18 @@ const commentAvatarStyle = (name: string): CSSProperties => {
   return { background: `linear-gradient(140deg, hsl(${hue} 34% 32%), hsl(${(hue + 46) % 360} 36% 21%))` };
 };
 
+const BLUE_NPC_AVATARS: Readonly<Record<string, string>> = {
+  npc_zhangwei: '/art/blue/avatar-zhangwei.jpg',
+  npc_manager: '/art/blue/avatar-manager.jpg',
+  npc_trainer: '/art/blue/avatar-trainer.jpg',
+};
+
 export function ChatView({ scene }: { scene: Scene }) {
   const { story, vars, nextSceneOf, continueKind, nav, memo, saveChat, judge, chooseAndNav, grantVars, navBusy } = useGame();
   const { prefs } = usePrefs();
   const npc = useMemo(() => story?.npcs?.find((entry) => entry.id === scene.npc), [story, scene.npc]);
   const npcName = npc?.name || '神秘人';
+  const npcAvatar = scene.npc ? BLUE_NPC_AVATARS[scene.npc] : undefined;
   const topics = scene.dialogue?.topics || [];
   const requiredClues = scene.dialogue?.requiredClues || [];
   const isDialogue = !!scene.dialogue;
@@ -203,9 +210,11 @@ export function ChatView({ scene }: { scene: Scene }) {
 
   return (
     <section className="chat chat--focused">
-      <Art id={scene.id} image={scene.image} label={story?.story.title} />
-      <div className="chat__head">
-        <span className="chat__npc"><span className="chat__avatar" aria-hidden>{npcName.slice(0, 1)}</span><span className="chat__who"><b>{npcName}</b><i>{busy ? '正在回答你' : '正在交谈'}</i></span></span>
+      <div className="chat__visual">
+        {scene.image ? <SceneVisual scene={scene} fallbackLabel={story?.story.title || '交谈现场'} variant="chat" /> : null}
+        <div className="chat__head">
+          <span className="chat__npc"><span className={`chat__avatar${npcAvatar ? ' chat__avatar--image' : ''}`} aria-hidden>{npcAvatar ? <img src={npcAvatar} alt="" width="1600" height="1600" decoding="async" /> : npcName.slice(0, 1)}</span><span className="chat__who"><b>{npcName}</b><i>{busy ? '正在回答你' : '正在交谈'}</i></span></span>
+        </div>
       </div>
       <aside className="chat__guide" aria-label="交谈指引">
         <p className="chat__objective">{objective}</p>
@@ -253,7 +262,7 @@ export function ChatView({ scene }: { scene: Scene }) {
               send(input);
             }
           }} rows={1} maxLength={4000} placeholder={busy ? '可以先写下一个问题…' : `对${npcName}说点什么…`} enterKeyHint="send" />
-          {busy ? <button key="stop" className="chat__send chat__send--stop" type="button" onClick={(event) => { event.preventDefault(); stop(); }}>停止</button> : <button key="send" className="chat__send" type="submit" disabled={!input.trim() || navBusy}>发送</button>}
+          {busy ? <button key="stop" className="chat__send chat__send--stop" type="button" onClick={(event) => { event.preventDefault(); stop(); }}>停止</button> : <button key="send" className={`chat__send${canContinue && (goalMet || !isDialogue) ? ' chat__send--secondary' : ''}`} type="submit" disabled={!input.trim() || navBusy}>发送</button>}
         </form> : null}
         {busy ? <p className="chat__waiting" role="status">{npcName}正在回答，草稿会留在输入框里。</p> : null}
         {!deckOpen && !canContinue && !busy ? <p className="chat__compose-note">聊到要点之后，就能继续往下走。</p> : null}

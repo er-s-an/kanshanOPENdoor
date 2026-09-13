@@ -4,6 +4,7 @@ import { sfxClick } from '../lib/sound';
 import { useGame } from '../state/engine';
 import { usePrefs } from '../state/prefs';
 import { ChoiceDeck } from './ChoiceDeck';
+import { SceneVisual } from './SceneVisual';
 import { TypedProse } from './TypedProse';
 
 export function StoryView({ scene }: { scene: Scene }) {
@@ -16,6 +17,7 @@ export function StoryView({ scene }: { scene: Scene }) {
   return (
     <section className="reading-scene" aria-label="故事正文">
       <div className="reading-scene__scroll">
+        {scene.image ? <SceneVisual scene={scene} fallbackLabel="当前章节" className="reading-scene__visual" /> : null}
         <article className="reading-scene__body">
           <div className="reading-scene__eyebrow">{scene.type === 'choice' ? '这一刻，由你决定' : '故事正在发生'}</div>
           {scene.objective ? <p className="reading-scene__lead">{scene.objective}</p> : null}
