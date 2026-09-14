@@ -6,7 +6,7 @@ import { useGame } from '../state/engine';
 import { usePrefs } from '../state/prefs';
 import '../post-ux.css';
 
-type FeedFilter = 'all' | 'replyable' | 'dm';
+type FeedFilter = 'all' | 'liked' | 'dm';
 
 function ExtractableText({ text, extractables = [] }: { text: string; extractables?: PostExtractable[] }) {
   const { vars, savePostExtractable } = useGame();
@@ -71,11 +71,11 @@ function CommunityFeed({ scene }: { scene: Scene }) {
   const accountChoiceIds = new Set(post.entries.flatMap((entry) => entry.actionChoiceId ? [entry.actionChoiceId] : []));
   const exitChoices = (scene.choices || []).filter((choice) => !accountChoiceIds.has(choice.id));
   const visible = post.entries.filter((entry) => {
-    if (filter === 'replyable') return Boolean(entry.actionChoiceId);
+    if (filter === 'liked') return Boolean(entry.pinned);
     if (filter === 'dm') return entry.channel === 'dm';
     return true;
   });
-  const replyableCount = post.entries.filter((entry) => entry.actionChoiceId).length;
+  const likedCount = post.entries.filter((entry) => entry.pinned).length;
   const dmCount = post.entries.filter((entry) => entry.channel === 'dm').length;
   const availableExitChoices = exitChoices.filter((choice) => !choiceLocked(choice, vars));
 
@@ -83,7 +83,7 @@ function CommunityFeed({ scene }: { scene: Scene }) {
     <div className="post-feed__filters" role="group" aria-label="筛选社区回应">
       {([
         ['all', `全部回应 ${post.entries.length}`],
-        ['replyable', `作者赞过 ${replyableCount}`],
+        ['liked', `楼主赞过 ${likedCount}`],
         ['dm', `私信 ${dmCount}`],
       ] as const).map(([id, label]) => <button key={id} aria-pressed={filter === id} onClick={() => setFilter(id)}>{label}</button>)}
     </div>
@@ -96,6 +96,12 @@ function CommunityFeed({ scene }: { scene: Scene }) {
           {entry.pinned ? <span className="post-entry__pin">作者赞过</span> : null}
           <AccountMeta entry={entry} />
           <p className="post-entry__text"><ExtractableText text={entry.text} extractables={post.extractables} /></p>
+          {entry.replies?.length ? <ol className="post-entry__replies" aria-label={`${entry.name}的楼中楼回复`}>
+            {entry.replies.map((reply) => <li key={reply.id}>
+              <p><strong>{reply.name}</strong><span>{reply.text}</span></p>
+              {reply.time ? <time>{reply.time}</time> : null}
+            </li>)}
+          </ol> : null}
           <footer className="post-entry__foot">
             <span>{typeof entry.likes === 'number' ? `${entry.likes} 赞同` : '刚出现的回应'}</span>
             {choice ? <ChoiceButton choice={choice} label={visited ? '再次查看' : entry.actionLabel} /> : null}

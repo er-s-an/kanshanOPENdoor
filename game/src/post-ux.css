@@ -47,6 +47,11 @@
 .post-entry__identity small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11px; color:#9299a4; }
 .post-entry__channel { margin-left:auto; padding:3px 8px; border-radius:4px; background:#e9f2ff; color:#315f99; font-size:11px; }
 .post-entry__text { max-width:720px; margin:14px 0 7px; color:#30343a; line-height:1.8; font-size:15px; }
+.post-entry__replies { display:grid; gap:7px; max-width:700px; margin:10px 0 5px 46px; padding:10px 12px; border-left:2px solid #e3e6ea; background:#f7f8fa; list-style:none; }
+.post-entry__replies li { display:flex; align-items:baseline; justify-content:space-between; gap:16px; color:#4e555f; font-size:12px; line-height:1.65; }
+.post-entry__replies p { margin:0; }
+.post-entry__replies strong { margin-right:7px; color:#3c4653; font-weight:600; }
+.post-entry__replies time { flex:none; color:#9aa0a9; font-size:10px; }
 .post-entry__boundary { margin:0; color:#7a828d; font-size:12px; line-height:1.65; }
 .post-entry__boundary summary { display:flex; align-items:center; width:fit-content; min-height:40px; padding:7px 0; color:#818994; cursor:pointer; list-style:none; }
 .post-entry__boundary summary::before { content:'依据边界'; margin-right:8px; padding:2px 6px; border:1px solid #d8dce0; border-radius:3px; color:#7b6842; font-size:10px; }
@@ -101,6 +106,7 @@
   .post-feed__filters { margin:0 -2px; overflow-x:auto; }
   .post-feed__filters button { flex:none; }
   .post-entry { padding:17px 15px 14px; }
+  .post-entry__replies { margin-left:0; }
   .post-entry__pin { top:18px; right:15px; }
   .post-entry--pinned .post-entry__meta { padding-right:92px; }
   .post-entry__foot { align-items:flex-end; }

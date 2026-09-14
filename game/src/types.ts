@@ -120,8 +120,12 @@ export interface PostEntry {
   channel?: PostChannel;
   /** Every visible community identity is authored fiction, never an imported Zhihu followee. */
   identity: 'story-fictional';
-  /** What this account can actually know. Always visible before the player replies. */
+  /** What this account can actually know. Authoring-only boundary; never rendered to players. */
   knowledge: string;
+  /** World-native attitude used to keep the crowd from sounding like one evidence coach. */
+  stance?: 'world-normal' | 'uncertain' | 'anomaly';
+  /** Small authored reply chains that add community texture without adding clue routes. */
+  replies?: Array<{ id: string; name: string; text: string; time?: string }>;
   /** Maps an authored account response to a normal deterministic scene choice. */
   actionChoiceId?: string;
   actionLabel?: string;
