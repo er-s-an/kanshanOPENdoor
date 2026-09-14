@@ -20,7 +20,7 @@ import crypto from 'node:crypto';
 import { isIP } from 'node:net';
 import { fileURLToPath } from 'node:url';
 import { clientStory, isAvailableStory, storyMeta } from './catalog.mjs';
-import { planDialogue, finishDialogue, dialogueInstruction } from './dialogue.mjs';
+import { buildKanshanMessages, dialogueInstruction, fallbackKanshanLine, finishDialogue, kanshanReplyLeaks, normalizeKanshanReply, planDialogue } from './dialogue.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..');
@@ -77,6 +77,8 @@ const CHAT_RATE_WINDOW_MS = envInteger('KANSHAN_CHAT_RATE_WINDOW_MS', 10 * 60_00
 // The bundled current Zhihu docs list a 100/day Zhida allowance, so reserve
 // headroom there. Compatible model endpoints keep the larger demo default.
 const CHAT_DAILY_LIMIT = envInteger('KANSHAN_CHAT_DAILY_LIMIT', IS_ZHIHU_UPSTREAM ? 80 : 4_500, 100_000);
+const GUIDE_RATE_LIMIT = envInteger('KANSHAN_GUIDE_RATE_LIMIT', 12, 1_000);
+const GUIDE_DAILY_LIMIT = envInteger('KANSHAN_GUIDE_DAILY_LIMIT', IS_ZHIHU_UPSTREAM ? 20 : 1_000, 10_000);
 
 // ------------------------------------------------------------ secrets
 // 每次请求解析：环境变量优先，其次本地文件（带 mtime 缓存），均失败则降级。
@@ -255,6 +257,8 @@ function clientRateKey(req) {
 
 const clientRateWindows = new Map();
 let dailyRateWindow = { day: '', count: 0 };
+const guideRateWindows = new Map();
+let guideDailyWindow = { day: '', count: 0 };
 let rateChecks = 0;
 
 function utcDay(now) {
@@ -285,6 +289,26 @@ function takeUpstreamSlot(clientKey, now = Date.now()) {
       if (now - value.startedAt >= CHAT_RATE_WINDOW_MS) clientRateWindows.delete(key);
     }
     while (clientRateWindows.size > 4_096) clientRateWindows.delete(clientRateWindows.keys().next().value);
+  }
+  return true;
+}
+
+function takeGuideSlot(clientKey, now = Date.now()) {
+  const day = utcDay(now);
+  if (guideDailyWindow.day !== day) guideDailyWindow = { day, count: 0 };
+  const current = guideRateWindows.get(clientKey);
+  const client = !current || now - current.startedAt >= CHAT_RATE_WINDOW_MS
+    ? { startedAt: now, count: 0 }
+    : current;
+  if ((GUIDE_RATE_LIMIT > 0 && client.count >= GUIDE_RATE_LIMIT)
+      || (GUIDE_DAILY_LIMIT > 0 && guideDailyWindow.count >= GUIDE_DAILY_LIMIT)) return false;
+  if (GUIDE_RATE_LIMIT > 0) guideRateWindows.set(clientKey, { ...client, count: client.count + 1 });
+  if (GUIDE_DAILY_LIMIT > 0) guideDailyWindow.count += 1;
+  if (guideRateWindows.size > 4_096) {
+    for (const [key, value] of guideRateWindows) {
+      if (now - value.startedAt >= CHAT_RATE_WINDOW_MS) guideRateWindows.delete(key);
+    }
+    while (guideRateWindows.size > 4_096) guideRateWindows.delete(guideRateWindows.keys().next().value);
   }
   return true;
 }
@@ -543,6 +567,88 @@ async function judgeGoal({ goal, windowed, reply, secret }) {
   } finally {
     clearTimeout(timer);
   }
+}
+
+// --------------------------------------------------------- /api/kanshan
+// The companion is deliberately separate from NPC chat: it receives only the
+// current visible scene and already-found clue cards, and can never grant state.
+async function handleKanshan(req, res) {
+  res.writeHead(200, sseHeaders());
+  let body;
+  try {
+    body = JSON.parse(await readBody(req));
+  } catch {
+    writeEvent(res, { type: 'error', code: 'BAD_REQUEST', message: '这句话没有传完。' });
+    return res.end();
+  }
+  const { storyId, sceneId, history = [], cluesFound = [] } = body || {};
+  const validId = (value) => typeof value === 'string' && value.trim().length > 0 && value.length <= MAX_ID_CHARS;
+  const validTurn = (turn) => turn && ['user', 'assistant'].includes(turn.role)
+    && typeof turn.content === 'string' && turn.content.length <= 280;
+  if (!validId(storyId) || !validId(sceneId) || !Array.isArray(history) || !history.length || history.length > 16
+      || history.some((turn) => !validTurn(turn)) || history.at(-1)?.role !== 'user' || !history.at(-1)?.content.trim()
+      || !Array.isArray(cluesFound) || cluesFound.length > 64
+      || cluesFound.some((id) => !validId(id) || !/^clue_[A-Za-z0-9_]+$/.test(id))) {
+    writeEvent(res, { type: 'error', code: 'BAD_REQUEST', message: '这句话太长，或者上下文不完整。' });
+    return res.end();
+  }
+  const resolved = await resolveStory(storyId);
+  if (!resolved) {
+    writeEvent(res, { type: 'error', code: 'NO_STORY', message: '我还没找到这扇门。' });
+    return res.end();
+  }
+  const { data } = resolved;
+  const scene = (data.scenes || []).find((candidate) => candidate.id === sceneId);
+  if (!scene) {
+    writeEvent(res, { type: 'error', code: 'BAD_SCENE', message: '我还没跟上你所在的这一幕。' });
+    return res.end();
+  }
+  const validClues = cluesFound.filter((id) => (data.clues || []).some((clue) => clue.id === id));
+  const windowed = history.slice(-8).map(({ role, content }) => ({ role, content }));
+  const { system, messages } = buildKanshanMessages({ data, scene, history: windowed, cluesFound: validClues });
+  const scripted = (reason) => {
+    const reply = fallbackKanshanLine(data, scene);
+    writeEvent(res, { type: 'delta', content: reply });
+    writeEvent(res, { type: 'done', reply, mode: 'scripted', cache: 'none', reason });
+    res.end();
+  };
+  const cacheKey = hashOf(JSON.stringify({ version: 1, kind: 'kanshan', storyId: data.story.id, sceneId: scene.id, baseUrl: BASE_URL, model: MODEL, system, messages }));
+  const cachePath = path.join(CACHE_DIR, `kanshan-${cacheKey}.json`);
+  if (!NO_CACHE) {
+    try {
+      const cached = JSON.parse(await readFile(cachePath, 'utf8'));
+      if (typeof cached.reply === 'string' && !kanshanReplyLeaks(cached.reply, { data, scene, cluesFound: validClues })) {
+        writeEvent(res, { type: 'delta', content: cached.reply });
+        writeEvent(res, { type: 'done', reply: cached.reply, mode: 'ai', cache: 'hit' });
+        return res.end();
+      }
+    } catch { /* cache is optional */ }
+  }
+  const secret = await resolveSecret();
+  if (!secret) return scripted('NO_KEY');
+  const rateKey = clientRateKey(req);
+  const cacheEnabled = !NO_CACHE;
+  let generated;
+  try {
+    generated = await singleFlight(cacheKey, cacheEnabled, async () => {
+      if (!takeGuideSlot(rateKey) || !takeUpstreamSlot(rateKey)) return null;
+      const out = await callZhida(messages, secret, () => {});
+      const reply = normalizeKanshanReply(out.reply);
+      if (out.finishError || isOffline(reply) || kanshanReplyLeaks(reply, { data, scene, cluesFound: validClues })) return null;
+      if (cacheEnabled) {
+        try {
+          await writeCacheAtomic(cachePath, { reply, model: MODEL, ts: Date.now() });
+        } catch { /* cache is optional */ }
+      }
+      return reply;
+    });
+  } catch {
+    generated = null;
+  }
+  if (!generated) return scripted('SAFE_FALLBACK');
+  writeEvent(res, { type: 'delta', content: generated });
+  writeEvent(res, { type: 'done', reply: generated, mode: 'ai', cache: 'miss' });
+  res.end();
 }
 
 // ------------------------------------------------------------ /api/chat
@@ -940,6 +1046,12 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'POST' && api === '/api/chat') {
     cors(res);
     await handleChat(req, res);
+    return;
+  }
+
+  if (req.method === 'POST' && api === '/api/kanshan') {
+    cors(res);
+    await handleKanshan(req, res);
     return;
   }
 

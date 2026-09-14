@@ -13,6 +13,7 @@ import { InvestigationView } from './InvestigationView';
 import { EncounterView } from './EncounterView';
 import { BossView } from './BossView';
 import { PostView } from './PostView';
+import { KanshanCompanion } from './KanshanCompanion';
 
 function SceneView({ scene }: { scene: Scene }) {
   if (scene.type === 'investigate') return <InvestigationView scene={scene} />;
@@ -86,6 +87,7 @@ export function Play() {
       </nav>
     </header>
     <div className="play__scene" ref={sceneRoot} key={`${story.story.id}:${sceneId}`}><SceneView scene={scene} /></div>
+    <KanshanCompanion story={story} scene={scene} cluesFound={found.map((clue) => clue.id)} />
     <p className="sr-only" role="status">{newRecords ? `已记下：${newRecords}` : ''}</p>
     <SettingsSheet open={settings} onClose={() => setSettings(false)} />
     <ClueSheet open={clueOpen} onClose={() => setClueOpen(false)} />
