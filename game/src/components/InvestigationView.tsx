@@ -1,5 +1,5 @@
 import { useId, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
-import type { ClueMeta, InvestigationBrowserResult, InvestigationItem, Scene } from '../types';
+import type { ClueMeta, InvestigationBrowserPage, InvestigationBrowserResult, InvestigationItem, Scene } from '../types';
 import { renderMarkdown } from '../lib/md';
 import { choiceLocked } from '../lib/rules.mjs';
 import { useGame } from '../state/engine';
@@ -35,6 +35,7 @@ export function InvestigationView({ scene }: { scene: Scene }) {
   const [searchFeedback, setSearchFeedback] = useState<SearchFeedback | null>(null);
   const [browserResults, setBrowserResults] = useState<InvestigationBrowserResult[]>([]);
   const [browserSearched, setBrowserSearched] = useState(false);
+  const [activeBrowserPage, setActiveBrowserPage] = useState<InvestigationBrowserPage | null>(null);
   const [contextOpen, setContextOpen] = useState(!scene.investigation?.browser);
   const [exitsOpen, setExitsOpen] = useState(false);
   const [activeItemId, setActiveItemId] = useState<string | null>(null);
@@ -73,6 +74,7 @@ export function InvestigationView({ scene }: { scene: Scene }) {
   const hasItems = investigation.items.length > 0;
   const hasChecks = investigation.checks.length > 0;
   const hasTabs = hasItems && hasChecks;
+  const showNotebook = !browser || (visited > 0 && !activeBrowserPage);
   const hasUndiscovered = undiscovered.length > 0;
   const next = nextSceneOf(scene);
   const choices = scene.choices || [];
@@ -128,14 +130,16 @@ export function InvestigationView({ scene }: { scene: Scene }) {
       if (result.status === 'empty') {
         setBrowserSearched(false);
         setBrowserResults([]);
-        setSearchFeedback({ status: 'empty', text: '先输入一个你想核对的词。浏览痕迹可以提供起点，但不会替你完成查证。' });
+        setActiveBrowserPage(null);
+        setSearchFeedback({ status: 'empty', text: '请输入搜索内容。' });
         return;
       }
       setBrowserSearched(true);
+      setActiveBrowserPage(null);
       setBrowserResults(result.results);
       setSearchFeedback(result.status === 'results'
-        ? { status: 'results', text: `找到 ${result.results.length} 个页面。标题和摘要只是入口，打开页面后才能判断能否留作记录。` }
-        : { status: 'miss', text: '这组词没有对应页面。试着从刚才的叙述、最近访问或已有记录里换一个具体名词。' });
+        ? { status: 'results', text: `约 ${result.results.length} 条结果` }
+        : { status: 'miss', text: '没有找到相关结果。' });
       return;
     }
     const result = searchInvestigation(draft);
@@ -163,19 +167,19 @@ export function InvestigationView({ scene }: { scene: Scene }) {
     setDraft(query);
     setBrowserSearched(false);
     setBrowserResults([]);
-    setSearchFeedback({ status: 'results', text: '已把这条旧痕迹放进搜索框。它只说明方诺查过什么，是否异常仍要由你核对。' });
+    setActiveBrowserPage(null);
+    setSearchFeedback(null);
     window.requestAnimationFrame(() => searchRef.current?.focus());
   };
   const openBrowserDocument = (document: InvestigationBrowserResult) => {
     if (navBusy) return;
     const result = openInvestigationBrowserDocument(document.id);
-    if (result.status !== 'evidence') {
+    if (result.status === 'miss') {
       setSearchFeedback({ status: 'miss', text: result.feedback });
       return;
     }
-    const alreadyFound = isFound(result.item.clue);
-    setSearchFeedback({ status: 'found', text: alreadyFound ? '已打开线索簿里的对应记录。' : `已读到可记录的原始资料：「${result.item.title}」。` });
-    showRecord(result.item, !alreadyFound);
+    setActiveBrowserPage(result.page);
+    setSearchFeedback(null);
   };
   const returnToPlaces = () => {
     setActiveItemId(null);
@@ -250,20 +254,20 @@ export function InvestigationView({ scene }: { scene: Scene }) {
           : pendingCheck ? '整理线索' : '回看记录';
 
   return (
-    <section className="investigation" aria-labelledby={`${uid}-title`}>
-      <header className="investigation__head">
+    <section className="investigation" aria-labelledby={browser ? `${uid}-search-title` : `${uid}-title`}>
+      {!browser ? <header className="investigation__head">
         <p className="investigation__eyebrow">{hasChecks ? '眼下要弄清' : '眼下要做的事'}</p>
         <h2 id={`${uid}-title`}>{investigation.objective}</h2>
         {scene.text ? <details className="investigation__context" open={contextOpen} onToggle={(event) => setContextOpen(event.currentTarget.open)}>
           <summary>场景回顾</summary>
           <div className="investigation__intro prose" dangerouslySetInnerHTML={{ __html: renderMarkdown(scene.text) }} />
         </details> : null}
-      </header>
+      </header> : null}
 
-      <div className={`investigation__actionbar${longExitLabel ? ' has-long-exit' : ''}`}>
-        <p role="status">{status}</p>
+      {!browser || canLeave ? <div className={`investigation__actionbar${longExitLabel ? ' has-long-exit' : ''}`}>
+        <p role="status">{browser ? '03:26' : status}</p>
         <button className={`btn ${canLeave || choices.length > 1 ? 'btn--primary' : 'btn--ghost'}`} onClick={primaryAction} disabled={navBusy} aria-label={longExitLabel ? singleExit?.text : undefined}>{primaryLabel}<span aria-hidden>→</span></button>
-      </div>
+      </div> : null}
 
       {choices.length > 1 && exitsOpen ? <section ref={exitsRef} className="investigation__exits" tabIndex={-1} aria-labelledby={`${uid}-exits-title`}>
         <div className="investigation__section-heading"><h3 id={`${uid}-exits-title`}>接下来，你想怎么做</h3><button className="investigation__text-button" onClick={() => { setExitsOpen(false); changeWorkspace(workspace); }}>继续整理</button></div>
@@ -272,40 +276,50 @@ export function InvestigationView({ scene }: { scene: Scene }) {
 
       {hasItems ? <section className={`investigation__search-panel${browser ? ' investigation__search-panel--browser' : ''}`} aria-labelledby={`${uid}-search-title`}>
         {browser ? <div className="investigation__browser-chrome" aria-hidden>
-          <span>‹</span><span>›</span><span>↻</span><p>{browser.address}</p><i>本地记录</i>
+          <span>‹</span><span>›</span><span>↻</span><p>{activeBrowserPage?.url || browser.address}</p><i>深夜模式</i>
         </div> : null}
-        <div className="investigation__section-heading"><h3 id={`${uid}-search-title`}>{browser?.title || '搜寻现场'}</h3><span className="investigation__count">已记录 {visited} 条</span></div>
-        {browser ? <p className="investigation__browser-prompt">{browser.prompt}</p> : null}
+        <div className="investigation__section-heading"><h3 id={`${uid}-search-title`}>{browser?.title || '搜寻现场'}</h3>{browser ? null : <span className="investigation__count">已记录 {visited} 条</span>}</div>
         <form className="investigation__search" role="search" onSubmit={submitSearch}>
-          <label htmlFor={`${uid}-search`} className="sr-only">搜寻本场景的地点、物件或感官线索</label>
-          <input ref={searchRef} id={`${uid}-search`} type="search" value={draft} maxLength={120} placeholder={investigation.searchPlaceholder || '输入地点、物件或你注意到的特征'} onChange={(event) => { setDraft(event.target.value); setSearchFeedback(null); if (browser) { setBrowserSearched(false); setBrowserResults([]); } }} aria-describedby={`${uid}-search-note ${uid}-search-feedback`} />
-          <button type="submit" disabled={navBusy}>搜寻</button>
+          <label htmlFor={`${uid}-search`} className="sr-only">搜索</label>
+          <input ref={searchRef} id={`${uid}-search`} type="search" value={draft} maxLength={120} placeholder={investigation.searchPlaceholder || '输入地点、物件或你注意到的特征'} onChange={(event) => { setDraft(event.target.value); setSearchFeedback(null); if (browser) { setBrowserSearched(false); setBrowserResults([]); setActiveBrowserPage(null); } }} aria-describedby={`${uid}-search-feedback`} />
+          <button type="submit" disabled={navBusy}>{browser ? '搜索' : '搜寻'}</button>
         </form>
-        <p className="investigation__search-note" id={`${uid}-search-note`}>{browser ? '搜索结果会混有无关页面；只有你亲自打开并读到的内容，才会进入线索簿。' : '用你想到的词搜寻；没有明确命中时不会添加线索。场景图上的标记也可以用键盘操作。'}</p>
+        {!browser ? <p className="investigation__search-note">用你想到的词搜寻；没有明确命中时不会添加线索。场景图上的标记也可以用键盘操作。</p> : null}
         <p className={`investigation__search-feedback${searchFeedback?.status === 'found' ? ' is-found' : ''}`} id={`${uid}-search-feedback`} role="status">{searchFeedback?.text || ''}</p>
         {browser ? <div className="investigation__browser-content">
-          {!browserSearched ? <section className="investigation__history" aria-labelledby={`${uid}-history-title`}>
-            <div className="investigation__browser-label"><h4 id={`${uid}-history-title`}>这台电脑的最近访问</h4><span>方诺留下的痕迹</span></div>
+          {activeBrowserPage ? <section className="investigation__browser-page" aria-labelledby={`${uid}-page-title`}>
+            <header>
+              <button type="button" onClick={() => setActiveBrowserPage(null)}><span aria-hidden>←</span> 返回搜索结果</button>
+              <small>{activeBrowserPage.url}</small>
+            </header>
+            <article>
+              <p className="investigation__browser-page-source">{activeBrowserPage.source}</p>
+              <h4 id={`${uid}-page-title`}>{activeBrowserPage.title}</h4>
+              {activeBrowserPage.byline || activeBrowserPage.publishedAt ? <p className="investigation__browser-page-meta">{[activeBrowserPage.byline, activeBrowserPage.publishedAt].filter(Boolean).join(' · ')}</p> : null}
+              <div className="investigation__browser-page-body">{activeBrowserPage.body.split('\n').filter(Boolean).map((paragraph, index) => <p key={index}>{paragraph}</p>)}</div>
+            </article>
+          </section> : !browserSearched ? <section className="investigation__history" aria-labelledby={`${uid}-history-title`}>
+            <div className="investigation__browser-label"><h4 id={`${uid}-history-title`}>最近访问</h4><span>今天</span></div>
             <ol>{browser.history.map((entry) => <li key={entry.id}><button type="button" onClick={() => useBrowserHistory(entry.query)} disabled={navBusy}>
               <span><strong>{entry.label}</strong><small>{entry.query}</small></span><time>{entry.time || '最近'}</time>
             </button></li>)}</ol>
           </section> : <section className="investigation__browser-results" aria-labelledby={`${uid}-results-title`}>
-            <div className="investigation__browser-label"><h4 id={`${uid}-results-title`}>搜索结果</h4><button type="button" onClick={() => { setBrowserSearched(false); setBrowserResults([]); setSearchFeedback(null); }}>返回最近访问</button></div>
+            <div className="investigation__browser-label"><h4 id={`${uid}-results-title`}>搜索结果</h4><button type="button" onClick={() => { setBrowserSearched(false); setBrowserResults([]); setSearchFeedback(null); }}>最近访问</button></div>
             {browserResults.length ? <ol>{browserResults.map((document) => <li key={document.id}>
               <button type="button" onClick={() => openBrowserDocument(document)} disabled={navBusy}>
                 <small>{document.source} · {document.url}</small><strong>{document.title}</strong><span>{document.snippet}</span><i>打开页面 →</i>
               </button>
-            </li>)}</ol> : <div className="investigation__browser-empty"><p>没有找到对应页面。</p><button type="button" onClick={() => { setBrowserSearched(false); setBrowserResults([]); searchRef.current?.focus(); }}>回到最近访问找一个起点</button></div>}
+            </li>)}</ol> : <div className="investigation__browser-empty"><p>没有找到与“{draft.trim()}”相关的结果。</p><button type="button" onClick={() => { setBrowserSearched(false); setBrowserResults([]); searchRef.current?.focus(); }}>最近访问</button></div>}
           </section>}
         </div> : <InvestigationScene key={scene.id} scene={scene} items={undiscovered} disabled={navBusy} onDiscover={discoverHotspot} />}
       </section> : null}
 
-      {hasTabs ? <div className="investigation__tabs" role="tablist" aria-label="调查工作区">
+      {hasTabs && showNotebook ? <div className="investigation__tabs" role="tablist" aria-label="调查工作区">
         <button ref={(element) => { tabRefs.current.observe = element; }} role="tab" id={`${uid}-observe-tab`} aria-selected={workspace === 'observe'} aria-controls={`${uid}-observe-panel`} tabIndex={workspace === 'observe' ? 0 : -1} onClick={() => changeWorkspace('observe')} onKeyDown={(event) => tabKey(event, 'observe')}>现场记录 <span>{visited} 条</span></button>
         <button ref={(element) => { tabRefs.current.verify = element; }} role="tab" id={`${uid}-verify-tab`} aria-selected={workspace === 'verify'} aria-controls={`${uid}-verify-panel`} tabIndex={workspace === 'verify' ? 0 : -1} onClick={() => changeWorkspace('verify')} onKeyDown={(event) => tabKey(event, 'verify')}>整理查证 <span>{completed}/{investigation.checks.length}</span></button>
       </div> : null}
 
-      {hasItems ? <section className={`investigation__field${activeItem ? ' has-record' : ''}`} id={`${uid}-observe-panel`} role={hasTabs ? 'tabpanel' : undefined} aria-labelledby={hasTabs ? `${uid}-observe-tab` : `${uid}-places-title`} hidden={workspace !== 'observe'} tabIndex={-1}>
+      {hasItems && showNotebook ? <section className={`investigation__field${activeItem ? ' has-record' : ''}`} id={`${uid}-observe-panel`} role={hasTabs ? 'tabpanel' : undefined} aria-labelledby={hasTabs ? `${uid}-observe-tab` : `${uid}-places-title`} hidden={workspace !== 'observe'} tabIndex={-1}>
         <section ref={placesRef} className="investigation__places" aria-labelledby={`${uid}-places-title`} tabIndex={-1}>
           <div className="investigation__section-heading"><h3 id={`${uid}-places-title`}>已找到的记录</h3>{!hasTabs ? <span className="investigation__count">{visited} 条</span> : null}</div>
           {foundItems.length ? <ul className="investigation__objects" aria-label="已找到的现场记录">
@@ -331,7 +345,7 @@ export function InvestigationView({ scene }: { scene: Scene }) {
         </article> : null}
       </section> : null}
 
-      {currentCheck ? <section className="investigation__checks" id={`${uid}-verify-panel`} role={hasTabs ? 'tabpanel' : undefined} aria-labelledby={hasTabs ? `${uid}-verify-tab` : `${uid}-claim-title`} hidden={workspace !== 'verify'} tabIndex={-1}>
+      {currentCheck && showNotebook ? <section className="investigation__checks" id={`${uid}-verify-panel`} role={hasTabs ? 'tabpanel' : undefined} aria-labelledby={hasTabs ? `${uid}-verify-tab` : `${uid}-claim-title`} hidden={workspace !== 'verify'} tabIndex={-1}>
         {investigation.checks.length > 1 ? <div className="investigation__questions" role="group" aria-label="选择要核对的说法">
           {investigation.checks.map((check) => <button key={check.id} className={`investigation__question${currentCheck.id === check.id ? ' is-active' : ''}`} aria-pressed={currentCheck.id === check.id} onClick={() => { setActiveCheckId(check.id); setOpenEvidenceId(null); }}><span>{check.prompt}</span><small>{passed(check) ? '已核对 ✓' : '待核对'}</small></button>)}
         </div> : null}

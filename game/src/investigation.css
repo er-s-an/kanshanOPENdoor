@@ -46,6 +46,16 @@
 .investigation__browser-empty { display:grid; justify-items:start; gap:6px; padding:24px 0 8px; color:var(--dim); }
 .investigation__browser-empty p { margin:0; }
 .investigation__browser-empty button { min-height:44px; color:var(--amber); font-size:13px; }
+.investigation__browser-page { margin-top:0; }
+.investigation__browser-page > header { display:flex; align-items:center; justify-content:space-between; gap:16px; min-height:52px; border-bottom:1px solid var(--line); }
+.investigation__browser-page > header button { min-height:44px; color:var(--amber); font-size:13px; }
+.investigation__browser-page > header small { min-width:0; overflow:hidden; color:var(--dim); text-overflow:ellipsis; white-space:nowrap; }
+.investigation__browser-page article { max-width:720px; margin:0 auto; padding:44px 20px 60px; }
+.investigation__browser-page-source { margin:0 0 10px; color:var(--amber); font-size:13px; letter-spacing:.08em; }
+.investigation__browser-page h4 { margin:0; color:var(--ink); font:500 clamp(26px,4vw,38px)/1.28 var(--serif); text-wrap:balance; }
+.investigation__browser-page-meta { margin:16px 0 32px; padding-bottom:18px; border-bottom:1px solid var(--line); color:var(--dim); font-size:13px; }
+.investigation__browser-page-body { color:var(--ink-2); font-size:17px; line-height:1.9; }
+.investigation__browser-page-body p { margin:0 0 1.25em; }
 .investigation__search-panel .investigation__section-heading { margin-bottom:10px; }
 .investigation__tabs { display:flex; border-bottom:1px solid var(--line); margin-bottom:20px; gap:8px; }
 .investigation__tabs button { display:flex; align-items:center; justify-content:center; gap:10px; flex:1; min-height:52px; color:var(--dim); font-size:16px; border-bottom:2px solid transparent; }
@@ -167,6 +177,8 @@
   .investigation__browser-chrome > span:nth-child(3),.investigation__browser-chrome i { display:none; }
   .investigation__browser-chrome p { margin-right:0; }
   .investigation__browser-label { align-items:flex-start; }
+  .investigation__browser-page > header { align-items:flex-start; flex-direction:column; gap:0; padding:6px 0 10px; }
+  .investigation__browser-page article { padding:30px 2px 44px; }
   .investigation__history li > button { gap:10px; }
   .investigation__tabs { gap:0; margin-bottom:16px; }
   .investigation__tabs button { font-size:16px; gap:7px; }

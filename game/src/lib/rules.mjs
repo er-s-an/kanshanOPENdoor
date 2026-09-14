@@ -99,12 +99,14 @@ export function openInvestigationBrowserDocument(story, sceneId, documentId, var
   const scene = story.scenes.find((candidate) => candidate.id === sceneId);
   const browser = scene?.type === 'investigate' ? scene.investigation?.browser : null;
   const document = browser?.documents.find((candidate) => candidate.id === documentId);
-  if (!document) return { status: 'miss', item: null, feedback: '这个页面不属于当前调查。' };
-  if (!document.itemId) return { status: 'noise', item: null, feedback: document.noiseFeedback || '这页没有足够来源信息，暂时不能作为记录。' };
+  if (!document) return { status: 'miss', page: null, item: null, feedback: '页面暂时无法打开。' };
+  const { id, title, source, url, snippet, body, byline, publishedAt } = document;
+  const page = { id, title, source, url, snippet, body, byline, publishedAt };
+  if (!document.itemId) return { status: 'noise', page, item: null };
   const result = inspectItem(story, sceneId, document.itemId, vars);
   return result
-    ? { status: 'evidence', item: result.item, vars: result.vars }
-    : { status: 'miss', item: null, feedback: '这个页面暂时无法形成可核验记录。' };
+    ? { status: 'evidence', page, item: result.item, vars: result.vars }
+    : { status: 'miss', page: null, item: null, feedback: '页面暂时无法打开。' };
 }
 
 export function savePostExtractable(story, sceneId, extractableId, vars) {

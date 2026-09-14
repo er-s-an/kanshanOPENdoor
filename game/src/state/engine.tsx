@@ -352,7 +352,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   }, []);
   const openInvestigationBrowserDocumentAtScene = useCallback((documentId: string): InvestigationBrowserOpenResult => {
     const current = stateRef.current;
-    if (!current.story || current.phase !== 'play' || busyRef.current) return { status: 'miss', item: null, feedback: '页面暂时无法打开。' };
+    if (!current.story || current.phase !== 'play' || busyRef.current) return { status: 'miss', page: null, item: null, feedback: '页面暂时无法打开。' };
     const result = openInvestigationBrowserDocument(current.story, current.sceneId, documentId, current.vars);
     if (result.status === 'evidence') dispatch({ type: 'INSPECT', itemId: result.item.id, from: current.sceneId });
     return result;

@@ -44,6 +44,9 @@ export interface InvestigationBrowserDocument {
   source: string;
   url: string;
   snippet: string;
+  body: string;
+  byline?: string;
+  publishedAt?: string;
   aliases?: string[];
   /** Authored recovery feedback for plausible but non-evidentiary pages. */
   noiseFeedback?: string;
@@ -62,12 +65,18 @@ export interface InvestigationBrowserResult {
   url: string;
   snippet: string;
 }
+export interface InvestigationBrowserPage extends InvestigationBrowserResult {
+  body: string;
+  byline?: string;
+  publishedAt?: string;
+}
 export type InvestigationBrowserQueryResult =
   | { status: 'results'; results: InvestigationBrowserResult[] }
   | { status: 'empty' | 'miss'; results: [] };
 export type InvestigationBrowserOpenResult =
-  | { status: 'evidence'; item: InvestigationItem; vars: Vars }
-  | { status: 'noise' | 'miss'; item: null; feedback: string };
+  | { status: 'evidence'; page: InvestigationBrowserPage; item: InvestigationItem; vars: Vars }
+  | { status: 'noise'; page: InvestigationBrowserPage; item: null }
+  | { status: 'miss'; page: null; item: null; feedback: string };
 export interface InvestigationCheck {
   id: string; prompt: string; claim: string; answer: string[]; grants: string[]; candidates?: string[];
   success: string; failure: string;
