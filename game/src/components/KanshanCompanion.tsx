@@ -7,6 +7,7 @@ import '../kanshan-companion.css';
 
 const IDLE_ART = '/art/character/motion/liu-kanshan-idle.gif';
 const STILL_ART = '/art/character/reference/liu-kanshan-front-green.jpg';
+const NUDGE_ART = '/art/character/proactive/liu-kanshan-whisper-v1.png';
 
 interface CompanionTurn {
   role: 'user' | 'assistant';
@@ -18,6 +19,12 @@ interface ProactiveNudge {
   eyebrow: string;
   text: string;
   action: string;
+}
+
+interface NudgeTiming {
+  chance: number;
+  minDelay: number;
+  maxDelay: number;
 }
 
 const LOCAL_FALLBACK = '先看当前目标和已经记下的事。我不替你下结论，但可以陪你把它们排清楚。';
@@ -51,10 +58,30 @@ const NUDGE_COPY: Record<Scene['type'], readonly ProactiveNudge[]> = {
   ],
 };
 
+// Liu Kanshan should feel like a companion who notices a pause, not a tutorial
+// that speaks on every cut. Investigation and confrontation have a higher chance
+// because they are naturally reflective moments; reading and endings get space.
+const NUDGE_TIMING: Record<Scene['type'], NudgeTiming> = {
+  novel: { chance: .65, minDelay: 15_000, maxDelay: 26_000 },
+  choice: { chance: .8, minDelay: 8_000, maxDelay: 16_000 },
+  chat: { chance: .8, minDelay: 9_000, maxDelay: 17_000 },
+  investigate: { chance: .95, minDelay: 7_000, maxDelay: 15_000 },
+  encounter: { chance: .85, minDelay: 9_000, maxDelay: 16_000 },
+  post: { chance: .95, minDelay: 7_000, maxDelay: 14_000 },
+  boss: { chance: 1, minDelay: 7_000, maxDelay: 13_000 },
+  ending: { chance: .5, minDelay: 15_000, maxDelay: 24_000 },
+};
+
 function nudgeForScene(scene: Scene): ProactiveNudge {
   const options = NUDGE_COPY[scene.type];
   const score = [...scene.id].reduce((total, char) => total + char.charCodeAt(0), 0);
   return options[score % options.length];
+}
+
+function scheduleNudgeForScene(scene: Scene): { delay: number } | null {
+  const timing = NUDGE_TIMING[scene.type];
+  if (Math.random() > timing.chance) return null;
+  return { delay: timing.minDelay + Math.floor(Math.random() * (timing.maxDelay - timing.minDelay + 1)) };
 }
 
 export function KanshanCompanion({ story, scene, cluesFound }: { story: GameJson; scene: Scene; cluesFound: string[] }) {
@@ -66,6 +93,8 @@ export function KanshanCompanion({ story, scene, cluesFound }: { story: GameJson
   const abortRef = useRef<AbortController | null>(null);
   const composingRef = useRef(false);
   const seenNudgesRef = useRef(new Set<string>());
+  const dismissedNudgesRef = useRef(new Set<string>());
+  const sceneNudgeKeyRef = useRef('');
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [input, setInput] = useState('');
@@ -96,15 +125,20 @@ export function KanshanCompanion({ story, scene, cluesFound }: { story: GameJson
   }, [scene.id]);
   useEffect(() => {
     const key = `${story.story.id}:${scene.id}`;
+    sceneNudgeKeyRef.current = key;
     setNudge(null);
     if (seenNudgesRef.current.has(key)) return;
     seenNudgesRef.current.add(key);
 
+    const schedule = scheduleNudgeForScene(scene);
+    if (!schedule) return;
     const sceneNudge = { ...nudgeForScene(scene), key };
-    const showTimer = window.setTimeout(() => setNudge(sceneNudge), 850);
+    const showTimer = window.setTimeout(() => {
+      if (!dismissedNudgesRef.current.has(key)) setNudge(sceneNudge);
+    }, schedule.delay);
     const hideTimer = window.setTimeout(() => {
       setNudge((current) => current?.key === key ? null : current);
-    }, 12_500);
+    }, schedule.delay + 12_500);
     return () => {
       window.clearTimeout(showTimer);
       window.clearTimeout(hideTimer);
@@ -116,6 +150,7 @@ export function KanshanCompanion({ story, scene, cluesFound }: { story: GameJson
     window.requestAnimationFrame(() => triggerRef.current?.focus({ preventScroll: true }));
   };
   const toggleOpen = () => {
+    dismissedNudgesRef.current.add(sceneNudgeKeyRef.current);
     setNudge(null);
     setOpen((value) => !value);
   };
@@ -188,6 +223,7 @@ export function KanshanCompanion({ story, scene, cluesFound }: { story: GameJson
       <span className="kanshan-companion__nudge-eyebrow">{nudge.eyebrow}</span>
       <strong>{nudge.text}</strong>
       <span className="kanshan-companion__nudge-action">{nudge.action}</span>
+      <img className="kanshan-companion__nudge-art" src={NUDGE_ART} alt="" width="1086" height="1448" decoding="async" />
     </button> : null}
     {open ? <aside className="kanshan-companion__panel" role="dialog" aria-modal="false" aria-labelledby={titleId}>
       <header>

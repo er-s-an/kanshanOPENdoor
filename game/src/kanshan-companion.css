@@ -7,11 +7,13 @@
 .kanshan-companion__trigger b { color:#f4ead5; font-size:13px; font-weight:600; }
 .kanshan-companion__trigger small { color:#b7b09f; font-size:11px; }
 .kanshan-companion__notice { width:7px; height:7px; margin-left:auto; border-radius:50%; background:#dfc689; box-shadow:0 0 0 4px rgba(223,198,137,.12); }
-.kanshan-companion__nudge { pointer-events:auto; position:absolute; right:0; bottom:78px; display:grid; gap:7px; width:min(330px,calc(100vw - 28px)); padding:15px 16px 13px; border:1px solid rgba(223,198,137,.85); border-radius:17px 17px 5px 17px; color:#f4ead5; background:linear-gradient(145deg,rgba(27,50,39,.98),rgba(10,25,19,.98)); box-shadow:0 22px 56px rgba(0,0,0,.42); text-align:left; animation:kanshan-nudge-in .42s cubic-bezier(.2,.8,.2,1) both; }
+.kanshan-companion__nudge { pointer-events:auto; position:absolute; right:0; bottom:78px; display:grid; grid-template-columns:minmax(0,1fr) 94px; gap:7px 4px; width:min(350px,calc(100vw - 28px)); min-height:130px; padding:15px 7px 13px 16px; overflow:visible; border:1px solid rgba(223,198,137,.85); border-radius:17px 17px 5px 17px; color:#f4ead5; background:linear-gradient(145deg,rgba(27,50,39,.98),rgba(10,25,19,.98)); box-shadow:0 22px 56px rgba(0,0,0,.42); text-align:left; animation:kanshan-nudge-in .42s cubic-bezier(.2,.8,.2,1) both; }
 .kanshan-companion__nudge:hover,.kanshan-companion__nudge:focus-visible { border-color:#f2d692; transform:translateY(-2px); }
+.kanshan-companion__nudge-eyebrow,.kanshan-companion__nudge strong,.kanshan-companion__nudge-action { grid-column:1; }
 .kanshan-companion__nudge-eyebrow { color:#d8bd7d; font-size:10px; font-weight:600; letter-spacing:.13em; }
 .kanshan-companion__nudge strong { color:#f4ead5; font:500 14px/1.65 var(--serif); }
 .kanshan-companion__nudge-action { color:#b8b09d; font-size:11px; }
+.kanshan-companion__nudge-art { grid-column:2; grid-row:1 / span 3; align-self:end; justify-self:end; width:112px; height:124px; margin:-17px -6px -14px 0; object-fit:contain; object-position:right bottom; pointer-events:none; filter:drop-shadow(0 10px 14px rgba(0,0,0,.24)); }
 .kanshan-companion__panel { pointer-events:auto; position:absolute; right:0; bottom:76px; display:grid; grid-template-rows:auto minmax(120px,1fr) auto auto auto; width:min(370px,calc(100vw - 28px)); max-height:min(610px,72vh); overflow:hidden; border:1px solid #d7c79f; border-radius:18px; color:#223029; background:#f7f3e9; box-shadow:0 30px 80px rgba(0,0,0,.44); }
 .kanshan-companion__panel > header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:16px 17px 13px; border-bottom:1px solid #ded6c3; background:#10231b; }
 .kanshan-companion__panel > header div { display:grid; gap:2px; }
@@ -36,13 +38,18 @@
 @keyframes kanshan-caret { 0%,48% { opacity:1; } 49%,100% { opacity:0; } }
 @keyframes kanshan-nudge-in { from { opacity:0; transform:translateY(10px) scale(.97); } to { opacity:1; transform:translateY(0) scale(1); } }
 
+/* The desktop card lives below the top bar, not above a scene's primary control. */
+@media (min-width:701px) {
+  .kanshan-companion__nudge { position:fixed; top:92px; bottom:auto; }
+}
+
 @media (max-width:700px) {
   .kanshan-companion { right:10px; bottom:calc(74px + var(--sab)); }
   .kanshan-companion__trigger { min-width:0; min-height:60px; padding:4px 8px 4px 4px; border-radius:16px; }
   .kanshan-companion__trigger img { width:52px; height:52px; }
   .kanshan-companion__trigger span { display:none; }
   .kanshan-companion__notice { position:absolute; top:1px; right:1px; }
-  .kanshan-companion__nudge { position:fixed; right:10px; bottom:calc(142px + var(--sab)); width:min(330px,calc(100vw - 20px)); }
+  .kanshan-companion__nudge { position:fixed; right:10px; bottom:calc(142px + var(--sab)); width:min(350px,calc(100vw - 20px)); }
   .kanshan-companion__panel { position:fixed; right:8px; bottom:calc(142px + var(--sab)); left:8px; width:auto; max-height:58vh; }
 }
 
