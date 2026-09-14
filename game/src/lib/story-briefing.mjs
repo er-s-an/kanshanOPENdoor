@@ -29,7 +29,7 @@ function finishSentence(value) {
 
 function identityFrom(lines) {
   for (const line of lines) {
-    const match = line.match(/(?:^|[，,])(?:此刻|现在)?你是([^，,。！？!?；;]{1,28})/);
+    const match = line.match(/(?:^|[，,])(?:进去以后|此刻|现在)?你(?:就)?是([^，,。！？!?；;]{1,28})/);
     if (match) return finishSentence(`你是${match[1].trim()}`);
   }
   return '';
@@ -40,6 +40,8 @@ function firstSentence(value) {
 }
 
 function actionFor(scene, introLines) {
+  const guideLine = introLines.find((line) => ACTION_HINT.test(cleanProse(line)));
+  if (guideLine) return finishSentence(guideLine);
   const authored = [
     scene?.objective,
     scene?.investigation?.objective,
@@ -47,7 +49,7 @@ function actionFor(scene, introLines) {
     scene?.goal,
   ].map(firstSentence).find(Boolean);
   if (authored) return authored;
-  return finishSentence(introLines.find((line) => ACTION_HINT.test(cleanProse(line))) || '');
+  return '';
 }
 
 function fallbackAction(scene) {
@@ -73,7 +75,7 @@ export function buildStoryBriefing(story, scene) {
   const stepClean = cleanProse(firstStep);
   const anomalyCandidate = introLines.find((line) => {
     const clean = cleanProse(line);
-    return clean !== identityClean && clean !== stepClean && !ACTION_HINT.test(clean);
+    return clean !== identityClean && clean !== stepClean && !ACTION_HINT.test(clean) && ANOMALY_HINT.test(clean);
   }) || firstSceneLines.find((line) => ANOMALY_HINT.test(cleanProse(line)))
     || firstSceneLines.find((line) => !ACTION_HINT.test(cleanProse(line)));
   const anomaly = finishSentence(anomalyCandidate || '眼前发生的事还没有完整答案。');

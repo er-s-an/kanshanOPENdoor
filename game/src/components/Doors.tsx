@@ -153,25 +153,25 @@ export function Doors() {
       : '先别急着进故事。让我带你认认这里。';
     const message = linkedStory
       ? '有人把这扇门送到了你面前。我先带你去门前，你看清楚以后，再决定要不要进去。'
-      : '这里的每一扇门，都通往一段可以亲自走进去的故事。你会和里面的人交谈、寻找证据，也会留下自己的选择。';
+      : '每扇门后，都有人困在一个还没想明白的问题里。进去以后，你会借他的眼睛看，用他的身份说话。';
     return <main className="library library--welcome">
       <section className="portal-welcome" aria-labelledby="portal-welcome-title">
         <figure className="portal-welcome__figure">
           {guideOk ? <img src="/art/character/motion/liu-kanshan-wave.gif" alt="刘看山站在任意门前向你挥手" loading="eager" decoding="async" onError={() => setGuideOk(false)} /> : <span className="portal-welcome__fallback">刘看山</span>}
-          <figcaption>知乎 IP · 刘看山</figcaption>
+          <figcaption>刘看山 · 在门口等你</figcaption>
         </figure>
         <div className="portal-welcome__copy">
-          <p className="portal-welcome__eyebrow">看山任意门 · 引路人接站</p>
+          <p className="portal-welcome__eyebrow">看山任意门</p>
           <h1 id="portal-welcome-title" ref={welcomeHeadingRef} tabIndex={-1}>{heading}</h1>
           <div className="portal-welcome__speech">
-            <strong>我是刘看山，这里的引路人。</strong>
+            <strong>我是刘看山。</strong>
             <p>{message}</p>
-            <p>准备好以后，自己选一扇门。我来替你打开。</p>
+            <p>选好一扇，我替你把门推开。</p>
           </div>
           <button className="btn btn--primary btn--lg portal-welcome__action" type="button" onClick={revealLibrary}>
             {linkedStory ? `先看看《${linkedStory.title}》` : '去选一扇门'} <span aria-hidden>→</span>
           </button>
-          <small>{stories.length ? `前面有 ${stories.length} 扇故事门` : '故事库还在连接，你可以先听我说完'}</small>
+          <small>{stories.length ? `前面亮着 ${stories.length} 扇门` : '前面的灯还没亮'}</small>
         </div>
       </section>
     </main>;
