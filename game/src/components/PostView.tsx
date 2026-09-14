@@ -23,8 +23,8 @@ function ExtractableText({ text, extractables = [] }: { text: string; extractabl
     }
     if (next.index > cursor) pieces.push(text.slice(cursor, next.index));
     const saved = Object.keys(next.fragment.set).every((name) => vars[name] === 'saved');
-    pieces.push(<button key={`${next.fragment.id}-${key++}`} type="button" className={`post-extractable${saved ? ' is-saved' : ''}`} aria-pressed={saved} onClick={() => savePostExtractable(next.fragment.id)}>
-      {next.fragment.text}<span aria-hidden>{saved ? ' ✓' : ' ＋'}</span>
+    pieces.push(<button key={`${next.fragment.id}-${key++}`} type="button" className={`post-extractable${saved ? ' is-saved' : ''}`} aria-label={`划下这句：${next.fragment.text}`} aria-pressed={saved} onClick={() => savePostExtractable(next.fragment.id)}>
+      {next.fragment.text}
     </button>);
     cursor = next.index + next.fragment.text.length;
   }
@@ -57,7 +57,7 @@ function AccountMeta({ entry }: { entry: PostEntry }) {
     <Avatar entry={entry} />
     <span className="post-entry__identity">
       <strong>{entry.name}</strong>
-      <small>{entry.handle ? `@${entry.handle}` : '故事账号'} · {entry.time || '刚刚'}</small>
+      <small>{entry.handle ? `@${entry.handle}` : '用户'} · {entry.time || '刚刚'}</small>
     </span>
     {entry.channel === 'dm' ? <span className="post-entry__channel">私信</span> : null}
   </div>;
@@ -77,6 +77,7 @@ function CommunityFeed({ scene }: { scene: Scene }) {
   });
   const replyableCount = post.entries.filter((entry) => entry.actionChoiceId).length;
   const dmCount = post.entries.filter((entry) => entry.channel === 'dm').length;
+  const availableExitChoices = exitChoices.filter((choice) => !choiceLocked(choice, vars));
 
   return <>
     <div className="post-feed__filters" role="group" aria-label="筛选社区回应">
@@ -97,15 +98,14 @@ function CommunityFeed({ scene }: { scene: Scene }) {
           <p className="post-entry__text"><ExtractableText text={entry.text} extractables={post.extractables} /></p>
           <footer className="post-entry__foot">
             <span>{typeof entry.likes === 'number' ? `${entry.likes} 赞同` : '刚出现的回应'}</span>
-            {choice ? <ChoiceButton choice={choice} label={visited ? '再次查看' : entry.actionLabel} /> : <span className="post-entry__ambient">仅浏览</span>}
+            {choice ? <ChoiceButton choice={choice} label={visited ? '再次查看' : entry.actionLabel} /> : null}
           </footer>
         </article>;
       })}
     </div>
-    <div className="post-feed__exit">
-      <p>这些回应来自不同立场。至少追问一位，再决定这张公开页面要不要留下。</p>
-      {exitChoices.map((choice) => <ChoiceButton key={choice.id} choice={choice} />)}
-    </div>
+    {availableExitChoices.length ? <div className="post-feed__exit">
+      {availableExitChoices.map((choice) => <ChoiceButton key={choice.id} choice={choice} />)}
+    </div> : null}
   </>;
 }
 
@@ -115,7 +115,6 @@ function CommunityThread({ scene }: { scene: Scene }) {
   return <div className="post-thread" aria-label={account.channel === 'dm' ? `与${account.name}的私信` : `与${account.name}的评论对话`}>
     <div className="post-thread__head">
       <AccountMeta entry={account} />
-      <p><span>知情边界</span>{account.knowledge}</p>
     </div>
     <ol className="post-thread__messages">
       {(post.thread || []).map((message) => <li key={message.id} className={`post-message post-message--${message.side}`}>
@@ -123,12 +122,7 @@ function CommunityThread({ scene }: { scene: Scene }) {
         <p>{message.text}</p>
       </li>)}
     </ol>
-    {post.feedback ? <aside className={`post-thread__feedback post-thread__feedback--${post.feedback.tone || 'boundary'}`} role="status">
-      <strong>{post.feedback.label}</strong>
-      <p>{post.feedback.text}</p>
-    </aside> : null}
     <div className="post-thread__choices">
-      <p>这条回应到这里为止。你可以继续看别人，或带着当前记录离开。</p>
       {(scene.choices || []).map((choice) => <ChoiceButton key={choice.id} choice={choice} />)}
     </div>
   </div>;
@@ -144,12 +138,8 @@ export function PostView({ scene }: { scene: Scene }) {
       <div className="post-shell">
         <header className="post-context">
           <span>{post.community}</span>
-          <strong>{post.view === 'thread' ? '回应详情' : '社区现场'}</strong>
+          <strong>{post.view === 'thread' ? '回应详情' : '最新回应'}</strong>
         </header>
-        <aside className="post-fiction-note" aria-label="角色身份说明">
-          <span aria-hidden>◇</span>
-          <p><strong>本幕身份说明</strong>{post.fictionNotice}</p>
-        </aside>
         <article className="post-question">
           <div className="post-question__author">
             <span className="post-question__avatar" aria-hidden>{post.author.avatarText || '匿'}</span>
@@ -164,9 +154,9 @@ export function PostView({ scene }: { scene: Scene }) {
             {post.stats.dms ? <span>{post.stats.dms} 条新私信</span> : null}
           </footer> : null}
         </article>
-        {post.extractables?.length ? <aside className="post-notes" aria-label="从帖子保存的调查摘录">
-          <div><strong>调查摘录</strong><span>{savedExtractables.length}/{post.extractables.length}</span></div>
-          {savedExtractables.length ? <ul>{savedExtractables.map((fragment) => <li key={fragment.id}>{fragment.note}</li>)}</ul> : <p>正文与回应里有几处可疑短语。点击带虚线的原话，把它留在本幕摘录中。</p>}
+        {savedExtractables.length ? <aside className="post-notes" aria-label="划下的原话">
+          <div><strong>划下的原话</strong><span>{savedExtractables.length} 条</span></div>
+          <ul>{savedExtractables.map((fragment) => <li key={fragment.id}>{fragment.note}</li>)}</ul>
         </aside> : null}
         {post.view === 'feed' ? <CommunityFeed scene={scene} /> : <CommunityThread scene={scene} />}
       </div>

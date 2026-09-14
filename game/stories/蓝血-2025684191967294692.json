@@ -856,7 +856,7 @@
           "label": "匿名提问者",
           "name": "夜里还醒着"
         },
-        "community": "故事内社区 · 异常经验",
+        "community": "回声问答 · 异常经验",
         "entries": [
           {
             "actionChoiceId": "open_archive",
@@ -1076,7 +1076,7 @@
       "post": {
         "activeAccountId": "archive",
         "author": { "avatarText": "匿", "handle": "night-window-23", "label": "匿名提问者", "name": "夜里还醒着" },
-        "community": "故事内社区 · 评论对话",
+        "community": "回声问答 · 评论",
         "entries": [
           {
             "avatarText": "拾", "handle": "page-salvager", "id": "archive", "identity": "story-fictional",
@@ -1116,7 +1116,7 @@
       "post": {
         "activeAccountId": "safety",
         "author": { "avatarText": "匿", "handle": "night-window-23", "label": "匿名提问者", "name": "夜里还醒着" },
-        "community": "故事内社区 · 私信",
+        "community": "回声问答 · 私信",
         "entries": [
           {
             "avatarText": "安", "channel": "dm", "handle": "safe-post-alan", "id": "safety", "identity": "story-fictional",
@@ -1153,7 +1153,7 @@
       "post": {
         "activeAccountId": "skeptic",
         "author": { "avatarText": "匿", "handle": "night-window-23", "label": "匿名提问者", "name": "夜里还醒着" },
-        "community": "故事内社区 · 评论对话",
+        "community": "回声问答 · 评论",
         "entries": [
           {
             "avatarText": "檬", "handle": "lemon-manual", "id": "skeptic", "identity": "story-fictional",
@@ -1190,7 +1190,7 @@
       "post": {
         "activeAccountId": "unknown",
         "author": { "avatarText": "匿", "handle": "night-window-23", "label": "匿名提问者", "name": "夜里还醒着" },
-        "community": "故事内社区 · 评论对话",
+        "community": "回声问答 · 评论",
         "entries": [
           {
             "avatarText": "17", "handle": "blank-17", "id": "unknown", "identity": "story-fictional",
