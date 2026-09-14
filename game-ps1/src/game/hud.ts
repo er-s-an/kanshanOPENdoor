@@ -4,7 +4,14 @@
 // 全中文；复古衬线 + 文字阴影 + 扫描线；不加载任何外部字体文件。
 // ============================================================================
 
-import { copyMyopiaShareLink, returnToMyopiaPortal, saveMyopiaShareCard, shareMyopiaShareCard } from './share-card'
+import {
+  copyMyopiaShareLink,
+  drawMyopiaJourneyImprint,
+  prepareMyopiaShareCard,
+  returnToMyopiaPortal,
+  savePreparedMyopiaShareCard,
+  sharePreparedMyopiaShareCard,
+} from './share-card'
 
 export interface EndingView {
   id: string
@@ -82,28 +89,48 @@ const STYLE = `
 .hud-pbox .opt .num { color:#a08c5a; margin-right:10px; font-family:"Courier New",monospace; }
 .hud-pbox .opt:hover .num { color:#5a4a20; }
 
-.hud-ending { position:fixed; inset:0; z-index:40; display:flex; flex-direction:column;
-  align-items:center; justify-content:center; text-align:center; pointer-events:auto;
-  opacity:0; transition:opacity 1.6s ease; padding:24px; }
+.hud-ending { position:fixed; inset:0; z-index:40; pointer-events:auto; opacity:0;
+  overflow-y:auto; overscroll-behavior:contain; touch-action:pan-y; transition:opacity .55s ease;
+  padding:clamp(20px,5vh,58px) clamp(16px,4vw,34px); color:#f3e3c0; }
 .hud-ending.on { opacity:1; }
-.hud-ending.good { background:radial-gradient(ellipse at 50% 38%, #33261a 0%, #14100b 72%); color:#f3e3c0; }
-.hud-ending.bad { background:radial-gradient(ellipse at 50% 38%, #3d0808 0%, #120202 72%); color:#ffc9c9; }
-.hud-ending.secret { background:radial-gradient(ellipse at 50% 38%, #0e2030 0%, #05090f 72%); color:#cfe8ff; }
-.hud-ending .etag { font-size:14px; letter-spacing:8px; opacity:.7; margin-bottom:18px; }
-.hud-ending .etitle { font-size:clamp(36px,7vw,72px); letter-spacing:10px; font-weight:700;
-  margin-bottom:26px; text-shadow:3px 3px 0 rgba(0,0,0,.85); }
-.hud-ending.good .etitle { color:#ffd98a; }
-.hud-ending.bad .etitle { color:#ff4d4d; }
-.hud-ending.secret .etitle { color:#8fd0ff; }
-.hud-ending .esub { max-width:560px; font-size:17px; line-height:2; letter-spacing:2px;
-  opacity:.92; margin-bottom:44px; text-shadow:1px 1px 0 rgba(0,0,0,.8); }
-.hud-ending .again { font-family:inherit; font-size:18px; letter-spacing:6px; cursor:pointer;
-  padding:12px 38px; background:transparent; border:2px solid currentColor; color:inherit;
-  box-shadow:3px 3px 0 rgba(0,0,0,.6); }
-.hud-ending .again:hover { background:#e8e0d0; color:#14100c; }
-.hud-ending .again:disabled { cursor:wait; opacity:.62; }
-.hud-ending__actions { display:flex; flex-wrap:wrap; justify-content:center; gap:12px; }
-.hud-ending .ending-share { font-size:14px; letter-spacing:3px; padding:10px 16px; }
+.hud-ending.good { --ending-ink:#f7e3b4; --ending-muted:#d7c69f; --ending-accent:#e4b85f;
+  --ending-panel:rgba(30,23,17,.92); --ending-border:rgba(235,193,113,.38);
+  background:radial-gradient(ellipse at 50% 0%,#3a2b1c 0%,#15100b 64%,#080707 100%); }
+.hud-ending.bad { --ending-ink:#ffe0d7; --ending-muted:#e4afa9; --ending-accent:#ef7880;
+  --ending-panel:rgba(43,12,16,.94); --ending-border:rgba(248,126,130,.38);
+  background:radial-gradient(ellipse at 50% 0%,#4d1018 0%,#190506 64%,#080303 100%); }
+.hud-ending.secret { --ending-ink:#d8edff; --ending-muted:#a8c9e5; --ending-accent:#83c9ff;
+  --ending-panel:rgba(8,20,33,.94); --ending-border:rgba(132,201,255,.38);
+  background:radial-gradient(ellipse at 50% 0%,#102b40 0%,#050a10 64%,#020406 100%); }
+.hud-ending__sheet { width:min(720px,100%); margin:0 auto; padding:clamp(18px,4vw,34px);
+  border:1px solid var(--ending-border); background:linear-gradient(145deg,rgba(255,255,255,.045),transparent 36%),var(--ending-panel);
+  box-shadow:0 24px 72px rgba(0,0,0,.52),inset 0 1px 0 rgba(255,255,255,.07); text-align:center; }
+.hud-ending__intro { padding:8px 4px 26px; }
+.hud-ending .etag { margin:0 0 13px; color:var(--ending-muted); font:700 12px/1.5 system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; letter-spacing:.22em; }
+.hud-ending .etitle { margin:0; color:var(--ending-ink); font-size:clamp(32px,7vw,62px); line-height:1.18; letter-spacing:.11em; font-weight:700; text-shadow:3px 3px 0 rgba(0,0,0,.75); }
+.hud-ending .esub { max-width:590px; margin:18px auto 0; color:var(--ending-ink); font-size:16px; line-height:1.9; letter-spacing:.055em; text-shadow:1px 1px 0 rgba(0,0,0,.65); }
+.hud-ending__boundary { max-width:570px; margin:14px auto 0; color:var(--ending-muted); font:13px/1.7 system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; }
+.hud-ending__gift { padding:clamp(20px,4vw,30px); border:1px solid var(--ending-border); background:rgba(0,0,0,.17); box-shadow:inset 0 1px 0 rgba(255,255,255,.05); }
+.hud-ending__gift-kicker { margin:0; color:var(--ending-accent); font:700 13px/1.5 system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; letter-spacing:.16em; }
+.hud-ending__gift-title { margin:10px 0 0; color:var(--ending-ink); font-size:clamp(27px,5.5vw,43px); line-height:1.2; letter-spacing:.09em; }
+.hud-ending__gift-line { max-width:480px; margin:10px auto 0; color:var(--ending-muted); font-size:15px; line-height:1.75; }
+.hud-ending__preview { display:grid; place-items:center; width:min(100%,318px); min-height:424px; margin:20px auto 12px; border:1px solid var(--ending-border); background:rgba(0,0,0,.24); box-shadow:7px 8px 0 rgba(0,0,0,.25); overflow:hidden; }
+.hud-ending__preview.is-loading::after { content:"正在显影记录卡…"; color:var(--ending-muted); font:13px/1.5 system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; letter-spacing:.08em; }
+.hud-ending__preview canvas { display:block; width:100%; height:auto; aspect-ratio:3 / 4; }
+.hud-ending__preview-error { padding:22px; color:var(--ending-muted); font:14px/1.7 system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; }
+.hud-ending__random-note { max-width:480px; margin:0 auto; color:var(--ending-muted); font:13px/1.65 system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; }
+.hud-ending__actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:18px 0 0; }
+.hud-ending__actions--footer { grid-template-columns:repeat(3,minmax(0,1fr)); margin-top:16px; }
+.hud-ending .ending-action { min-height:48px; padding:10px 14px; border:1px solid var(--ending-border); background:rgba(255,255,255,.035); color:var(--ending-ink); font:700 14px/1.35 "Songti SC","STSong","STZhongsong","SimSun",serif; letter-spacing:.12em; cursor:pointer; touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
+.hud-ending .ending-action:hover { background:var(--ending-ink); color:#17110c; }
+.hud-ending .ending-action--primary { border-color:var(--ending-accent); background:var(--ending-accent); color:#23170d; }
+.hud-ending.bad .ending-action--primary { color:#3b0d13; }
+.hud-ending .ending-action--primary:hover { filter:brightness(1.08); }
+.hud-ending .ending-action:focus-visible { outline:3px solid var(--ending-accent); outline-offset:3px; }
+.hud-ending .ending-action:disabled { cursor:wait; opacity:.62; }
+.hud-ending__status { min-height:1.65em; margin:13px 0 0; color:var(--ending-muted); font:13px/1.65 system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; }
+.hud-ending__footer-note { margin:8px 0 0; color:var(--ending-muted); font:12px/1.6 system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; }
+
 
 /* 手机端：操控层低于剧情弹窗，但始终给玩家明确的移动、看向、行动入口。 */
 html.touch-ui { --touch-safe-top:max(12px, env(safe-area-inset-top)); --touch-safe-right:max(12px, env(safe-area-inset-right)); --touch-safe-bottom:max(16px, env(safe-area-inset-bottom)); --touch-safe-left:max(12px, env(safe-area-inset-left)); }
@@ -136,9 +163,11 @@ html.touch-ui .hud-sys .sline { font-size:clamp(18px,5.4vw,27px); letter-spacing
 html.touch-ui .hud-toast { bottom:36%; width:min(340px,calc(100vw - 48px)); text-align:center; font-size:13px; line-height:1.55; }
 html.touch-ui .hud-pbox { min-width:0; width:min(540px,calc(100vw - 28px)); max-height:calc(100dvh - 28px); overflow:auto; padding:18px 18px; touch-action:pan-y; }
 html.touch-ui .hud-pbox .opt { min-height:52px; padding:12px 14px; font-size:16px; touch-action:manipulation; }
-html.touch-ui .hud-ending { padding:max(24px,env(safe-area-inset-top)) 20px max(24px,env(safe-area-inset-bottom)); overflow:auto; touch-action:pan-y; }
-html.touch-ui .hud-ending .esub { font-size:15px; line-height:1.75; margin-bottom:28px; }
-html.touch-ui .hud-ending .again { min-height:50px; padding:10px 18px; letter-spacing:3px; }
+html.touch-ui .hud-ending { padding:max(18px,env(safe-area-inset-top)) 14px max(18px,env(safe-area-inset-bottom)); }
+html.touch-ui .hud-ending__sheet { padding:18px 14px; }
+html.touch-ui .hud-ending .esub { font-size:15px; line-height:1.75; }
+html.touch-ui .hud-ending__preview { width:min(100%,286px); min-height:381px; }
+html.touch-ui .hud-ending .ending-action { min-height:50px; padding:11px 10px; letter-spacing:.08em; }
 @media (orientation:landscape) and (max-height:520px) {
   .mobile-joystick { width:104px; height:104px; }
   .mobile-joystick__nub { width:46px; height:46px; }
@@ -147,6 +176,12 @@ html.touch-ui .hud-ending .again { min-height:50px; padding:10px 18px; letter-sp
   .mobile-action { min-height:50px; }
   .mobile-squint { bottom:calc(var(--touch-safe-bottom) + 58px); min-width:54px; min-height:54px; }
   html.touch-ui .hud-sub { bottom:calc(var(--touch-safe-bottom) + 112px); }
+  html.touch-ui .hud-ending { padding-top:12px; padding-bottom:12px; }
+  html.touch-ui .hud-ending__preview { width:216px; min-height:288px; margin:14px auto 10px; }
+  html.touch-ui .hud-ending__gift { padding:16px; }
+}
+@media (max-width:420px) {
+  .hud-ending__actions { grid-template-columns:1fr; }
 }
 @media (prefers-reduced-motion:reduce) {
   .hud-pulse.on,.hud-fear.high .fbar { animation:none; }
@@ -426,76 +461,238 @@ export class HUD {
 
   // ------------------------------ 结局页 ------------------------------
   showEnding(def: EndingView): void {
+    // Gameplay calls this once. The guard also ensures an accidental second call
+    // cannot draw a new card for an ending that is already on screen.
+    if (document.querySelector('.hud-ending')) return
+
     this.showInteract(null)
     this.setPulse(false)
     this.elCross.style.display = 'none'
+
+    const imprint = drawMyopiaJourneyImprint(def)
+    // Start QR, Canvas, PNG, and File generation while the ending sheet is
+    // appearing. The Share click below must call navigator.share immediately.
+    const preparedCardPromise = prepareMyopiaShareCard(def, imprint)
     const e = document.createElement('div')
     e.className = `hud-ending ${def.tone}`
-    const tag = document.createElement('div')
+    e.setAttribute('role', 'dialog')
+    e.setAttribute('aria-modal', 'true')
+    e.setAttribute('aria-label', '近视眼本章记录')
+
+    const sheet = document.createElement('section')
+    sheet.className = 'hud-ending__sheet'
+    sheet.tabIndex = -1
+
+    const intro = document.createElement('header')
+    intro.className = 'hud-ending__intro'
+    const tag = document.createElement('p')
     tag.className = 'etag'
-    tag.textContent = def.tone === 'secret' ? '隐藏结局' : '结局'
-    const title = document.createElement('div')
+    tag.textContent = def.id === 'dead' ? '互动玩法失败记录 · 不是小说续写' : '开放首章记录 · 不是小说结局'
+    const title = document.createElement('h1')
     title.className = 'etitle'
     title.textContent = def.title
-    const sub = document.createElement('div')
+    const sub = document.createElement('p')
     sub.className = 'esub'
     sub.textContent = def.subtitle
-    const again = document.createElement('button')
-    again.className = 'again'
-    again.textContent = '再玩一次'
-    again.onclick = () => location.reload()
-    const save = document.createElement('button')
-    save.className = 'again ending-share'
-    save.textContent = '保存这张记录卡'
-    save.onclick = async () => {
+    const boundary = document.createElement('p')
+    boundary.className = 'hud-ending__boundary'
+    boundary.textContent = def.id === 'dead'
+      ? '惊悚值到达阈值只会结束这一局互动，不代表原文第 113 行之后发生的事。'
+      : '记录止于女主起身斥责后的原文截断处；思思、来人和这家人的后续仍是未知。'
+    intro.append(tag, title, sub, boundary)
+
+    const gift = document.createElement('section')
+    gift.className = 'hud-ending__gift'
+    gift.setAttribute('aria-labelledby', 'myopia-record-card-title')
+    const giftKicker = document.createElement('p')
+    giftKicker.className = 'hud-ending__gift-kicker'
+    giftKicker.textContent = imprint.kind === 'keepsake' ? '刘看山赠送了一张本局记录卡' : '本局失焦记录'
+    const giftTitle = document.createElement('h2')
+    giftTitle.className = 'hud-ending__gift-title'
+    giftTitle.id = 'myopia-record-card-title'
+    giftTitle.textContent = imprint.kind === 'keepsake' ? `你抽到了「${imprint.title}」` : `「${imprint.title}」`
+    const giftLine = document.createElement('p')
+    giftLine.className = 'hud-ending__gift-line'
+    giftLine.textContent = imprint.line
+    const preview = document.createElement('div')
+    preview.className = 'hud-ending__preview is-loading'
+    preview.setAttribute('aria-label', `${imprint.title}记录卡预览`)
+    const cardNote = document.createElement('p')
+    cardNote.className = 'hud-ending__random-note'
+    cardNote.textContent = imprint.kind === 'keepsake'
+      ? '这是本局随机抽到的旅途收藏卡，不是人格判定；保存和分享会使用同一张卡。'
+      : '这是惊悚值达到阈值后的固定失败记录，不把它当作奖励，也不补写原文。'
+
+    const actionStatus = document.createElement('p')
+    actionStatus.className = 'hud-ending__status'
+    actionStatus.setAttribute('role', 'status')
+    actionStatus.setAttribute('aria-live', 'polite')
+    const announce = (message: string) => { actionStatus.textContent = message }
+
+    const makeAction = (text: string, primary = false) => {
+      const button = document.createElement('button')
+      button.className = `ending-action${primary ? ' ending-action--primary' : ''}`
+      button.type = 'button'
+      button.textContent = text
+      return button
+    }
+    const save = makeAction('保存这张记录卡', true)
+    const share = makeAction('分享这张记录卡')
+    let preparedCard: Awaited<typeof preparedCardPromise> | null = null
+    save.disabled = true
+    share.disabled = true
+    save.textContent = '正在准备记录卡…'
+    share.textContent = '正在准备记录卡…'
+
+    save.onclick = () => {
+      if (!preparedCard) return
       save.disabled = true
       try {
-        await saveMyopiaShareCard(def)
+        savePreparedMyopiaShareCard(preparedCard)
         save.textContent = '记录卡已保存'
+        announce('本局记录卡已保存。')
       } catch {
         save.textContent = '保存失败，请再试一次'
+        announce('保存记录卡失败，请再试一次。')
       } finally {
-        window.setTimeout(() => { save.disabled = false; save.textContent = '保存这张记录卡' }, 1800)
+        window.setTimeout(() => { save.disabled = false; save.textContent = '保存这张记录卡' }, 1_800)
       }
     }
-    const share = document.createElement('button')
-    share.className = 'again ending-share'
-    share.textContent = '分享这张记录卡'
-    share.onclick = async () => {
+    share.onclick = () => {
+      if (!preparedCard) return
       share.disabled = true
       try {
-        const result = await shareMyopiaShareCard(def)
-        share.textContent = result === 'saved' ? '图片已保存，可手动分享' : '分享面板已打开'
+        // This call happens before any await or Promise continuation so that
+        // mobile Safari/Chrome retain the tap's transient user activation.
+        const shareResult = sharePreparedMyopiaShareCard(preparedCard)
+        void shareResult.then((result) => {
+          share.textContent = result === 'saved' ? '图片已保存，可手动分享' : '分享面板已打开'
+          announce(result === 'saved' ? '此浏览器无法分享图片，已保存同一张记录卡。' : '系统分享面板已打开。')
+        }).catch((error: unknown) => {
+          if (error instanceof DOMException && error.name === 'AbortError') {
+            share.textContent = '已取消分享'
+            announce('已取消分享。')
+          } else {
+            share.textContent = '分享失败，请保存图片'
+            announce('分享失败，请保存图片后手动分享。')
+          }
+        }).finally(() => {
+          window.setTimeout(() => {
+            if (!preparedCard) return
+            share.disabled = false
+            share.textContent = '分享这张记录卡'
+          }, 1_800)
+        })
       } catch (error) {
-        if (error instanceof DOMException && error.name === 'AbortError') share.textContent = '已取消分享'
-        else share.textContent = '分享失败，请保存图片'
-      } finally {
-        window.setTimeout(() => { share.disabled = false; share.textContent = '分享这张记录卡' }, 1800)
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          share.textContent = '已取消分享'
+          announce('已取消分享。')
+        } else {
+          share.textContent = '分享失败，请保存图片'
+          announce('分享失败，请保存图片后手动分享。')
+        }
+        window.setTimeout(() => {
+          if (!preparedCard) return
+          share.disabled = false
+          share.textContent = '分享这张记录卡'
+        }, 1_800)
       }
     }
-    const copy = document.createElement('button')
-    copy.className = 'again ending-share'
-    copy.textContent = '复制近视眼入口'
+    const cardActions = document.createElement('div')
+    cardActions.className = 'hud-ending__actions'
+    cardActions.append(save, share)
+    gift.append(giftKicker, giftTitle, giftLine, preview, cardNote, cardActions)
+
+    void preparedCardPromise.then((prepared) => {
+      preparedCard = prepared
+      preview.classList.remove('is-loading')
+      preview.replaceChildren(prepared.canvas)
+      save.disabled = false
+      share.disabled = false
+      save.textContent = '保存这张记录卡'
+      share.textContent = '分享这张记录卡'
+      announce('本局记录卡已准备好，可以保存或分享。')
+    }).catch(() => {
+      preview.classList.remove('is-loading')
+      const error = document.createElement('p')
+      error.className = 'hud-ending__preview-error'
+      error.textContent = '记录卡暂时没有显影，请稍后重试。'
+      preview.replaceChildren(error)
+      save.textContent = '记录卡未能生成'
+      share.textContent = '记录卡未能生成'
+      announce('本局记录卡暂时未能生成。')
+    })
+
+    const copy = makeAction('复制近视眼入口')
     copy.onclick = async () => {
       copy.disabled = true
       try {
         await copyMyopiaShareLink()
         copy.textContent = '入口已复制'
+        announce('近视眼入口已复制。')
       } catch {
         copy.textContent = '复制失败，请保存记录卡'
+        announce('复制入口失败，请保存记录卡后手动打开。')
       } finally {
-        window.setTimeout(() => { copy.disabled = false; copy.textContent = '复制近视眼入口' }, 1800)
+        window.setTimeout(() => { copy.disabled = false; copy.textContent = '复制近视眼入口' }, 1_800)
       }
     }
-    const portal = document.createElement('button')
-    portal.className = 'again ending-share'
-    portal.textContent = '回任意门'
-    portal.onclick = () => returnToMyopiaPortal()
-    const actions = document.createElement('div')
-    actions.className = 'hud-ending__actions'
-    actions.append(save, share, copy, portal, again)
-    e.append(tag, title, sub, actions)
+    const portal = makeAction('回任意门')
+    const again = makeAction('再玩一次')
+    const footerActions = document.createElement('div')
+    footerActions.className = 'hud-ending__actions hud-ending__actions--footer'
+    footerActions.append(copy, portal, again)
+    const footerNote = document.createElement('p')
+    footerNote.className = 'hud-ending__footer-note'
+    footerNote.textContent = '分享入口只会带你回到任意门，不会带走存档、恐惧值或本局记录。'
+
+    sheet.append(intro, gift, footerActions, actionStatus, footerNote)
+    e.appendChild(sheet)
     document.body.appendChild(e)
-    requestAnimationFrame(() => e.classList.add('on'))
+
+    // The game HUD has hidden but tabbable subtitle/system controls. Treat the
+    // ending as a real modal rather than relying on the visual full-screen veil.
+    const endingButtons = () => Array.from(e.querySelectorAll<HTMLButtonElement>('button'))
+      .filter((button) => !button.disabled && !button.hidden && button.getClientRects().length > 0)
+    const trapEndingFocus = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab') return
+      const buttons = endingButtons()
+      if (!buttons.length) return
+      const current = document.activeElement
+      const index = current instanceof HTMLButtonElement ? buttons.indexOf(current) : -1
+      const next = event.shiftKey
+        ? (index <= 0 ? buttons[buttons.length - 1] : null)
+        : (index === -1 || index === buttons.length - 1 ? buttons[0] : null)
+      if (!next) return
+      event.preventDefault()
+      next.focus()
+    }
+    const rootWasInert = this.root.hasAttribute('inert')
+    let endingDisposed = false
+    const disposeEnding = () => {
+      if (endingDisposed) return
+      endingDisposed = true
+      document.removeEventListener('keydown', trapEndingFocus, true)
+      window.removeEventListener('pagehide', disposeEnding)
+      if (!rootWasInert) this.root.removeAttribute('inert')
+    }
+    if (!rootWasInert) this.root.setAttribute('inert', '')
+    document.addEventListener('keydown', trapEndingFocus, true)
+    window.addEventListener('pagehide', disposeEnding, { once: true })
+
+    portal.onclick = () => {
+      disposeEnding()
+      returnToMyopiaPortal()
+    }
+    again.onclick = () => {
+      disposeEnding()
+      location.reload()
+    }
+    requestAnimationFrame(() => {
+      if (endingDisposed) return
+      e.classList.add('on')
+      sheet.focus({ preventScroll: true })
+    })
   }
+
 }

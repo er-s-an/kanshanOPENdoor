@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { PS1Pipeline } from '../../engine/renderer'
 import { buildConsortWorld } from './world'
-import { getConsortPortalUrl, saveConsortShareCard, shareConsortShareCard } from './share-card'
+import { drawConsortKeepsake, getConsortPortalUrl, prepareConsortShareCard, savePreparedConsortShareCard, sharePreparedConsortShareCard, type ConsortKeepsake, type PreparedConsortShareCard } from './share-card'
 import './style.css'
 
 // 原作：重十八《端妃黑又壮》，本地开放文本 L1–177。
@@ -22,13 +22,47 @@ root.innerHTML = `
   <div class="veil" id="cover"><section class="cover"><span class="meta">重十八 原著 · 可玩开放篇章</span><h2>景华宫的日子</h2><p class="tagline">我会种萝卜，怕啥？</p><p>院子大，也清净。先把人安顿好，再把地翻松。别人说她们的，我过我的日子。</p><p>走进一座能亲手改变的院子：安顿宫人、翻土播种，洗净手，再下一盘棋。</p><button class="primary" id="start">推门，过我的日子 →</button><p class="source-note">低清 3D 世界 · 清晰中文字幕<br>本篇依据现有开放文本 L1–177，结尾停在未完的话语。<br>地块操作与棋势图为游戏新增表达，不改写原文结果。</p></section></div>
   <section class="panel" id="dialog" hidden role="dialog" aria-modal="true" aria-labelledby="dialog-speaker"><div class="panel-top"><span class="speaker" id="dialog-speaker"></span><span class="meta" id="dialog-source"></span></div><p class="dialog-text" id="dialog-text"></p><div class="dialog-footer"><small id="dialog-position"></small><button class="primary" id="next" aria-label="按 E 或点击继续下一段">继续 · E</button></div></section>
   <section class="panel custom" id="custom" hidden role="dialog" aria-modal="true"></section>
-  <div class="veil" id="ending" hidden><section class="cover"><span class="meta">开放篇章记录 · 不是小说结局</span><h2>日子，已经有了模样。</h2><ul class="endlist"><li>留下宫人，让合适的人做合适的事。</li><li>杂草清了，土翻松了，萝卜种子播下了。</li><li>听青杏把话说完，也照常安排了一顿加餐。</li><li>洗手下棋。先推棋认输，再承认已经赢了。</li></ul><p>萧寻笑过，谈起朝政时又露出倦意。</p><p>「御史参了朕一个时……」</p><p class="source-note">原文 L177 在「御史参了朕一个时」处截断。<br>没有补写后半句、皇帝感情、宫斗胜利或后续命运。</p><div class="ending-actions"><button class="primary" id="again">再过一次这样的日子</button><button class="quiet" id="save-card">保存记录卡</button><button class="quiet" id="share-card">分享记录卡</button><a class="quiet portal-return" id="ending-return" href="${portalUrl}">返回任意门</a></div><p class="share-status" id="ending-share-status" role="status" aria-live="polite"></p></section></div>`
+  <div class="veil ending-veil" id="ending" hidden>
+    <section class="ending-sheet" role="dialog" aria-modal="true" aria-labelledby="ending-title">
+      <header class="ending-result">
+        <span class="meta">开放篇章记录 · 不是小说结局</span>
+        <h2 id="ending-title" tabindex="-1">日子，已经有了模样。</h2>
+        <p>萧寻笑过，谈起朝政时又露出倦意。</p>
+        <p class="unfinished-quote">「御史参了朕一个时……」</p>
+        <p class="source-note">原文 L177 在「御史参了朕一个时」处截断。<br>没有补写后半句、皇帝感情、宫斗胜利或后续命运。</p>
+      </header>
+      <section class="record-award" aria-labelledby="record-award-title">
+        <p class="record-kicker">✦ 刘看山寄来一张本局记录卡</p>
+        <h3 id="record-award-title">你抽到了「<span id="keepsake-name"></span>」</h3>
+        <p class="record-line" id="keepsake-line"></p>
+        <figure class="record-preview" id="record-preview">
+          <canvas id="ending-card-preview" width="1080" height="1440" aria-label="本局记录卡预览" aria-busy="true"></canvas>
+          <figcaption id="ending-card-caption" aria-live="polite">正在装裱这一局的随机收藏卡……</figcaption>
+        </figure>
+        <p class="record-disclosure">这张卡由本局随机抽取，只作收藏，不对应你的操作好坏。</p>
+      </section>
+      <div class="ending-actions" aria-label="篇章结束操作">
+        <button class="primary" id="save-card" disabled aria-describedby="ending-card-caption ending-share-status">保存本局记录卡</button>
+        <button class="quiet" id="share-card" disabled aria-describedby="ending-card-caption ending-share-status">分享本局记录卡</button>
+        <a class="quiet portal-return" id="ending-return" href="${portalUrl}">返回任意门</a>
+        <button class="quiet" id="again">再过一次这样的日子</button>
+      </div>
+      <p class="share-status" id="ending-share-status" role="status" aria-live="polite"></p>
+      <section class="journey-recap" aria-labelledby="journey-recap-title">
+        <span class="meta">本章已记下</span>
+        <h3 id="journey-recap-title">这一局走到的地方</h3>
+        <ul class="endlist"><li>留下宫人，让合适的人做合适的事。</li><li>杂草清了，土翻松了，萝卜种子播下了。</li><li>听青杏把话说完，也照常安排了一顿加餐。</li><li>洗手下棋。先推棋认输，再承认已经赢了。</li></ul>
+      </section>
+    </section>
+  </div>`
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string): T => document.getElementById(id) as T
 const canvas = $<HTMLCanvasElement>('scene')
 const hud = $('hud')
 const custom = $('custom')
 const dialog = $('dialog')
+const endingOverlay = $('ending')
+const endingSheet = endingOverlay.querySelector<HTMLElement>('.ending-sheet')!
 const coarsePointer = window.matchMedia('(pointer: coarse)')
 const usesTouchControls = () => coarsePointer.matches
 let renderer: THREE.WebGLRenderer
@@ -132,6 +166,9 @@ let phase: Phase = 'unpack'
 let started = false
 let busy = false
 let ended = false
+let endingKeepsake: ConsortKeepsake | undefined
+let endingCard: PreparedConsortShareCard | undefined
+let endingCardRequest = 0
 let muted = false
 let audio: AudioContext | undefined
 const plotState: (0 | 1 | 2 | 3)[] = [0, 0, 0]
@@ -384,15 +421,106 @@ function concede() {
   })
 }
 
+function setEndingCardActionsReady(ready: boolean) {
+  $<HTMLButtonElement>('save-card').disabled = !ready
+  $<HTMLButtonElement>('share-card').disabled = !ready
+}
+
+function setEndingModalOpen(open: boolean) {
+  // inert removes the playable HUD and prior panels from both pointer and
+  // sequential keyboard navigation. The Tab trap below remains as a fallback
+  // for browsers that do not yet honor inert.
+  for (const background of [hud, $('cover'), dialog, custom]) {
+    background.toggleAttribute('inert', open)
+    background.toggleAttribute('aria-hidden', open)
+  }
+}
+
+function endingFocusables() {
+  return Array.from(endingSheet.querySelectorAll<HTMLElement>([
+    'a[href]', 'button:not([disabled])', 'input:not([disabled])',
+    'select:not([disabled])', 'textarea:not([disabled])', '[tabindex]:not([tabindex="-1"])',
+  ].join(','))).filter(element => !element.hidden && element.getClientRects().length > 0)
+}
+
+function trapEndingFocus(event: KeyboardEvent) {
+  if (event.key !== 'Tab' || endingOverlay.hidden) return false
+  const focusables = endingFocusables()
+  const current = document.activeElement as HTMLElement | null
+  if (!focusables.length) {
+    event.preventDefault()
+    $('ending-title').focus()
+    return true
+  }
+  const first = focusables[0]!
+  const last = focusables[focusables.length - 1]!
+  if (!current || !focusables.includes(current)) {
+    event.preventDefault()
+    const target = event.shiftKey ? last : first
+    target.focus()
+    return true
+  }
+  if ((!event.shiftKey && current === last) || (event.shiftKey && current === first)) {
+    event.preventDefault()
+    const target = event.shiftKey ? last : first
+    target.focus()
+    return true
+  }
+  return false
+}
+
+async function prepareEndingKeepsake(record: ConsortKeepsake) {
+  const request = ++endingCardRequest
+  const preview = $<HTMLCanvasElement>('ending-card-preview')
+  const caption = $('ending-card-caption')
+  const wrap = $('record-preview')
+  const status = $('ending-share-status')
+  endingCard = undefined
+  setEndingCardActionsReady(false)
+  preview.setAttribute('aria-label', `本局随机记录卡预览：${record.name}`)
+  preview.setAttribute('aria-busy', 'true')
+  wrap.classList.remove('ready', 'failed')
+  caption.textContent = '正在装裱这一局的随机收藏卡……'
+  status.textContent = '正在生成可保存、可分享的本局记录卡。'
+  try {
+    // Includes the QR image, PNG blob, and File. The share click below only
+    // consumes this cache, preserving mobile transient activation.
+    const card = await prepareConsortShareCard(record)
+    if (endingKeepsake !== record || request !== endingCardRequest) return
+    const context = preview.getContext('2d')
+    if (!context) throw new Error('预览画布不可用')
+    context.clearRect(0, 0, preview.width, preview.height)
+    context.drawImage(card.canvas, 0, 0, preview.width, preview.height)
+    endingCard = card
+    preview.removeAttribute('aria-busy')
+    wrap.classList.add('ready')
+    caption.textContent = '这张随机收藏卡已固定在本局记录里。'
+    status.textContent = '记录卡已准备好，可以保存或分享。'
+    setEndingCardActionsReady(true)
+  } catch {
+    if (endingKeepsake !== record || request !== endingCardRequest) return
+    preview.removeAttribute('aria-busy')
+    wrap.classList.add('failed')
+    caption.textContent = '记录卡暂时没能生成，保存和分享会保持不可用。'
+    status.textContent = '记录卡暂时没准备好，请重新开始这一篇后再试。'
+  }
+}
+
 function ending() {
   setPhase('end')
   ended = true
+  endingKeepsake ??= drawConsortKeepsake()
+  const record = endingKeepsake
+  $('keepsake-name').textContent = record.name
+  $('keepsake-line').textContent = record.line
   lock(true)
   dialog.hidden = true
   custom.hidden = true
-  $('ending').hidden = false
+  endingOverlay.hidden = false
+  setEndingModalOpen(true)
   world.setGoalMarker(null)
-  $('again').focus()
+  $('ending-title').focus()
+  void prepareEndingKeepsake(record)
 }
 
 type Target = { id: string; position: THREE.Vector3; label: string; radius: number }
@@ -551,6 +679,7 @@ function interact() {
 const keys = new Set<string>()
 let pointer: { x: number; y: number; id: number } | null = null
 window.addEventListener('keydown', event => {
+  if (trapEndingFocus(event)) return
   if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyE'].includes(event.code)) event.preventDefault()
   if (event.code === 'KeyE' && !event.repeat) interact()
   if (!busy && started && !ended) keys.add(event.code)
@@ -599,35 +728,63 @@ $('start').onclick = () => {
 }
 $('restart').onclick = () => location.reload()
 $('again').onclick = () => location.reload()
-$<HTMLButtonElement>('save-card').onclick = async () => {
+$<HTMLButtonElement>('save-card').onclick = () => {
   const button = $<HTMLButtonElement>('save-card')
   const status = $('ending-share-status')
+  const card = endingCard
+  if (!card) {
+    status.textContent = '本局记录还没有准备好，请稍后再试。'
+    return
+  }
   button.disabled = true
   try {
-    await saveConsortShareCard()
-    status.textContent = '记录卡已保存。'
+    savePreparedConsortShareCard(card)
+    status.textContent = '本局记录卡已保存。'
     button.textContent = '记录卡已保存'
   } catch {
     status.textContent = '保存失败，请再试一次。'
     button.textContent = '保存失败，请重试'
   } finally {
-    window.setTimeout(() => { button.disabled = false; button.textContent = '保存记录卡' }, 1_800)
+    window.setTimeout(() => { button.disabled = false; button.textContent = '保存本局记录卡' }, 1_800)
   }
 }
-$<HTMLButtonElement>('share-card').onclick = async () => {
+$<HTMLButtonElement>('share-card').onclick = () => {
   const button = $<HTMLButtonElement>('share-card')
   const status = $('ending-share-status')
-  button.disabled = true
+  const card = endingCard
+  if (!card) {
+    status.textContent = '本局记录还没有准备好，请稍后再试。'
+    return
+  }
+  // navigator.share must be reached in this exact button-click stack. The
+  // image, QR, Blob, and File were all built before this button was enabled.
+  let shared: Promise<'shared' | 'saved'>
   try {
-    const result = await shareConsortShareCard()
-    if (result === 'saved') {
-      status.textContent = '此浏览器没有分享面板，记录卡已保存，可手动分享。'
+    shared = sharePreparedConsortShareCard(card)
+  } catch {
+    button.disabled = true
+    try {
+      savePreparedConsortShareCard(card)
+      status.textContent = '分享面板暂时不可用，记录卡已保存，可手动分享。'
       button.textContent = '图片已保存'
-    } else {
-      status.textContent = '分享面板已打开。'
-      button.textContent = '分享面板已打开'
+    } catch {
+      status.textContent = '分享失败，请保存记录卡后手动分享。'
+      button.textContent = '分享失败，请保存图片'
+    } finally {
+      window.setTimeout(() => { button.disabled = false; button.textContent = '分享本局记录卡' }, 1_800)
     }
-  } catch (error) {
+    return
+  }
+  button.disabled = true
+  void shared.then((result) => {
+    if (result === 'saved') {
+      status.textContent = '此浏览器无法分享图片，已保存同一张记录卡。'
+      button.textContent = '图片已保存'
+      return
+    }
+    status.textContent = '分享面板已打开。'
+    button.textContent = '分享面板已打开'
+  }).catch((error: unknown) => {
     if (error instanceof DOMException && error.name === 'AbortError') {
       status.textContent = '已取消分享。'
       button.textContent = '已取消分享'
@@ -635,9 +792,9 @@ $<HTMLButtonElement>('share-card').onclick = async () => {
       status.textContent = '分享失败，请保存记录卡后手动分享。'
       button.textContent = '分享失败，请保存图片'
     }
-  } finally {
-    window.setTimeout(() => { button.disabled = false; button.textContent = '分享记录卡' }, 1_800)
-  }
+  }).finally(() => {
+    window.setTimeout(() => { button.disabled = false; button.textContent = '分享本局记录卡' }, 1_800)
+  })
 }
 $('sound').onclick = () => { muted = !muted; $('sound').textContent = `声音 · ${muted ? '关' : '开'}`; if (!muted) sound() }
 coarsePointer.addEventListener('change', updateInputCopy)

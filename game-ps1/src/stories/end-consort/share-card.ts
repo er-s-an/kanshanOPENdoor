@@ -10,6 +10,55 @@ const SANS = 'system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif
 type PageLocation = Pick<Location, 'protocol' | 'origin' | 'pathname'>
 
 /**
+ * These are deliberately small, story-facing keepsakes rather than player
+ * types. They are drawn once after an open chapter finishes and never claim to
+ * diagnose the player from the limited 3D interactions.
+ */
+export type ConsortKeepsake = Readonly<{
+  id: 'roster' | 'seeds' | 'water' | 'chess'
+  name: string
+  line: string
+  marker: string
+  colors: Readonly<{ ink: string; accent: string; wash: string }>
+}>
+
+export const CONSORT_KEEPSAKES: readonly ConsortKeepsake[] = [
+  {
+    id: 'roster',
+    name: '景华宫名册',
+    line: '把人留下来，也把该做的事一件件写清。',
+    marker: '安顿',
+    colors: { ink: '#33483b', accent: '#56744e', wash: '#d7dfba' },
+  },
+  {
+    id: 'seeds',
+    name: '萝卜种子袋',
+    line: '土翻松了，种子才有地方慢慢落下。',
+    marker: '播种',
+    colors: { ink: '#5b4430', accent: '#9b6d3b', wash: '#eed8a5' },
+  },
+  {
+    id: 'water',
+    name: '洗手的清水',
+    line: '做完手边的活，再干干净净坐到石桌前。',
+    marker: '洗净',
+    colors: { ink: '#31545c', accent: '#4c8290', wash: '#c7e3df' },
+  },
+  {
+    id: 'chess',
+    name: '石桌残局',
+    line: '棋势已经明白，话仍要照实说出来。',
+    marker: '落子',
+    colors: { ink: '#3e4130', accent: '#6e7447', wash: '#dde0b8' },
+  },
+]
+
+export function drawConsortKeepsake(random = Math.random()): ConsortKeepsake {
+  const normalized = Number.isFinite(random) ? Math.min(Math.max(random, 0), .999999) : 0
+  return CONSORT_KEEPSAKES[Math.floor(normalized * CONSORT_KEEPSAKES.length)]!
+}
+
+/**
  * A built experience is copied below /myopia-3d/. Trim that directory to get
  * back to the portal, while retaining a possible deployment subdirectory.
  * A direct end-consort.html preview has no such parent, so it deliberately
@@ -38,38 +87,95 @@ function loadImage(src: string) {
   })
 }
 
-function drawPalace(ctx: CanvasRenderingContext2D) {
+function drawKeepsakeMotif(ctx: CanvasRenderingContext2D, record: ConsortKeepsake) {
   ctx.save()
-  ctx.translate(W / 2, 405)
-  ctx.fillStyle = 'rgba(238, 213, 151, .18)'
-  ctx.strokeStyle = 'rgba(239, 203, 111, .72)'
-  ctx.lineWidth = 5
-  ctx.beginPath()
-  ctx.moveTo(-330, -48)
-  ctx.lineTo(0, -260)
-  ctx.lineTo(330, -48)
-  ctx.closePath()
-  ctx.fill()
-  ctx.stroke()
-  ctx.fillStyle = 'rgba(28, 55, 43, .62)'
-  ctx.fillRect(-268, -45, 536, 330)
-  ctx.strokeRect(-268, -45, 536, 330)
-  for (let x = -205; x <= 205; x += 102) {
-    ctx.strokeStyle = 'rgba(239, 203, 111, .45)'
-    ctx.beginPath()
-    ctx.moveTo(x, -42)
-    ctx.lineTo(x, 282)
+  ctx.translate(W / 2, 420)
+  ctx.strokeStyle = record.colors.accent
+  ctx.fillStyle = record.colors.wash
+  ctx.lineWidth = 9
+
+  if (record.id === 'roster') {
+    rounded(ctx, -245, -232, 490, 455, 24)
+    ctx.fill()
     ctx.stroke()
+    ctx.strokeStyle = `${record.colors.accent}bb`
+    ctx.lineWidth = 5
+    for (let row = -138; row <= 120; row += 86) {
+      ctx.beginPath()
+      ctx.moveTo(-152, row)
+      ctx.lineTo(152, row)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.moveTo(-152, row + 27)
+      ctx.lineTo(52, row + 27)
+      ctx.stroke()
+    }
+    ctx.fillStyle = record.colors.accent
+    ctx.beginPath()
+    ctx.arc(-148, -164, 16, 0, Math.PI * 2)
+    ctx.arc(-148, -78, 16, 0, Math.PI * 2)
+    ctx.arc(-148, 8, 16, 0, Math.PI * 2)
+    ctx.fill()
+  } else if (record.id === 'seeds') {
+    ctx.strokeStyle = `${record.colors.accent}bb`
+    ctx.lineWidth = 7
+    for (let y = -145; y <= 145; y += 96) {
+      ctx.beginPath()
+      ctx.moveTo(-250, y)
+      ctx.quadraticCurveTo(0, y + 62, 250, y)
+      ctx.stroke()
+    }
+    ctx.fillStyle = record.colors.accent
+    for (const [x, y] of [[-150, -110], [-50, -55], [90, -118], [185, -15], [-133, 65], [14, 101], [130, 143]] as const) {
+      ctx.beginPath()
+      ctx.ellipse(x, y, 22, 13, -.36, 0, Math.PI * 2)
+      ctx.fill()
+    }
+  } else if (record.id === 'water') {
+    ctx.fillStyle = record.colors.wash
+    ctx.beginPath()
+    ctx.arc(0, 0, 208, 0, Math.PI * 2)
+    ctx.fill()
+    for (const radius of [68, 126, 190]) {
+      ctx.strokeStyle = `${record.colors.accent}${radius === 190 ? 'a0' : 'd2'}`
+      ctx.lineWidth = 8
+      ctx.beginPath()
+      ctx.ellipse(0, 0, radius, radius * .56, 0, 0, Math.PI * 2)
+      ctx.stroke()
+    }
+    ctx.fillStyle = record.colors.accent
+    ctx.beginPath()
+    ctx.arc(0, -92, 19, 0, Math.PI * 2)
+    ctx.fill()
+  } else {
+    rounded(ctx, -214, -214, 428, 428, 12)
+    ctx.fill()
+    ctx.stroke()
+    ctx.strokeStyle = `${record.colors.accent}bb`
+    ctx.lineWidth = 5
+    for (let i = 1; i < 4; i++) {
+      const place = -214 + i * 107
+      ctx.beginPath()
+      ctx.moveTo(place, -214)
+      ctx.lineTo(place, 214)
+      ctx.moveTo(-214, place)
+      ctx.lineTo(214, place)
+      ctx.stroke()
+    }
+    for (const [x, y, dark] of [[-108, -108, true], [0, -2, false], [108, 105, true], [106, -108, false], [-108, 105, false]] as const) {
+      ctx.fillStyle = dark ? record.colors.ink : '#f9f3df'
+      ctx.beginPath()
+      ctx.arc(x, y, 31, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.strokeStyle = `${record.colors.accent}99`
+      ctx.lineWidth = 4
+      ctx.stroke()
+    }
   }
-  ctx.fillStyle = 'rgba(239, 203, 111, .25)'
-  rounded(ctx, -70, 52, 140, 230, 64)
-  ctx.fill()
-  ctx.strokeStyle = 'rgba(239, 203, 111, .7)'
-  ctx.stroke()
   ctx.restore()
 }
 
-export async function createConsortShareCard(): Promise<HTMLCanvasElement> {
+export async function createConsortShareCard(record: ConsortKeepsake): Promise<HTMLCanvasElement> {
   const canvas = document.createElement('canvas')
   canvas.width = W
   canvas.height = H
@@ -77,8 +183,8 @@ export async function createConsortShareCard(): Promise<HTMLCanvasElement> {
   if (!ctx) return canvas
 
   const outer = ctx.createLinearGradient(0, 0, W, H)
-  outer.addColorStop(0, '#173c32')
-  outer.addColorStop(.55, '#637047')
+  outer.addColorStop(0, record.colors.ink)
+  outer.addColorStop(.54, record.colors.accent)
   outer.addColorStop(1, '#b9864e')
   ctx.fillStyle = outer
   ctx.fillRect(0, 0, W, H)
@@ -90,7 +196,7 @@ export async function createConsortShareCard(): Promise<HTMLCanvasElement> {
   ctx.fill()
 
   ctx.textAlign = 'center'
-  ctx.fillStyle = '#56744e'
+  ctx.fillStyle = record.colors.accent
   rounded(ctx, 76, 76, 206, 54, 27)
   ctx.fill()
   ctx.fillStyle = '#f2e5c7'
@@ -99,44 +205,44 @@ export async function createConsortShareCard(): Promise<HTMLCanvasElement> {
   ctx.textAlign = 'right'
   ctx.fillStyle = '#778065'
   ctx.font = `600 19px ${SANS}`
-  ctx.fillText('开放篇章记录 · KANSHAN DOOR', 986, 111)
+  ctx.fillText('刘看山 · 本局随机记录卡', 986, 111)
 
   ctx.textAlign = 'center'
-  ctx.fillStyle = 'rgba(183, 127, 63, .12)'
+  ctx.fillStyle = `${record.colors.accent}16`
   ctx.font = `900 178px ${SANS}`
   ctx.fillText('JING HUA', W / 2, 455)
-  ctx.fillStyle = 'rgba(86, 116, 78, .14)'
+  ctx.fillStyle = `${record.colors.wash}90`
   rounded(ctx, 164, 152, 752, 570, 42)
   ctx.fill()
-  drawPalace(ctx)
-  ctx.fillStyle = '#33483b'
-  ctx.font = `700 18px ${SANS}`
-  ctx.fillText('把景华宫，过成自己的日子。', W / 2, 680)
+  drawKeepsakeMotif(ctx, record)
+  ctx.fillStyle = record.colors.ink
+  ctx.font = `800 18px ${SANS}`
+  ctx.fillText(`本局印记 · ${record.marker}`, W / 2, 680)
 
   ctx.fillStyle = '#283e33'
+  ctx.font = `800 34px ${SERIF}`
+  ctx.fillText('《端妃黑又壮》开放篇章', W / 2, 793)
+  ctx.fillStyle = record.colors.ink
   ctx.font = `800 66px ${SERIF}`
-  ctx.fillText('景 华 宫 的 日 子', W / 2, 806)
+  ctx.fillText(record.name, W / 2, 878)
   ctx.fillStyle = '#778065'
   ctx.font = `500 26px ${SERIF}`
-  ctx.fillText('种下萝卜，也把日子过成自己。', W / 2, 858)
-  ctx.fillStyle = '#56744e'
-  rounded(ctx, 336, 905, 408, 40, 20)
+  ctx.fillText(record.line, W / 2, 932)
+  ctx.fillStyle = record.colors.accent
+  rounded(ctx, 334, 972, 412, 42, 21)
   ctx.fill()
   ctx.fillStyle = '#f2e5c7'
   ctx.font = `800 16px ${SANS}`
-  ctx.fillText('《端妃黑又壮》· 开放篇章', W / 2, 932)
-  ctx.fillStyle = '#33483b'
-  ctx.font = `800 49px ${SERIF}`
-  ctx.fillText('日子，已经有了模样。', W / 2, 1019)
-  ctx.strokeStyle = 'rgba(86, 116, 78, .42)'
+  ctx.fillText('随机收藏 · 不表示玩家表现', W / 2, 1000)
+  ctx.strokeStyle = `${record.colors.accent}88`
   ctx.lineWidth = 3
   ctx.beginPath()
-  ctx.moveTo(162, 1061)
-  ctx.lineTo(918, 1061)
+  ctx.moveTo(162, 1057)
+  ctx.lineTo(918, 1057)
   ctx.stroke()
   ctx.fillStyle = '#778065'
   ctx.font = `600 20px ${SANS}`
-  ctx.fillText('PS1 沉浸体验 · 开放文本止于 L177', W / 2, 1126)
+  ctx.fillText('开放文本止于 L177 · 不补写后续命运', W / 2, 1122)
 
   ctx.fillStyle = '#213b30'
   rounded(ctx, 76, 1180, 928, 180, 22)
@@ -171,30 +277,98 @@ function asBlob(canvas: HTMLCanvasElement) {
   return new Promise<Blob>((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('生成记录卡失败')), 'image/png'))
 }
 
-export async function saveConsortShareCard() {
-  const blob = await asBlob(await createConsortShareCard())
+type NavigatorWithShare = {
+  share?: (data: ShareData) => Promise<void>
+  canShare?: (data: ShareData) => boolean
+}
+
+/**
+ * Everything that a save or a native share needs is prepared while the ending
+ * sheet is opening. Web Share is activation-gated on mobile, so a click must
+ * never wait for QR rendering or canvas encoding before invoking it.
+ */
+export type PreparedConsortShareCard = Readonly<{
+  record: ConsortKeepsake
+  canvas: HTMLCanvasElement
+  blob: Blob
+  file?: File
+  shareData: ShareData
+}>
+
+function fileName(record: ConsortKeepsake) {
+  return `端妃黑又壮-${record.name}-记录卡.png`
+}
+
+function shareText(record: ConsortKeepsake) {
+  return `我在《端妃黑又壮》的开放篇章里，抽到了「${record.name}」本局记录卡。原文停在 L177 的未完话语。`
+}
+
+export async function prepareConsortShareCard(record: ConsortKeepsake): Promise<PreparedConsortShareCard> {
+  const canvas = await createConsortShareCard(record)
+  const blob = await asBlob(canvas)
+  const file = typeof File === 'function'
+    ? new File([blob], fileName(record), { type: 'image/png' })
+    : undefined
+  const shareData: ShareData = {
+    title: `我的《端妃黑又壮》${record.name}记录卡`,
+    text: shareText(record),
+    // The portal route is deliberately the door only. It does not encode the
+    // random card, play progress, or any in-game actions.
+    url: getConsortPortalUrl(),
+  }
+  return { record, canvas, blob, file, shareData }
+}
+
+/** Save the already-rendered image; this is also the no-Web-Share fallback. */
+export function savePreparedConsortShareCard(card: PreparedConsortShareCard) {
+  const { blob, record } = card
   const objectUrl = URL.createObjectURL(blob)
   const download = document.createElement('a')
   download.href = objectUrl
-  download.download = '端妃黑又壮-景华宫记录卡.png'
+  download.download = fileName(record)
   download.click()
   window.setTimeout(() => URL.revokeObjectURL(objectUrl), 4_000)
 }
 
-export async function shareConsortShareCard() {
-  const navigatorWithShare = navigator as Navigator & { share?: (data: ShareData) => Promise<void>; canShare?: (data: ShareData) => boolean }
-  if (!navigatorWithShare.share) {
-    await saveConsortShareCard()
-    return 'saved' as const
+/**
+ * Calls navigator.share immediately with the prepared image. Do not make this
+ * async: callers need the browser call itself to happen in the original button
+ * click stack. Browsers that cannot share image files download the exact same
+ * prepared PNG instead of silently sharing only a text link.
+ */
+export function sharePreparedConsortShareCard(card: PreparedConsortShareCard): Promise<'shared' | 'saved'> {
+  const navigatorWithShare = navigator as NavigatorWithShare
+  const file = card.file
+  // A browser that exposes text sharing alone must not receive a card as a
+  // text-only fallback. If it cannot prove file support, save this PNG.
+  let canShareFile = false
+  if (file && navigatorWithShare.share && navigatorWithShare.canShare) {
+    try {
+      canShareFile = navigatorWithShare.canShare({ files: [file] })
+    } catch {
+      canShareFile = false
+    }
   }
-  const blob = await asBlob(await createConsortShareCard())
-  const file = new File([blob], '端妃黑又壮-景华宫记录卡.png', { type: 'image/png' })
-  const data: ShareData = {
-    title: '我的《端妃黑又壮》篇章记录',
-    text: '我在《端妃黑又壮》里，把景华宫过成了自己的日子。你会怎么开始？',
-    url: getConsortPortalUrl(),
+  if (!canShareFile || !file || !navigatorWithShare.share) {
+    savePreparedConsortShareCard(card)
+    return Promise.resolve('saved')
   }
-  if (navigatorWithShare.canShare?.({ files: [file] })) data.files = [file]
-  await navigatorWithShare.share(data)
-  return 'shared' as const
+
+  const data: ShareData = { ...card.shareData, files: [file] }
+  try {
+    // No await may precede this invocation; it must retain the tap activation.
+    const nativeShare = navigatorWithShare.share(data)
+    return nativeShare.then(
+      () => 'shared' as const,
+      (error: unknown) => {
+        if (error instanceof DOMException && error.name === 'AbortError') throw error
+        savePreparedConsortShareCard(card)
+        return 'saved' as const
+      },
+    )
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') return Promise.reject(error)
+    savePreparedConsortShareCard(card)
+    return Promise.resolve('saved')
+  }
 }
