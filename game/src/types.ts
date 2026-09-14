@@ -34,6 +34,20 @@ export interface InvestigationCheck {
   id: string; prompt: string; claim: string; answer: string[]; grants: string[]; candidates?: string[];
   success: string; failure: string;
 }
+export interface InvestigationBrowserShortcut {
+  id: string;
+  /** A visible, non-spoiler result title. The query stays deterministic and authored. */
+  label: string;
+  query: string;
+  source: string;
+  note: string;
+}
+export interface InvestigationBrowser {
+  title: string;
+  address: string;
+  prompt: string;
+  shortcuts: InvestigationBrowserShortcut[];
+}
 
 export interface EncounterCondition { key: string; op: 'eq' | 'ne' | 'gte' | 'lte'; value: string | number }
 export interface EncounterAction {
@@ -248,7 +262,7 @@ export interface Scene {
   onEnter?: Vars;
   dialogue?: { topics: DialogueTopic[]; requiredClues?: string[]; leaveLabel?: string };
   investigation?: { objective: string; searchPlaceholder?: string; hints: string[];
-    items: InvestigationItem[]; checks: InvestigationCheck[] };
+    items: InvestigationItem[]; checks: InvestigationCheck[]; browser?: InvestigationBrowser };
   npc?: string;
   lore?: string[];
   choices?: Choice[];
