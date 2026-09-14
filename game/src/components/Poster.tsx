@@ -2,7 +2,6 @@
 // never need to render Chinese text, and the card still works without an LLM.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { EndingMeta } from '../types';
-import type { Report } from '../lib/report';
 import type { PersonaResult } from '../lib/persona.mjs';
 import { buildPersonaShareUrl } from '../lib/persona.mjs';
 
@@ -23,7 +22,6 @@ export const ENDING_RATING_LABEL: Record<NonNullable<EndingMeta['rating']>, stri
 interface PosterProps {
   storyId: string;
   storyTitle: string;
-  report: Report;
   persona: PersonaResult;
 }
 
@@ -91,112 +89,101 @@ function drawCard(
   c: CanvasRenderingContext2D,
   character: HTMLImageElement | null,
   storyTitle: string,
-  report: Report,
   persona: PersonaResult,
   shareUrl: string,
 ) {
   c.clearRect(0, 0, W, H);
-  c.fillStyle = '#efeadd';
+  c.fillStyle = '#d9d2c4';
   c.fillRect(0, 0, W, H);
   seededTexture(c, `${storyTitle}|${persona.code}`);
 
   const accent = accentByPersona[persona.code];
-  c.fillStyle = '#153128';
-  c.fillRect(0, 0, W, 520);
+  c.fillStyle = '#10291f';
+  roundedRect(c, 34, 34, 1012, 1372, 42);
+  c.fill();
+  c.fillStyle = '#f2ecdf';
+  roundedRect(c, 56, 56, 968, 1328, 28);
+  c.fill();
   c.fillStyle = accent;
-  c.fillRect(0, 0, 24, H);
-  c.fillStyle = 'rgba(239,234,221,.07)';
-  c.font = `800 278px ${SANS}`;
-  c.textAlign = 'left';
-  c.fillText(persona.code, 42, 430);
+  roundedRect(c, 76, 76, 150, 54, 27);
+  c.fill();
+  c.fillStyle = '#fffaf0';
+  c.font = `800 23px ${SANS}`;
+  c.textAlign = 'center';
+  c.fillText(persona.code, 151, 111);
 
-  c.fillStyle = '#f3d797';
-  c.font = `600 24px ${SANS}`;
-  c.letterSpacing = '5px';
-  c.fillText('看山任意门 · 本局调查人格', 76, 82);
+  c.textAlign = 'right';
+  c.fillStyle = '#657269';
+  c.font = `600 19px ${SANS}`;
+  c.letterSpacing = '3px';
+  c.fillText('本局获得 · KANSHAN TYPE', 986, 111);
   c.letterSpacing = '0px';
 
-  c.fillStyle = 'rgba(239,234,221,.78)';
-  c.font = `28px ${SERIF}`;
-  c.fillText(`《${storyTitle}》`, 76, 134);
+  c.textAlign = 'center';
+  c.fillStyle = `${accent}18`;
+  c.font = `900 230px ${SANS}`;
+  c.fillText(persona.code, 540, 438);
 
   c.save();
-  c.translate(650, 54);
-  c.rotate(-0.025);
-  c.fillStyle = '#e3d9c3';
-  roundedRect(c, 0, 0, 350, 420, 40);
+  c.translate(540, 164);
+  c.fillStyle = '#e2dacb';
+  roundedRect(c, -300, 0, 600, 530, 42);
   c.fill();
-  c.strokeStyle = 'rgba(243,215,151,.7)';
-  c.lineWidth = 3;
+  c.strokeStyle = `${accent}99`;
+  c.lineWidth = 4;
   c.stroke();
   if (character) {
-    const ratio = Math.min(324 / character.naturalWidth, 388 / character.naturalHeight);
+    const ratio = Math.min(540 / character.naturalWidth, 490 / character.naturalHeight);
     const width = character.naturalWidth * ratio;
     const height = character.naturalHeight * ratio;
-    c.drawImage(character, (350 - width) / 2, 20 + (388 - height) / 2, width, height);
+    c.drawImage(character, -width / 2, 24 + (490 - height) / 2, width, height);
   } else {
     c.fillStyle = '#153128';
-    c.font = `700 36px ${SERIF}`;
-    c.textAlign = 'center';
-    c.fillText('刘看山', 175, 205);
-    c.font = `22px ${SANS}`;
-    c.fillText('正在赶来', 175, 246);
+    c.font = `700 44px ${SERIF}`;
+    c.fillText('刘看山正在赶来', 0, 275);
   }
   c.restore();
 
-  c.textAlign = 'left';
-  c.fillStyle = accent;
-  c.font = `800 30px ${SANS}`;
-  c.fillText(persona.code, 76, 608);
-  c.fillStyle = '#153128';
-  c.font = `800 84px ${SERIF}`;
-  c.fillText(persona.name, 76, 700);
-  c.fillStyle = '#52635b';
-  c.font = `600 26px ${SANS}`;
-  c.fillText(persona.route, 80, 752);
+  c.fillStyle = '#6f776f';
+  c.font = `600 20px ${SANS}`;
+  c.letterSpacing = '6px';
+  c.fillText('看山调查人格', 540, 758);
+  c.letterSpacing = '0px';
+  c.fillStyle = '#10291f';
+  c.font = `800 82px ${SERIF}`;
+  c.fillText(persona.name, 540, 858);
 
-  c.fillStyle = '#fffdf6';
-  roundedRect(c, 72, 790, 936, 164, 28);
-  c.fill();
-  c.fillStyle = accent;
-  c.font = `700 31px ${SERIF}`;
-  drawLines(c, splitLines(c, persona.roast, 820, 2), 112, 850, 49);
-
-  c.fillStyle = '#243c33';
-  c.font = `30px ${SERIF}`;
-  drawLines(c, splitLines(c, persona.praise, 860, 2), 84, 1012, 46);
-
-  c.fillStyle = '#153128';
-  c.font = `700 24px ${SANS}`;
-  c.fillText('这张卡来自你的关键选择', 84, 1118);
-  c.font = `24px ${SANS}`;
-  c.fillStyle = '#52635b';
-  persona.proofLines.slice(0, 3).forEach((line, index) => {
-    c.fillStyle = accent;
-    c.fillRect(86, 1154 + index * 48, 8, 8);
-    c.fillStyle = '#52635b';
-    c.fillText(line, 112, 1164 + index * 48);
-  });
-
-  c.strokeStyle = 'rgba(21,49,40,.18)';
-  c.lineWidth = 2;
+  c.strokeStyle = `${accent}77`;
+  c.lineWidth = 3;
   c.beginPath();
-  c.moveTo(84, 1298);
-  c.lineTo(996, 1298);
+  c.moveTo(162, 910);
+  c.lineTo(918, 910);
   c.stroke();
-  c.fillStyle = '#153128';
-  c.font = `700 21px ${SANS}`;
-  c.fillText('你会把同一件事查成什么？', 84, 1334);
-  const readableUrl = decodeURI(shareUrl.replace(/^https?:\/\//, ''));
-  c.fillStyle = '#52635b';
+
+  c.fillStyle = '#203d32';
+  c.font = `700 42px ${SERIF}`;
+  drawLines(c, splitLines(c, persona.shareLine, 760, 2), 540, 990, 64);
+
+  c.fillStyle = '#6f776f';
+  c.font = `24px ${SERIF}`;
+  c.fillText(`《${storyTitle}》`, 540, 1122);
+
+  c.fillStyle = '#10291f';
+  roundedRect(c, 76, 1194, 928, 166, 22);
+  c.fill();
+  c.fillStyle = '#f2d79a';
+  c.font = `700 27px ${SERIF}`;
+  c.fillText('你会把同一件事查成什么？', 540, 1250);
+  c.fillStyle = 'rgba(242,236,223,.76)';
+  c.font = `19px ${SANS}`;
+  c.fillText('看山任意门 · kanshan.makebook.hk2048.online', 540, 1295);
+  c.fillStyle = 'rgba(242,236,223,.46)';
   c.font = `16px ${SANS}`;
-  const linkLines = splitLines(c, readableUrl, 900, 2);
-  drawLines(c, linkLines, 84, 1366, 20);
-  c.fillStyle = '#7a817d';
-  c.font = `16px ${SANS}`;
-  c.textAlign = 'right';
-  c.fillText(`${report.badge} · 娱乐性结果，不是心理测量`, 996, 1410);
-  c.textAlign = 'left';
+  c.fillText('娱乐性结果 · 不是心理测量', 540, 1333);
+
+  // Keep the actual URL in the share payload; the saved card only needs a
+  // readable destination rather than a long query string.
+  void shareUrl;
 }
 
 function canvasToBlob(canvas: HTMLCanvasElement) {
@@ -222,13 +209,13 @@ async function copyText(value: string) {
   if (!copied) throw new Error('复制失败');
 }
 
-export function Poster({ storyId, storyTitle, report, persona }: PosterProps) {
+export function Poster({ storyId, storyTitle, persona }: PosterProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState<'save' | 'share' | 'copy' | null>(null);
   const [feedback, setFeedback] = useState('');
   const shareUrl = useMemo(() => buildPersonaShareUrl(storyId, persona.code), [storyId, persona.code]);
-  const signature = `${storyTitle}|${report.meta.title}|${report.badge}|${persona.code}|${shareUrl}`;
+  const signature = `${storyTitle}|${persona.code}|${persona.shareLine}|${shareUrl}`;
 
   useEffect(() => {
     let active = true;
@@ -248,12 +235,12 @@ export function Poster({ storyId, storyTitle, report, persona }: PosterProps) {
       let character: HTMLImageElement | null = null;
       try { character = await loadImage(persona.asset); } catch { /* text fallback remains exportable */ }
       if (!active) return;
-      drawCard(context, character, storyTitle, report, persona, shareUrl);
+      drawCard(context, character, storyTitle, persona, shareUrl);
       setReady(true);
       setFeedback(character ? '分享卡已排好，可以保存或转发。' : '角色图暂时没赶上，文字版分享卡仍可保存。');
     })();
     return () => { active = false; };
-  }, [signature, persona, report, shareUrl, storyTitle]);
+  }, [signature, persona, shareUrl, storyTitle]);
 
   const save = async () => {
     const canvas = canvasRef.current;
@@ -299,7 +286,7 @@ export function Poster({ storyId, storyTitle, report, persona }: PosterProps) {
     try {
       const data: ShareData = {
         title: `我的看山调查人格：${persona.name}`,
-        text: `${persona.roast} 你会把同一件事查成什么？`,
+        text: `我在《${storyTitle}》拿到了「${persona.name}」：${persona.shareLine} 你会把同一件事查成什么？`,
         url: shareUrl,
       };
       const canvas = canvasRef.current;
@@ -328,13 +315,13 @@ export function Poster({ storyId, storyTitle, report, persona }: PosterProps) {
   return (
     <section className="poster" aria-labelledby="poster-title">
       <div className="poster__heading">
-        <div><p>1080 × 1440</p><h3 id="poster-title">把这局变成一张卡</h3></div>
+        <div><p>已生成 · 1080 × 1440</p><h3 id="poster-title">保存或分享这张人格卡</h3></div>
         <span>{persona.code}</span>
       </div>
       <canvas ref={canvasRef} className="poster__canvas" aria-label={`${persona.name}调查人格分享卡预览`} />
       <div className="poster__actions">
-        <button className="btn btn--primary" disabled={!ready || Boolean(busy)} onClick={() => void save()}>{busy === 'save' ? '正在生成 PNG…' : '保存 PNG'}</button>
-        <button className="btn btn--ghost" disabled={Boolean(busy)} onClick={() => void share()}>{busy === 'share' ? '正在打开分享…' : '分享给朋友'}</button>
+        <button className="btn btn--primary" disabled={!ready || Boolean(busy)} onClick={() => void save()}>{busy === 'save' ? '正在生成图片…' : '保存图片'}</button>
+        <button className="btn btn--ghost" disabled={Boolean(busy)} onClick={() => void share()}>{busy === 'share' ? '正在打开分享…' : '分享这张卡'}</button>
       </div>
       <label className="poster__link">
         <span>朋友打开后会先回到刘看山的故事入口</span>

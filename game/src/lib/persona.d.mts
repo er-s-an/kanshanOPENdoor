@@ -6,6 +6,7 @@ export interface PersonaDefinition {
   code: PersonaCode;
   name: string;
   route: string;
+  shareLine: string;
   roast: string;
   praise: string;
   asset: string;

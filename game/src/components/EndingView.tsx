@@ -18,7 +18,6 @@ export function EndingView({ scene }: { scene: Scene }) {
   const { story, vars, memo, enterStory, backToDoor, chooseAndNav, navBusy } = useGame();
   const { prefs } = usePrefs();
   const [typed, setTyped] = useState(!scene.text);
-  const [posterOpen, setPosterOpen] = useState(false);
   const [confirmRestart, setConfirmRestart] = useState(false);
   const [restarting, setRestarting] = useState(false);
   const [restartError, setRestartError] = useState('');
@@ -85,46 +84,47 @@ export function EndingView({ scene }: { scene: Scene }) {
               {story.source?.scope === 'excerpt' ? <p className="ending-result__scope">故事仍未结束，这里是本次体验的阶段结果。</p> : null}
             </header>
 
-            <section className="ending-recap" aria-labelledby="ending-recap-title">
-              <h2 id="ending-recap-title">{decisions ? '你留下的选择' : actions ? '你做过的事' : '这一次的经历'}</h2>
-              <ul>{recap.map((line, index) => <li key={index}>{line}</li>)}</ul>
-              {report.clueFound > 0 ? <p className="ending-recap__note">已记下 {report.clueFound} 条线索。</p> : null}
+            <section className={`persona-award persona-award--${persona.code.toLowerCase()}`} aria-labelledby="persona-title">
+              <header className="persona-award__heading">
+                <p>刘看山发来一张新卡</p>
+                <h2 id="persona-title">你获得了「{persona.name}」</h2>
+                <blockquote>{persona.shareLine}</blockquote>
+              </header>
+              <Poster storyId={story.story.id} storyTitle={story.story.title} persona={persona} />
             </section>
 
-            {counterfactual ? <section className="ending-counterfactual" aria-labelledby="ending-counterfactual-title">
-              <div className="ending-counterfactual__head">
-                <p>本局反事实复盘 · {counterfactual.chapter}</p>
-                <h2 id="ending-counterfactual-title">如果回到最后一个真实分歧点</h2>
-              </div>
-              <div className="ending-counterfactual__routes">
-                <article><small>你实际选择</small><strong>{counterfactual.selected}</strong><span>{counterfactual.axisFrom}</span></article>
-                <span aria-hidden>⇄</span>
-                <article><small>另一条可走路线</small><strong>{counterfactual.alternative}</strong><span>{counterfactual.axisTo}</span></article>
-              </div>
-              <p>{counterfactual.note}</p>
-            </section> : null}
+            <section className="ending-analysis" aria-labelledby="ending-analysis-title">
+              <header className="ending-analysis__head">
+                <p>本剧分析</p>
+                <h2 id="ending-analysis-title">你为什么走到这个结局</h2>
+              </header>
 
-            <section className={`persona-reveal persona-reveal--${persona.code.toLowerCase()}`} aria-labelledby="persona-title">
-              <div className="persona-reveal__character" aria-hidden="true">
-                <span>{persona.code}</span>
-                <img src={persona.asset} alt="" />
-              </div>
-              <div className="persona-reveal__copy">
-                <p className="persona-reveal__eyebrow">刘看山的本局判型</p>
-                <h2 id="persona-title">你是：{persona.name}</h2>
-                <p className="persona-reveal__route">{persona.route}</p>
-                <blockquote>{persona.roast}</blockquote>
-                <p className="persona-reveal__praise">{persona.praise}</p>
-              </div>
-              <div className="persona-reveal__basis">
-                <p>{persona.matchedChoices >= 2 ? `依据来自本局 ${persona.matchedChoices} 次关键选择` : '这一局留下的关键选择较少，结果是当前路线倾向'}</p>
+              <section className="ending-recap" aria-labelledby="ending-recap-title">
+                <h3 id="ending-recap-title">{decisions ? '你留下的选择' : actions ? '你做过的事' : '这一次的经历'}</h3>
+                <ul>{recap.map((line, index) => <li key={index}>{line}</li>)}</ul>
+                {report.clueFound > 0 ? <p className="ending-recap__note">已记下 {report.clueFound} 条线索。</p> : null}
+              </section>
+
+              {counterfactual ? <section className="ending-counterfactual" aria-labelledby="ending-counterfactual-title">
+                <div className="ending-counterfactual__head">
+                  <p>本局反事实复盘 · {counterfactual.chapter}</p>
+                  <h3 id="ending-counterfactual-title">如果回到最后一个真实分歧点</h3>
+                </div>
+                <div className="ending-counterfactual__routes">
+                  <article><small>你实际选择</small><strong>{counterfactual.selected}</strong><span>{counterfactual.axisFrom}</span></article>
+                  <span aria-hidden>⇄</span>
+                  <article><small>另一条可走路线</small><strong>{counterfactual.alternative}</strong><span>{counterfactual.axisTo}</span></article>
+                </div>
+                <p>{counterfactual.note}</p>
+              </section> : null}
+
+              <section className="persona-analysis" aria-labelledby="persona-analysis-title">
+                <p>{persona.route}</p>
+                <h3 id="persona-analysis-title">为什么是「{persona.name}」</h3>
+                <p>{persona.praise}</p>
                 <ul>{persona.proofLines.map((line) => <li key={line}>{line}</li>)}</ul>
-              </div>
-              <p className="persona-reveal__note">娱乐性结果，不是心理测量。换一种关键选择，刘看山也会换一种判法。</p>
-              <button className="btn btn--primary persona-reveal__open" aria-expanded={posterOpen} aria-controls="persona-poster" onClick={() => setPosterOpen((open) => !open)}>
-                {posterOpen ? '收起分享卡' : '打开我的分享卡'}
-              </button>
-              {posterOpen ? <div id="persona-poster" className="ending-keepsake"><Poster storyId={story.story.id} storyTitle={story.story.title} report={report} persona={persona} /></div> : null}
+                <small>{persona.matchedChoices >= 2 ? `来自本局 ${persona.matchedChoices} 次关键选择。` : '这一局留下的关键选择较少，结果是当前路线倾向。'}娱乐性结果，不是心理测量。</small>
+              </section>
             </section>
 
             {scene.choices?.length ? <section className="ending-next-choices" aria-labelledby="ending-next-title">
