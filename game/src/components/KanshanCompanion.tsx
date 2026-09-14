@@ -14,7 +14,48 @@ interface CompanionTurn {
   stream?: boolean;
 }
 
+interface ProactiveNudge {
+  eyebrow: string;
+  text: string;
+  action: string;
+}
+
 const LOCAL_FALLBACK = '先看当前目标和已经记下的事。我不替你下结论，但可以陪你把它们排清楚。';
+
+// These are authored, local scene beats: they never make a model request and never disclose a solution.
+const NUDGE_COPY: Record<Scene['type'], readonly ProactiveNudge[]> = {
+  novel: [
+    { eyebrow: '刘看山探头', text: '这段别急着翻页。故事里最像闲话的那一句，常常最不闲。', action: '听他再说一句 →' },
+    { eyebrow: '刘看山压低声音', text: '先把眼前这件事看清楚。越像理所当然的地方，越值得多看一眼。', action: '和他聊聊 →' },
+  ],
+  choice: [
+    { eyebrow: '刘看山掸掸耳朵', text: '别急着选最响亮的答案。听上去最顺的那句，有时候只是在催你。', action: '问问他的想法 →' },
+  ],
+  chat: [
+    { eyebrow: '刘看山凑近', text: '先让对方把话说完。人一紧张，就爱把重点藏在后半句。', action: '和他理一理 →' },
+  ],
+  investigate: [
+    { eyebrow: '刘看山翻开小本子', text: '搜词可以再具体一点。你问“怎么回事”，世界只会还你一口雾。', action: '问他怎么找 →' },
+  ],
+  encounter: [
+    { eyebrow: '刘看山竖起尾巴', text: '先看，再动。门后的东西通常不怕你慢半拍。', action: '听他嘀咕 →' },
+  ],
+  post: [
+    { eyebrow: '刘看山刷着页面', text: '评论区的灵魂，一半是线索，一半是没看题。慢慢捞。', action: '和他一起看 →' },
+  ],
+  boss: [
+    { eyebrow: '刘看山扶住桌角', text: '发出去前多看一眼。评论区不负责替你收拾烂摊子。', action: '问他一句 →' },
+  ],
+  ending: [
+    { eyebrow: '刘看山轻轻落座', text: '先看看你走到了哪里。结论可以晚点，感受得自己留着。', action: '和他收个尾 →' },
+  ],
+};
+
+function nudgeForScene(scene: Scene): ProactiveNudge {
+  const options = NUDGE_COPY[scene.type];
+  const score = [...scene.id].reduce((total, char) => total + char.charCodeAt(0), 0);
+  return options[score % options.length];
+}
 
 export function KanshanCompanion({ story, scene, cluesFound }: { story: GameJson; scene: Scene; cluesFound: string[] }) {
   const { prefs } = usePrefs();
@@ -24,9 +65,11 @@ export function KanshanCompanion({ story, scene, cluesFound }: { story: GameJson
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const composingRef = useRef(false);
+  const seenNudgesRef = useRef(new Set<string>());
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [input, setInput] = useState('');
+  const [nudge, setNudge] = useState<(ProactiveNudge & { key: string }) | null>(null);
   const [turns, setTurns] = useState<CompanionTurn[]>([
     { role: 'assistant', content: '我就在旁边。想不清下一步时，问我；答案还是由你来找。' },
   ]);
@@ -51,10 +94,39 @@ export function KanshanCompanion({ story, scene, cluesFound }: { story: GameJson
     abortRef.current = null;
     setBusy(false);
   }, [scene.id]);
+  useEffect(() => {
+    const key = `${story.story.id}:${scene.id}`;
+    setNudge(null);
+    if (seenNudgesRef.current.has(key)) return;
+    seenNudgesRef.current.add(key);
+
+    const sceneNudge = { ...nudgeForScene(scene), key };
+    const showTimer = window.setTimeout(() => setNudge(sceneNudge), 850);
+    const hideTimer = window.setTimeout(() => {
+      setNudge((current) => current?.key === key ? null : current);
+    }, 12_500);
+    return () => {
+      window.clearTimeout(showTimer);
+      window.clearTimeout(hideTimer);
+    };
+  }, [scene.id, scene.type, story.story.id]);
 
   const close = () => {
     setOpen(false);
     window.requestAnimationFrame(() => triggerRef.current?.focus({ preventScroll: true }));
+  };
+  const toggleOpen = () => {
+    setNudge(null);
+    setOpen((value) => !value);
+  };
+  const openFromNudge = () => {
+    if (nudge) {
+      setTurns((current) => current.at(-1)?.content === nudge.text
+        ? current
+        : [...current, { role: 'assistant', content: nudge.text }]);
+    }
+    setNudge(null);
+    setOpen(true);
   };
 
   const send = (raw: string) => {
@@ -112,6 +184,11 @@ export function KanshanCompanion({ story, scene, cluesFound }: { story: GameJson
   };
 
   return <div className={`kanshan-companion${open ? ' is-open' : ''}`}>
+    {!open && nudge ? <button className="kanshan-companion__nudge" type="button" onClick={openFromNudge} aria-label={`刘看山主动提示：${nudge.text}。点击和刘看山聊天`}>
+      <span className="kanshan-companion__nudge-eyebrow">{nudge.eyebrow}</span>
+      <strong>{nudge.text}</strong>
+      <span className="kanshan-companion__nudge-action">{nudge.action}</span>
+    </button> : null}
     {open ? <aside className="kanshan-companion__panel" role="dialog" aria-modal="false" aria-labelledby={titleId}>
       <header>
         <div><span>同行中</span><h2 id={titleId}>问刘看山</h2></div>
@@ -143,12 +220,13 @@ export function KanshanCompanion({ story, scene, cluesFound }: { story: GameJson
       </form>
       <p className="kanshan-companion__boundary">他会帮你理思路，不会替你拆穿这扇门。</p>
     </aside> : null}
-    <button ref={triggerRef} className="kanshan-companion__trigger" type="button" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
+    <button ref={triggerRef} className="kanshan-companion__trigger" type="button" aria-expanded={open} onClick={toggleOpen}>
       <picture>
         {!prefs.calm ? <source media="(prefers-reduced-motion: reduce)" srcSet={STILL_ART} /> : null}
         <img src={prefs.calm ? STILL_ART : IDLE_ART} alt="" width="320" height="320" decoding="async" />
       </picture>
-      <span><b>刘看山</b><small>{open ? '正听着' : '点我聊聊'}</small></span>
+      <span><b>刘看山</b><small>{open ? '正听着' : nudge ? '看山在说话' : '点我聊聊'}</small></span>
+      {nudge ? <i className="kanshan-companion__notice" aria-hidden /> : null}
     </button>
   </div>;
 }
