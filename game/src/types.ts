@@ -30,6 +30,44 @@ export interface InvestigationItem {
 export type InvestigationSearchResult =
   | { status: 'found'; item: InvestigationItem; vars: Vars }
   | { status: 'empty' | 'miss' | 'ambiguous'; item: null };
+export interface InvestigationBrowserHistory {
+  id: string;
+  label: string;
+  query: string;
+  time?: string;
+}
+export interface InvestigationBrowserDocument {
+  id: string;
+  /** Linking a document to an item makes it a source the player can open and record. */
+  itemId?: string;
+  title: string;
+  source: string;
+  url: string;
+  snippet: string;
+  aliases?: string[];
+  /** Authored recovery feedback for plausible but non-evidentiary pages. */
+  noiseFeedback?: string;
+}
+export interface InvestigationBrowser {
+  title: string;
+  address: string;
+  prompt: string;
+  history: InvestigationBrowserHistory[];
+  documents: InvestigationBrowserDocument[];
+}
+export interface InvestigationBrowserResult {
+  id: string;
+  title: string;
+  source: string;
+  url: string;
+  snippet: string;
+}
+export type InvestigationBrowserQueryResult =
+  | { status: 'results'; results: InvestigationBrowserResult[] }
+  | { status: 'empty' | 'miss'; results: [] };
+export type InvestigationBrowserOpenResult =
+  | { status: 'evidence'; item: InvestigationItem; vars: Vars }
+  | { status: 'noise' | 'miss'; item: null; feedback: string };
 export interface InvestigationCheck {
   id: string; prompt: string; claim: string; answer: string[]; grants: string[]; candidates?: string[];
   success: string; failure: string;
@@ -87,6 +125,13 @@ export interface PostThreadMessage {
   text: string;
   time?: string;
 }
+export interface PostExtractable {
+  id: string;
+  text: string;
+  note: string;
+  /** Notes are observations, never clue grants. Keys must use the note_ namespace. */
+  set: Vars;
+}
 export interface PostData {
   view: 'feed' | 'thread';
   community: string;
@@ -97,6 +142,7 @@ export interface PostData {
   stats?: { views?: number; comments?: number; dms?: number };
   fictionNotice: string;
   entries: PostEntry[];
+  extractables?: PostExtractable[];
   activeAccountId?: string;
   thread?: PostThreadMessage[];
   feedback?: { label: string; text: string; tone?: 'useful' | 'boundary' };
@@ -248,7 +294,7 @@ export interface Scene {
   onEnter?: Vars;
   dialogue?: { topics: DialogueTopic[]; requiredClues?: string[]; leaveLabel?: string };
   investigation?: { objective: string; searchPlaceholder?: string; hints: string[];
-    items: InvestigationItem[]; checks: InvestigationCheck[] };
+    items: InvestigationItem[]; checks: InvestigationCheck[]; browser?: InvestigationBrowser };
   npc?: string;
   lore?: string[];
   choices?: Choice[];

@@ -2,11 +2,11 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import type {
   BossDecision, BossRunState, ChatTurn, Choice, GameJson, InvestigationMode,
-  InvestigationSearchResult, MemoEntry, Scene, StorySummary, Vars,
+  InvestigationBrowserOpenResult, InvestigationBrowserQueryResult, InvestigationSearchResult, MemoEntry, Scene, StorySummary, Vars,
 } from '../types';
 import { fetchStory, fetchStories } from '../lib/api';
 import { archiveSave, clearSave, loadSave, persistSave } from '../lib/store';
-import { applyAction, applyChoice, completedOutcome, applyEntry, inspectItem, searchInvestigation, verifyEvidence } from '../lib/rules.mjs';
+import { applyAction, applyChoice, completedOutcome, applyEntry, inspectItem, openInvestigationBrowserDocument, queryInvestigationBrowser, savePostExtractable, searchInvestigation, verifyEvidence } from '../lib/rules.mjs';
 import { advanceBossCase, createBossRun, presentBossEvidence, restoreBossRun, selectBossClaim, selectBossSuspect } from '../lib/boss-rules.mjs';
 
 export type Phase = 'boot' | 'door' | 'play';
@@ -33,6 +33,7 @@ type Action =
   | { type: 'ACT'; actionId: string; from: string }
   | { type: 'GRANT'; vars: Vars; from?: string }
   | { type: 'INSPECT'; itemId: string; from: string }
+  | { type: 'POST_EXTRACT'; extractableId: string; from: string }
   | { type: 'VERIFY'; checkId: string; evidenceIds: string[]; from: string }
   | { type: 'BOSS'; result: BossDecision; from: string }
   | { type: 'TO_DOOR'; keepSave: boolean };
@@ -102,6 +103,13 @@ function reducer(s: GameState, a: Action): GameState {
       const entry: MemoEntry = { kind: 'action', sceneId: s.sceneId, actionId: `inspect:${a.itemId}`, text: `查看：${result.item.title}`, feedback: result.item.text, changes: [] };
       return { ...s, vars: result.vars, memo: [...s.memo, entry].slice(-240) };
     }
+    case 'POST_EXTRACT': {
+      if (!s.story || s.sceneId !== a.from) return s;
+      const result = savePostExtractable(s.story, s.sceneId, a.extractableId, s.vars);
+      if (!result || Object.keys(result.fragment.set).every((key) => s.vars[key] === 'saved')) return s;
+      const entry: MemoEntry = { kind: 'action', sceneId: s.sceneId, actionId: `extract:${a.extractableId}`, text: `摘录：${result.fragment.note}`, feedback: result.fragment.text, changes: [] };
+      return { ...s, vars: result.vars, memo: [...s.memo, entry].slice(-240) };
+    }
     case 'VERIFY': {
       if (!s.story || s.sceneId !== a.from) return s;
       const result = verifyEvidence(s.story, s.sceneId, a.checkId, a.evidenceIds, s.vars);
@@ -166,8 +174,14 @@ export interface Engine extends GameState {
   /** Preserved V1 clue integration. Encounter actions never call this. */
   grantVars: (vars: Vars, fromSceneId?: string) => void;
   inspect: (itemId: string) => void;
+  /** Saves an authored observation from a fictional post; never grants clue_ variables. */
+  savePostExtractable: (extractableId: string) => void;
   /** Search grants only after one unique eligible match; misses reveal no item metadata. */
   searchInvestigation: (query: string, mode?: InvestigationMode) => InvestigationSearchResult;
+  /** Returns display-safe fictional pages without changing game state. */
+  queryInvestigationBrowser: (query: string) => InvestigationBrowserQueryResult;
+  /** Revalidates a fictional page and grants evidence only when that page has an authored source. */
+  openInvestigationBrowserDocument: (documentId: string) => InvestigationBrowserOpenResult;
   verify: (checkId: string, evidenceIds: string[]) => boolean;
   bossRun: BossRunState | null;
   bossSelectClaim: (claimId: string) => BossDecision | null;
@@ -321,11 +335,26 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const inspect = useCallback((itemId: string) => {
     if (!busyRef.current) dispatch({ type: 'INSPECT', itemId, from: state.sceneId });
   }, [state.sceneId]);
+  const savePostExtractableAtScene = useCallback((extractableId: string) => {
+    if (!busyRef.current) dispatch({ type: 'POST_EXTRACT', extractableId, from: state.sceneId });
+  }, [state.sceneId]);
   const searchInvestigationAtScene = useCallback((query: string, mode?: InvestigationMode): InvestigationSearchResult => {
     const current = stateRef.current;
     if (!current.story || current.phase !== 'play' || busyRef.current) return { status: 'miss', item: null };
     const result = searchInvestigation(current.story, current.sceneId, query, current.vars, mode);
     if (result.status === 'found') dispatch({ type: 'INSPECT', itemId: result.item.id, from: current.sceneId });
+    return result;
+  }, []);
+  const queryInvestigationBrowserAtScene = useCallback((query: string): InvestigationBrowserQueryResult => {
+    const current = stateRef.current;
+    if (!current.story || current.phase !== 'play' || busyRef.current) return { status: 'miss', results: [] };
+    return queryInvestigationBrowser(current.story, current.sceneId, query, current.vars);
+  }, []);
+  const openInvestigationBrowserDocumentAtScene = useCallback((documentId: string): InvestigationBrowserOpenResult => {
+    const current = stateRef.current;
+    if (!current.story || current.phase !== 'play' || busyRef.current) return { status: 'miss', item: null, feedback: '页面暂时无法打开。' };
+    const result = openInvestigationBrowserDocument(current.story, current.sceneId, documentId, current.vars);
+    if (result.status === 'evidence') dispatch({ type: 'INSPECT', itemId: result.item.id, from: current.sceneId });
     return result;
   }, []);
   const verify = useCallback((checkId: string, evidenceIds: string[]) => {
@@ -439,7 +468,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       act,
       grantVars,
       inspect,
+      savePostExtractable: savePostExtractableAtScene,
       searchInvestigation: searchInvestigationAtScene,
+      queryInvestigationBrowser: queryInvestigationBrowserAtScene,
+      openInvestigationBrowserDocument: openInvestigationBrowserDocumentAtScene,
       verify,
       bossRun,
       bossSelectClaim,
@@ -450,7 +482,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       resetRun,
       saveChat,
     }),
-    [state, scene, sceneList, nextSceneOf, continueKind, navBusy, navToken, booted, refreshStories, enterStory, fireNav, chooseAndNav, act, grantVars, inspect, searchInvestigationAtScene, verify, bossRun, bossSelectClaim, bossSelectSuspect, bossPresentEvidence, bossAdvance, backToDoor, resetRun, saveChat],
+    [state, scene, sceneList, nextSceneOf, continueKind, navBusy, navToken, booted, refreshStories, enterStory, fireNav, chooseAndNav, act, grantVars, inspect, savePostExtractableAtScene, searchInvestigationAtScene, queryInvestigationBrowserAtScene, openInvestigationBrowserDocumentAtScene, verify, bossRun, bossSelectClaim, bossSelectSuspect, bossPresentEvidence, bossAdvance, backToDoor, resetRun, saveChat],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

@@ -51,13 +51,13 @@ const normalizeSearchText = (value) => typeof value === 'string'
   ? value.normalize('NFKC').toLocaleLowerCase('zh-CN').replace(/[\p{P}\p{S}\s]+/gu, '')
   : '';
 
-export function searchInvestigation(story, sceneId, query, vars, mode) {
+function findInvestigationMatches(story, sceneId, query, vars, mode) {
   const needle = normalizeSearchText(query);
-  if (!needle) return { status: 'empty', item: null };
+  if (!needle) return [];
   const scene = story.scenes.find((candidate) => candidate.id === sceneId);
-  if (scene?.type !== 'investigate' || !scene.investigation) return { status: 'miss', item: null };
+  if (scene?.type !== 'investigate' || !scene.investigation) return [];
   const normalizedMode = typeof mode === 'string' ? mode : null;
-  const matchesQuery = scene.investigation.items.filter((item) => {
+  return scene.investigation.items.filter((item) => {
     if (choiceLocked(item, vars)) return false;
     if (normalizedMode && item.discover?.modes?.length && !item.discover.modes.includes(normalizedMode)) return false;
     const terms = [item.title, ...(item.keywords || []), ...(item.discover?.aliases || [])]
@@ -65,10 +65,55 @@ export function searchInvestigation(story, sceneId, query, vars, mode) {
       .filter(Boolean);
     return terms.some((term) => term.includes(needle) || needle.includes(term));
   });
+}
+
+export function searchInvestigation(story, sceneId, query, vars, mode) {
+  const needle = normalizeSearchText(query);
+  if (!needle) return { status: 'empty', item: null };
+  const matchesQuery = findInvestigationMatches(story, sceneId, query, vars, mode);
   if (matchesQuery.length === 0) return { status: 'miss', item: null };
   if (matchesQuery.length !== 1) return { status: 'ambiguous', item: null };
   const result = inspectItem(story, sceneId, matchesQuery[0].id, vars);
   return result ? { status: 'found', item: result.item, vars: result.vars } : { status: 'miss', item: null };
+}
+
+export function queryInvestigationBrowser(story, sceneId, query, vars) {
+  const needle = normalizeSearchText(query);
+  if (!needle) return { status: 'empty', results: [] };
+  const scene = story.scenes.find((candidate) => candidate.id === sceneId);
+  const browser = scene?.type === 'investigate' ? scene.investigation?.browser : null;
+  if (!browser) return { status: 'miss', results: [] };
+  const matchedItemIds = new Set(findInvestigationMatches(story, sceneId, query, vars).map((item) => item.id));
+  const eligibleItemIds = new Set((scene.investigation?.items || []).filter((item) => !choiceLocked(item, vars)).map((item) => item.id));
+  const documents = browser.documents.filter((document) => {
+    if (document.itemId) return eligibleItemIds.has(document.itemId) && matchedItemIds.has(document.itemId);
+    const terms = [document.title, document.source, document.snippet, ...(document.aliases || [])]
+      .map(normalizeSearchText)
+      .filter(Boolean);
+    return terms.some((term) => term.includes(needle) || needle.includes(term));
+  }).slice(0, 5).map(({ id, title, source, url, snippet }) => ({ id, title, source, url, snippet }));
+  return documents.length ? { status: 'results', results: documents } : { status: 'miss', results: [] };
+}
+
+export function openInvestigationBrowserDocument(story, sceneId, documentId, vars) {
+  const scene = story.scenes.find((candidate) => candidate.id === sceneId);
+  const browser = scene?.type === 'investigate' ? scene.investigation?.browser : null;
+  const document = browser?.documents.find((candidate) => candidate.id === documentId);
+  if (!document) return { status: 'miss', item: null, feedback: '这个页面不属于当前调查。' };
+  if (!document.itemId) return { status: 'noise', item: null, feedback: document.noiseFeedback || '这页没有足够来源信息，暂时不能作为记录。' };
+  const result = inspectItem(story, sceneId, document.itemId, vars);
+  return result
+    ? { status: 'evidence', item: result.item, vars: result.vars }
+    : { status: 'miss', item: null, feedback: '这个页面暂时无法形成可核验记录。' };
+}
+
+export function savePostExtractable(story, sceneId, extractableId, vars) {
+  const scene = story.scenes.find((candidate) => candidate.id === sceneId);
+  const fragment = scene?.type === 'post' && scene.post?.extractables?.find((candidate) => candidate.id === extractableId);
+  if (!fragment || !fragment.text || !fragment.note) return null;
+  const entries = Object.entries(fragment.set || {});
+  if (!entries.length || entries.some(([key, value]) => !key.startsWith('note_') || value !== 'saved')) return null;
+  return { fragment, vars: { ...vars, ...fragment.set } };
 }
 
 export function verifyEvidence(story, sceneId, checkId, evidenceIds, vars) {

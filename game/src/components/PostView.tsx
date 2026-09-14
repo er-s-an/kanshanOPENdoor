@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import type { Choice, PostEntry, Scene } from '../types';
+import { useMemo, useState, type ReactNode } from 'react';
+import type { Choice, PostEntry, PostExtractable, Scene } from '../types';
 import { choiceLocked } from '../lib/rules.mjs';
 import { sfxClick } from '../lib/sound';
 import { useGame } from '../state/engine';
@@ -7,6 +7,29 @@ import { usePrefs } from '../state/prefs';
 import '../post-ux.css';
 
 type FeedFilter = 'all' | 'replyable' | 'dm';
+
+function ExtractableText({ text, extractables = [] }: { text: string; extractables?: PostExtractable[] }) {
+  const { vars, savePostExtractable } = useGame();
+  const pieces: ReactNode[] = [];
+  let cursor = 0;
+  let key = 0;
+  while (cursor < text.length) {
+    const next = extractables.map((fragment) => ({ fragment, index: text.indexOf(fragment.text, cursor) }))
+      .filter((candidate) => candidate.index >= 0)
+      .sort((a, b) => a.index - b.index || b.fragment.text.length - a.fragment.text.length)[0];
+    if (!next) {
+      pieces.push(text.slice(cursor));
+      break;
+    }
+    if (next.index > cursor) pieces.push(text.slice(cursor, next.index));
+    const saved = Object.keys(next.fragment.set).every((name) => vars[name] === 'saved');
+    pieces.push(<button key={`${next.fragment.id}-${key++}`} type="button" className={`post-extractable${saved ? ' is-saved' : ''}`} aria-pressed={saved} onClick={() => savePostExtractable(next.fragment.id)}>
+      {next.fragment.text}<span aria-hidden>{saved ? ' ✓' : ' ＋'}</span>
+    </button>);
+    cursor = next.index + next.fragment.text.length;
+  }
+  return <>{pieces}</>;
+}
 
 function Avatar({ entry }: { entry: PostEntry }) {
   return <span className="post-avatar" aria-hidden>{entry.avatarText || entry.name.slice(0, 1)}</span>;
@@ -59,7 +82,7 @@ function CommunityFeed({ scene }: { scene: Scene }) {
     <div className="post-feed__filters" role="group" aria-label="筛选社区回应">
       {([
         ['all', `全部回应 ${post.entries.length}`],
-        ['replyable', `可继续追问 ${replyableCount}`],
+        ['replyable', `作者赞过 ${replyableCount}`],
         ['dm', `私信 ${dmCount}`],
       ] as const).map(([id, label]) => <button key={id} aria-pressed={filter === id} onClick={() => setFilter(id)}>{label}</button>)}
     </div>
@@ -69,13 +92,9 @@ function CommunityFeed({ scene }: { scene: Scene }) {
         const choice = entry.actionChoiceId ? choiceById.get(entry.actionChoiceId) : undefined;
         const visited = Boolean(entry.visitedVar && vars[entry.visitedVar]);
         return <article key={entry.id} className={`post-entry${entry.pinned ? ' post-entry--pinned' : ''}${choice ? ' post-entry--actionable' : ''}`}>
-          {entry.pinned ? <span className="post-entry__pin">可继续追问</span> : null}
+          {entry.pinned ? <span className="post-entry__pin">作者赞过</span> : null}
           <AccountMeta entry={entry} />
-          <p className="post-entry__text">{entry.text}</p>
-          <details className="post-entry__boundary">
-            <summary>为什么这条回应不能直接当证据？</summary>
-            <p>{entry.knowledge}</p>
-          </details>
+          <p className="post-entry__text"><ExtractableText text={entry.text} extractables={post.extractables} /></p>
           <footer className="post-entry__foot">
             <span>{typeof entry.likes === 'number' ? `${entry.likes} 赞同` : '刚出现的回应'}</span>
             {choice ? <ChoiceButton choice={choice} label={visited ? '再次查看' : entry.actionLabel} /> : <span className="post-entry__ambient">仅浏览</span>}
@@ -84,7 +103,7 @@ function CommunityFeed({ scene }: { scene: Scene }) {
       })}
     </div>
     <div className="post-feed__exit">
-      <p>不需要找出“最可疑的人”。先确认一条回应的来源边界，就可以继续。</p>
+      <p>这些回应来自不同立场。至少追问一位，再决定这张公开页面要不要留下。</p>
       {exitChoices.map((choice) => <ChoiceButton key={choice.id} choice={choice} />)}
     </div>
   </>;
@@ -117,7 +136,9 @@ function CommunityThread({ scene }: { scene: Scene }) {
 
 export function PostView({ scene }: { scene: Scene }) {
   const post = scene.post;
+  const { vars } = useGame();
   if (!post) return <section className="post-scene"><p className="post-scene__broken">这一页暂时无法显示。</p></section>;
+  const savedExtractables = (post.extractables || []).filter((fragment) => Object.keys(fragment.set).every((name) => vars[name] === 'saved'));
   return <section className="post-scene" aria-labelledby={`post-title-${scene.id}`}>
     <div className="post-scene__scroll">
       <div className="post-shell">
@@ -135,7 +156,7 @@ export function PostView({ scene }: { scene: Scene }) {
             <p><strong>{post.author.name}</strong><small>{post.author.handle ? `@${post.author.handle}` : ''}{post.author.label ? ` · ${post.author.label}` : ''}</small></p>
           </div>
           <h2 id={`post-title-${scene.id}`}>{post.questionTitle}</h2>
-          {post.questionBody.split('\n').filter(Boolean).map((paragraph, index) => <p key={index}>{paragraph}</p>)}
+          {post.questionBody.split('\n').filter(Boolean).map((paragraph, index) => <p key={index}><ExtractableText text={paragraph} extractables={post.extractables} /></p>)}
           {post.tags?.length ? <div className="post-question__tags" aria-label="帖子话题">{post.tags.map((tag) => <span key={tag}>{tag}</span>)}</div> : null}
           {post.stats ? <footer>
             <span>{post.stats.views ?? 0} 浏览</span>
@@ -143,6 +164,10 @@ export function PostView({ scene }: { scene: Scene }) {
             {post.stats.dms ? <span>{post.stats.dms} 条新私信</span> : null}
           </footer> : null}
         </article>
+        {post.extractables?.length ? <aside className="post-notes" aria-label="从帖子保存的调查摘录">
+          <div><strong>调查摘录</strong><span>{savedExtractables.length}/{post.extractables.length}</span></div>
+          {savedExtractables.length ? <ul>{savedExtractables.map((fragment) => <li key={fragment.id}>{fragment.note}</li>)}</ul> : <p>正文与回应里有几处可疑短语。点击带虚线的原话，把它留在本幕摘录中。</p>}
+        </aside> : null}
         {post.view === 'feed' ? <CommunityFeed scene={scene} /> : <CommunityThread scene={scene} />}
       </div>
     </div>
