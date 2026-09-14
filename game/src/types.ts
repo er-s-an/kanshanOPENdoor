@@ -476,7 +476,7 @@ export interface SaveData {
 }
 
 export interface Prefs {
-  /** 逐字呈现为可选；默认直接阅读全文。 */
+  /** 剧情默认逐字呈现；玩家可随时改为直接阅读全文。 */
   typewriter?: boolean;
   /** 打字速度 0 慢 / 1 标准 / 2 快 */
   speed: 0 | 1 | 2;

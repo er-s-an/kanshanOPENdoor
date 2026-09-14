@@ -2,11 +2,13 @@
 import type { Prefs } from '../types';
 
 export const STORAGE_SAVE = 'kanshan:save:v1';
-export const STORAGE_PREFS = 'kanshan:prefs:v1';
+// V2 makes paced story text the authored default. Keeping a new key prevents
+// an untouched V1 `typewriter:false` value from silently masking the release.
+export const STORAGE_PREFS = 'kanshan:prefs:v2';
 
 export const TYPING_MS = [40, 22, 12] as const; // 慢 / 标准 / 快（每字符毫秒）
 
-export const DEFAULT_PREFS: Prefs = { speed: 1, typewriter: false, sfx: false, tick: false, calm: true };
+export const DEFAULT_PREFS: Prefs = { speed: 1, typewriter: true, sfx: false, tick: false, calm: false };
 
 /** 玩家输入命中这些词 → 触发刘看山剧透拦截（内容安全闸） */
 export const SPOILER_WORDS = [
