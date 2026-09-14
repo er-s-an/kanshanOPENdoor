@@ -779,7 +779,7 @@ input, textarea { font-family: inherit; }
 
 /* 结局页：评级徽章（剧本 endings 自带 rating 才渲染） */
 .ending-result__rating {
-  display: inline-flex; align-items: center; margin: 14px 0 0;
+  display: inline-flex; align-items: center; margin: 0 0 14px;
   padding: 5px 16px; border-radius: 999px;
   border: 1px solid var(--line-2); color: var(--amber);
   font-size: 13px; letter-spacing: 0.18em; font-family: var(--serif);
@@ -791,6 +791,12 @@ input, textarea { font-family: inherit; }
   box-shadow: 0 4px 18px rgba(255, 180, 84, 0.25);
 }
 .ending-result__rating--egg { border-style: dashed; }
+.ending-result__rating--rare { border-style: dashed; }
+.ending-result__rating--bad {
+  border-color: rgba(204, 100, 76, 0.72); color: #e0a08f;
+  background: rgba(140, 52, 37, 0.15); font-weight: 700;
+  box-shadow: 0 0 0 4px rgba(140, 52, 37, 0.06);
+}
 
 /* ================= 任务C：玩家体验与信息层级打磨（2026-09-13） =================
    原则：每幕先回答「眼下能做什么」；氛围评论比对话更轻；空态给出下一步；

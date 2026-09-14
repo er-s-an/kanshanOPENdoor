@@ -360,7 +360,7 @@ export interface EndingMeta {
   title: string;
   tone?: string;
   /** 结局评级（复盘/海报展示；缺省由引擎按门控推断） */
-  rating?: 'normal' | 'rare' | 'legend' | 'egg';
+  rating?: 'normal' | 'rare' | 'legend' | 'egg' | 'bad';
 }
 
 /** 线索元数据：编译期从 clue_* 变量派生，供引擎渲染线索簿 */

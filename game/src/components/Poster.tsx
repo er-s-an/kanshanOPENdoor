@@ -13,10 +13,11 @@ const SANS = 'system-ui,-apple-system,"PingFang SC","Noto Sans SC","Microsoft Ya
 
 /** 结局评级展示文案（结局页徽章与海报共用） */
 export const ENDING_RATING_LABEL: Record<NonNullable<EndingMeta['rating']>, string> = {
-  normal: '普通结局',
-  rare: '稀有 · 二星',
-  legend: '传说 · 三星',
-  egg: '彩蛋结局',
+  normal: 'NORMAL END · 留存路线',
+  rare: 'OPEN END · 继续追查',
+  legend: 'GOOD END · 公开留证',
+  egg: 'HIDDEN END · 地理偏移',
+  bad: 'BAD END · 论证失焦',
 };
 
 interface PosterProps {

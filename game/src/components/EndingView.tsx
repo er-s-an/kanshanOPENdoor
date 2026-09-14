@@ -77,10 +77,10 @@ export function EndingView({ scene }: { scene: Scene }) {
           {scene.text ? <div className="ending-read"><TypedProse md={scene.text} autoTick onDone={setTyped} /></div> : null}
 
           {typed ? <>
-            <header className="ending-result">
-              <p className="ending-result__eyebrow">{story.source?.scope === 'excerpt' ? '首章 · 阶段收束' : '本局结果'}</p>
-              <h2>{report.meta.title}</h2>
+            <header className={`ending-result${report.meta.rating ? ` ending-result--${report.meta.rating}` : ''}`}>
+              <p className="ending-result__eyebrow">{story.source?.scope === 'excerpt' ? '你抵达的阶段分支' : '你抵达的本局分支'}</p>
               {report.meta.rating ? <p className={`ending-result__rating ending-result__rating--${report.meta.rating}`}>{ENDING_RATING_LABEL[report.meta.rating]}</p> : null}
+              <h2>{report.meta.title}</h2>
               {report.meta.tone ? <p className="ending-result__tone">{report.meta.tone}</p> : null}
               {story.source?.scope === 'excerpt' ? <p className="ending-result__scope">故事仍未结束，这里是本次体验的阶段结果。</p> : null}
             </header>
