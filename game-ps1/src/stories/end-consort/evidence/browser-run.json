@@ -1,0 +1,583 @@
+{
+  "url": "http://127.0.0.1:5188/end-consort.html",
+  "mode": "Headless desktop Chrome, actual keyboard/mouse controls",
+  "actions": 86,
+  "errors": [],
+  "result": {
+    "phase": "end",
+    "busy": true,
+    "started": true,
+    "ended": true,
+    "plotState": [
+      3,
+      3,
+      3
+    ],
+    "chessStep": 3,
+    "handsClean": true,
+    "position": [
+      4.8990365721554525,
+      1.65,
+      -2.3133737672413988
+    ],
+    "yaw": 0.7679400884083681,
+    "pitch": -0.05,
+    "actorsVisible": {
+      "emperor": true,
+      "defei": false
+    },
+    "target": null,
+    "events": [
+      {
+        "phase": "unpack",
+        "action": "enter",
+        "source": "原文回顾 L10–76"
+      },
+      {
+        "phase": "unpack",
+        "action": "trunk",
+        "source": "原文回顾 L10–76"
+      },
+      {
+        "phase": "unpack",
+        "action": "童年: 我从小声音洪亮、身板结实。琴弦断过，教头夸我适合练武；祖母接纳我，我便读兵书、骑马。父亲说皇家粮食多，我带上书和种子，拍拍他的肩膀道别。",
+        "source": "L10–39"
+      },
+      {
+        "phase": "unpack",
+        "action": "选秀: 殿里站着三十余位秀女。我在最后一排，被脂粉味呛得连打三个喷嚏。行礼时姿态如松，太后正要撂牌子，萧寻却开口了。",
+        "source": "L41–66"
+      },
+      {
+        "phase": "unpack",
+        "action": "入宫: 萧寻说：“留。谢氏……端庄稳重，甚好。封端妃，居景华宫。”我谢恩起身，见他长出一口气——像放了个镇宅神兽进来辟邪。",
+        "source": "L67–76"
+      },
+      {
+        "phase": "settle",
+        "action": "enter",
+        "source": "原文 L78–90"
+      },
+      {
+        "phase": "settle",
+        "action": "gate",
+        "source": "原文 L78–90"
+      },
+      {
+        "phase": "settle",
+        "action": "谢明珠: 景华宫在最西北角，墙皮剥落了一半，院里的草比人高。但它大，而且清净。",
+        "source": "L78–82"
+      },
+      {
+        "phase": "settle",
+        "action": "谢明珠: 分来的宫人站在院里，瑟瑟发抖。领头的福顺左腿微跛，青杏一紧张就结巴。",
+        "source": "L83–87"
+      },
+      {
+        "phase": "settle",
+        "action": "谢明珠: 行。那就留下吧。把这儿清理出来。我有用。",
+        "source": "L88–90"
+      },
+      {
+        "phase": "fushun",
+        "action": "enter",
+        "source": "原文 L91"
+      },
+      {
+        "phase": "fushun",
+        "action": "fushun",
+        "source": "原文 L91"
+      },
+      {
+        "phase": "fushun",
+        "action": "谢明珠: 福顺腿脚不好，我便不让他跑远路，让他帮我记账、管库房。",
+        "source": "L91"
+      },
+      {
+        "phase": "listen",
+        "action": "enter",
+        "source": "原文 L85、L92–93"
+      },
+      {
+        "phase": "listen",
+        "action": "qingxing",
+        "source": "原文 L85、L92–93"
+      },
+      {
+        "phase": "listen",
+        "action": "我的心里: 不是施恩，只是觉得人活着不容易，没必要折腾。",
+        "source": "L93"
+      },
+      {
+        "phase": "clear",
+        "action": "enter",
+        "source": "原文 L89–95 · 地块操作为游戏新增"
+      },
+      {
+        "phase": "clear",
+        "action": "plot0",
+        "source": "原文 L89–95 · 地块操作为游戏新增"
+      },
+      {
+        "phase": "clear",
+        "action": "plot0: 1",
+        "source": "L94–98 · 游戏新增地块表达"
+      },
+      {
+        "phase": "clear",
+        "action": "plot1",
+        "source": "原文 L89–95 · 地块操作为游戏新增"
+      },
+      {
+        "phase": "clear",
+        "action": "plot1: 1",
+        "source": "L94–98 · 游戏新增地块表达"
+      },
+      {
+        "phase": "clear",
+        "action": "plot2",
+        "source": "原文 L89–95 · 地块操作为游戏新增"
+      },
+      {
+        "phase": "clear",
+        "action": "plot2: 1",
+        "source": "L94–98 · 游戏新增地块表达"
+      },
+      {
+        "phase": "loosen",
+        "action": "enter",
+        "source": "原文 L94–95 · 地块操作为游戏新增"
+      },
+      {
+        "phase": "loosen",
+        "action": "plot1",
+        "source": "原文 L94–95 · 地块操作为游戏新增"
+      },
+      {
+        "phase": "loosen",
+        "action": "plot1: 2",
+        "source": "L94–98 · 游戏新增地块表达"
+      },
+      {
+        "phase": "loosen",
+        "action": "plot2",
+        "source": "原文 L94–95 · 地块操作为游戏新增"
+      },
+      {
+        "phase": "loosen",
+        "action": "plot2: 2",
+        "source": "L94–98 · 游戏新增地块表达"
+      },
+      {
+        "phase": "loosen",
+        "action": "plot0",
+        "source": "原文 L94–95 · 地块操作为游戏新增"
+      },
+      {
+        "phase": "loosen",
+        "action": "plot0: 2",
+        "source": "L94–98 · 游戏新增地块表达"
+      },
+      {
+        "phase": "loosen",
+        "action": "时光过渡: 没过半个月，景华宫变了样。杂草没了，地翻松了。",
+        "source": "L94–95"
+      },
+      {
+        "phase": "sow",
+        "action": "enter",
+        "source": "原文 L96–98"
+      },
+      {
+        "phase": "sow",
+        "action": "plot0",
+        "source": "原文 L96–98"
+      },
+      {
+        "phase": "sow",
+        "action": "plot0: 3",
+        "source": "L94–98 · 游戏新增地块表达"
+      },
+      {
+        "phase": "sow",
+        "action": "plot1",
+        "source": "原文 L96–98"
+      },
+      {
+        "phase": "sow",
+        "action": "plot1: 3",
+        "source": "L94–98 · 游戏新增地块表达"
+      },
+      {
+        "phase": "sow",
+        "action": "plot2",
+        "source": "原文 L96–98"
+      },
+      {
+        "phase": "sow",
+        "action": "plot2: 3",
+        "source": "L94–98 · 游戏新增地块表达"
+      },
+      {
+        "phase": "sow",
+        "action": "谢明珠: 我把带来的萝卜种子撒了下去。看着黑黝黝的土地，心里特别踏实。",
+        "source": "L96–98"
+      },
+      {
+        "phase": "sow",
+        "action": "我的日子: 我不去给太后请安，也不去御花园争奇斗艳。就在景华宫，日出而作，日落而息。后宫里，自然也有风言风语。",
+        "source": "L99–103"
+      },
+      {
+        "phase": "defei",
+        "action": "enter",
+        "source": "原文 L104–115"
+      },
+      {
+        "phase": "defei",
+        "action": "defei",
+        "source": "原文 L104–115"
+      },
+      {
+        "phase": "defei",
+        "action": "来客: 德妃带着一群人来了。我穿着布衣，蹲在地里。她用帕子捂着鼻子。",
+        "source": "L104–106"
+      },
+      {
+        "phase": "defei",
+        "action": "德妃: 哟，端妃姐姐这是在做什么？好大一股子土腥味。",
+        "source": "L105–107"
+      },
+      {
+        "phase": "defei",
+        "action": "谢明珠: 种菜。",
+        "source": "L108"
+      },
+      {
+        "phase": "defei",
+        "action": "德妃: 姐姐真是好雅兴。听说陛下还没翻过姐姐的牌子？也是，姐姐这身板，怕是陛下消受不起。",
+        "source": "L109"
+      },
+      {
+        "phase": "defei",
+        "action": "谢明珠: 妹妹说得对。",
+        "source": "L112–114"
+      },
+      {
+        "phase": "defei",
+        "action": "来客: 我诚恳地点头。德妃一拳打在棉花上，脸都绿了。",
+        "source": "L114–115"
+      },
+      {
+        "phase": "defei",
+        "action": "德妃: 疯子，白瞎了这江南谢氏的出身。",
+        "source": "L116"
+      },
+      {
+        "phase": "defei",
+        "action": "来客: 她骂了一句，转身走了。",
+        "source": "L117"
+      },
+      {
+        "phase": "weed",
+        "action": "enter",
+        "source": "原文 L116–118"
+      },
+      {
+        "phase": "weed",
+        "action": "plot0",
+        "source": "原文 L116–118"
+      },
+      {
+        "phase": "weed",
+        "action": "谢明珠: 我没看她的背影，低头继续拔草。",
+        "source": "L118"
+      },
+      {
+        "phase": "comfort",
+        "action": "enter",
+        "source": "原文 L119–123"
+      },
+      {
+        "phase": "comfort",
+        "action": "qingxing",
+        "source": "原文 L119–123"
+      },
+      {
+        "phase": "comfort",
+        "action": "谢明珠: 难过什么？今晚加餐，吃红烧肉。",
+        "source": "L121"
+      },
+      {
+        "phase": "comfort",
+        "action": "我的心里: 难过？那是最没用的情绪。",
+        "source": "L122–123"
+      },
+      {
+        "phase": "tool",
+        "action": "enter",
+        "source": "原文 L125"
+      },
+      {
+        "phase": "tool",
+        "action": "tool",
+        "source": "原文 L125"
+      },
+      {
+        "phase": "tool",
+        "action": "景华宫: 我挽着袖子，拿着镰刀。门被推开，我以为是福顺回来了，头也没回。",
+        "source": "L125–127"
+      },
+      {
+        "phase": "tool",
+        "action": "谢明珠: 粪挑回来了？堆墙角就行。",
+        "source": "L128"
+      },
+      {
+        "phase": "tool",
+        "action": "身后: 一片死寂。我直觉不对。",
+        "source": "L128–129"
+      },
+      {
+        "phase": "turn",
+        "action": "enter",
+        "source": "原文 L126–134"
+      },
+      {
+        "phase": "turn",
+        "action": "gate",
+        "source": "原文 L126–134"
+      },
+      {
+        "phase": "turn",
+        "action": "gate",
+        "source": "原文 L126–134"
+      },
+      {
+        "phase": "turn",
+        "action": "谢明珠: 回头一看，萧寻站在门口，一身明黄常服，脸色黑得像锅底。我把陛下当成了挑粪的太监。",
+        "source": "L129–134"
+      },
+      {
+        "phase": "bow",
+        "action": "enter",
+        "source": "原文 L135–141"
+      },
+      {
+        "phase": "bow",
+        "action": "gate",
+        "source": "原文 L135–141"
+      },
+      {
+        "phase": "bow",
+        "action": "谢明珠: 臣妾参见陛下。",
+        "source": "L135–137"
+      },
+      {
+        "phase": "bow",
+        "action": "萧寻: 爱妃这是……",
+        "source": "L138–139"
+      },
+      {
+        "phase": "bow",
+        "action": "谢明珠: 割草。",
+        "source": "L140"
+      },
+      {
+        "phase": "bow",
+        "action": "萧寻: 起来吧。",
+        "source": "L141"
+      },
+      {
+        "phase": "talk",
+        "action": "enter",
+        "source": "原文 L142–154"
+      },
+      {
+        "phase": "talk",
+        "action": "chess",
+        "source": "原文 L142–154"
+      },
+      {
+        "phase": "talk",
+        "action": "萧寻: 这地方……倒是清净。",
+        "source": "L142–143"
+      },
+      {
+        "phase": "talk",
+        "action": "石桌边: 他坐在石桌旁。这里放着一盘残局，还有一本翻开的《孙子兵法》。",
+        "source": "L144–145"
+      },
+      {
+        "phase": "talk",
+        "action": "萧寻: 你看得懂？",
+        "source": "L146"
+      },
+      {
+        "phase": "talk",
+        "action": "谢明珠: 勉强能看懂几成。",
+        "source": "L147"
+      },
+      {
+        "phase": "talk",
+        "action": "萧寻: 你祖母是林家的人？",
+        "source": "L148"
+      },
+      {
+        "phase": "talk",
+        "action": "谢明珠: 陛下知道？",
+        "source": "L149"
+      },
+      {
+        "phase": "talk",
+        "action": "萧寻: 林老将军威名赫赫，当年北征大捷，朕还是皇子时便听过。",
+        "source": "L150"
+      },
+      {
+        "phase": "talk",
+        "action": "萧寻: 陪朕下盘棋。",
+        "source": "L151"
+      },
+      {
+        "phase": "talk",
+        "action": "谢明珠: 臣妾手脏。",
+        "source": "L152"
+      },
+      {
+        "phase": "talk",
+        "action": "萧寻: 朕不嫌弃。",
+        "source": "L153"
+      },
+      {
+        "phase": "wash",
+        "action": "enter",
+        "source": "原文 L152–155"
+      },
+      {
+        "phase": "wash",
+        "action": "basin",
+        "source": "原文 L152–155"
+      },
+      {
+        "phase": "wash",
+        "action": "谢明珠: 我去洗了手，坐在他对面。",
+        "source": "L155"
+      },
+      {
+        "phase": "chess",
+        "action": "enter",
+        "source": "原文 L156–160 · 棋势图为游戏新增"
+      },
+      {
+        "phase": "chess",
+        "action": "chess",
+        "source": "原文 L156–160 · 棋势图为游戏新增"
+      },
+      {
+        "phase": "chess",
+        "action": "chessMove1",
+        "source": "L156–160 · 游戏新增棋势图"
+      },
+      {
+        "phase": "chess",
+        "action": "chessMove2",
+        "source": "L156–160 · 游戏新增棋势图"
+      },
+      {
+        "phase": "chess",
+        "action": "chessMove3",
+        "source": "L156–160 · 游戏新增棋势图"
+      },
+      {
+        "phase": "concede",
+        "action": "enter",
+        "source": "原文 L161–165"
+      },
+      {
+        "phase": "concede",
+        "action": "谢明珠: 臣妾输了。",
+        "source": "L161–162"
+      },
+      {
+        "phase": "concede",
+        "action": "萧寻: 你没输。",
+        "source": "L163"
+      },
+      {
+        "phase": "concede",
+        "action": "谢明珠: 臣妾输了。陛下英明神武，棋艺超群。",
+        "source": "L164"
+      },
+      {
+        "phase": "concede",
+        "action": "萧寻: ……你再这样，是欺君。",
+        "source": "L165"
+      },
+      {
+        "phase": "accept",
+        "action": "enter",
+        "source": "原文 L166–172"
+      },
+      {
+        "phase": "accept",
+        "action": "谢明珠: 那臣妾赢了。",
+        "source": "L166"
+      },
+      {
+        "phase": "accept",
+        "action": "石桌旁: 他看了我半晌，忽然笑了。不是帝王的矜持微笑，是真的被逗乐了。眉眼舒展，倦意散了几分。",
+        "source": "L168–170"
+      },
+      {
+        "phase": "accept",
+        "action": "萧寻: 你倒是有意思。",
+        "source": "L171"
+      },
+      {
+        "phase": "accept",
+        "action": "谢明珠: 陛下谬赞。",
+        "source": "L172"
+      },
+      {
+        "phase": "closing",
+        "action": "enter",
+        "source": "原文 L173–177"
+      },
+      {
+        "phase": "closing",
+        "action": "chess",
+        "source": "原文 L173–177"
+      },
+      {
+        "phase": "closing",
+        "action": "萧寻: 你出生江南谢氏，父亲是当朝大理寺卿，母家又是将门之后，你又这么……",
+        "source": "L173"
+      },
+      {
+        "phase": "closing",
+        "action": "石桌边: 他瞥我一眼，轻咳一声，跳过了些我听惯了的词句。",
+        "source": "L174"
+      },
+      {
+        "phase": "closing",
+        "action": "萧寻: 朕到景华宫来，总不能再是宠信佞臣，不顾朝政了吧。",
+        "source": "L175"
+      },
+      {
+        "phase": "closing",
+        "action": "石桌边: 他自言自语。刚刚舒展的倦意，聊着聊着又重新上了眉头。",
+        "source": "L176"
+      },
+      {
+        "phase": "closing",
+        "action": "萧寻: 「御史参了朕一个时",
+        "source": "L177 · 此处原文截断"
+      },
+      {
+        "phase": "end",
+        "action": "enter",
+        "source": "开放原文 L177 · 句中截断"
+      }
+    ]
+  }
+}

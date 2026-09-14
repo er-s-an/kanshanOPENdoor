@@ -10,6 +10,7 @@
     "dev:gateway": "node server/gateway.mjs",
     "dev:mock": "node server/mock-upstream.mjs",
     "build": "vite build",
+    "build:experiences": "npm run build && npm --prefix ../game-ps1 run build && node scripts/bundle-myopia.mjs",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "start": "node server/gateway.mjs",
@@ -18,11 +19,13 @@
   "dependencies": {
     "dompurify": "^3.2.4",
     "marked": "^15.0.7",
+    "qrcode": "^1.5.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@types/dompurify": "^3.0.5",
+    "@types/qrcode": "^1.5.5",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.3.4",

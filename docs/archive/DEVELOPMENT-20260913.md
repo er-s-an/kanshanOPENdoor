@@ -2,7 +2,7 @@
 
 产品设计：[PRD v2.1：玩法库 × 前人留痕](../PRD-v2.1.md)。参赛判断：[契合与缺口](HACKATHON-READINESS-20260913.md)。
 
-本轮先在隔离副本 `/Users/xiejiachen/Documents/ChatGPT/rebuild/kanshan-dev-20260913` 开发与验证，再以文件哈希检查把本轮变更同步回 `kanshan-portal`。原工程并行新增的 `ClueDrop`、`Scene.clueDrops`、`grantVars/GRANT` 已保留；未覆盖其 V1 对话线索扩展。没有提交 Git、推送、上线或提交比赛作品。
+本轮先在隔离副本开发与验证，再以文件哈希检查把本轮变更同步回上一版工程。原工程并行新增的 `ClueDrop`、`Scene.clueDrops`、`grantVars/GRANT` 已保留；未覆盖其 V1 对话线索扩展。没有提交 Git、推送、上线或提交比赛作品。
 
 ## 已实现
 

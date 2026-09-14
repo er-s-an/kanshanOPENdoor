@@ -1,0 +1,55 @@
+{
+  "package": {
+    "schemaVersion": "1.0.0",
+    "id": "offline-demo",
+    "title": "雨夜门口",
+    "runtime": { "engineMajor": 1, "templateVersion": 1 },
+    "source": {
+      "id": "demo-source",
+      "title": "雨夜门口",
+      "author": "原创测试",
+      "digest": "0000000000000000000000000000000000000000000000000000000000000000",
+      "codepointLength": 1,
+      "extent": "excerpt",
+      "boundary": "止于脚步声，不解释来者身份。",
+      "usage": "private-prototype"
+    },
+    "flags": [{ "id": "door-open", "initial": false }],
+    "items": [{ "id": "key", "label": "黄铜钥匙" }],
+    "facts": [],
+    "scenes": [{
+      "id": "room",
+      "template": "room-v1",
+      "spawn": { "position": [0, 1.6, 3], "yaw": 0 },
+      "objects": [
+        { "id": "note", "prefab": "note-v1", "position": [0, 1, 0], "yaw": 0 },
+        { "id": "key-object", "prefab": "key-v1", "position": [1, 1, 0], "yaw": 0, "itemId": "key" },
+        { "id": "door", "prefab": "door-v1", "position": [3, 0, 0], "yaw": 1.57, "visibleWhen": { "flagId": "door-open", "value": false } }
+      ],
+      "anchors": [
+        { "id": "at-note", "targetObject": "note", "position": [0, 0, 1], "radius": 1 },
+        { "id": "at-key", "targetObject": "key-object", "position": [1, 0, 1], "radius": 1 },
+        { "id": "at-door", "targetObject": "door", "position": [2, 0, 0], "radius": 1 }
+      ]
+    }],
+    "startBeat": "read-note",
+    "beats": [
+      {
+        "id": "read-note", "sceneId": "room", "objective": "阅读纸条", "entry": [],
+        "action": { "kind": "inspect", "anchorId": "at-note" },
+        "options": [{ "id": "read", "label": "读纸条", "guards": [], "cues": [{ "kind": "narration", "text": "请打开门。", "provenance": { "kind": "invented", "spans": [], "note": "fixture" } }], "effects": [], "next": "take-key" }]
+      },
+      {
+        "id": "take-key", "sceneId": "room", "objective": "拿起钥匙", "entry": [],
+        "action": { "kind": "collect", "anchorId": "at-key", "itemId": "key" },
+        "options": [{ "id": "take", "label": "拿起钥匙", "guards": [{ "kind": "inventory", "id": "key", "present": false }], "cues": [], "effects": [{ "kind": "inventory", "id": "key", "present": true }], "next": "open-door" }]
+      },
+      {
+        "id": "open-door", "sceneId": "room", "objective": "打开门", "entry": [],
+        "action": { "kind": "use", "anchorId": "at-door", "itemId": "key" },
+        "options": [{ "id": "open", "label": "用钥匙开门", "guards": [{ "kind": "inventory", "id": "key", "present": true }], "cues": [{ "kind": "narration", "text": "门外传来脚步声。", "provenance": { "kind": "invented", "spans": [], "note": "fixture" } }], "effects": [{ "kind": "flag", "id": "door-open", "value": true }], "next": "end" }]
+      },
+      { "id": "end", "sceneId": "room", "objective": "片段结束", "entry": [], "action": { "kind": "end" }, "options": [] }
+    ]
+  }
+}

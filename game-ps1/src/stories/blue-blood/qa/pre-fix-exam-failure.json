@@ -1,0 +1,49 @@
+{
+  "error": "TimeoutError: locator.selectOption: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#answer-blood')\u001b[22m\n\u001b[2m    - locator resolved to <select id=\"answer-blood\" aria-label=\"血液颜色\">…</select>\u001b[22m\n\u001b[2m  - attempting select option action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible and enabled\u001b[22m\n\u001b[2m      - did not find some options\u001b[22m\n\u001b[2m    - retrying select option action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible and enabled\u001b[22m\n\u001b[2m      - did not find some options\u001b[22m\n\u001b[2m    - retrying select option action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    56 × waiting for element to be visible and enabled\u001b[22m\n\u001b[2m       - did not find some options\u001b[22m\n\u001b[2m     - retrying select option action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n",
+  "errors": [],
+  "state": {
+    "chapter": 4,
+    "task": "exam.myPaper",
+    "anchor": "myPaper",
+    "busy": true,
+    "modal": true,
+    "mirror": false,
+    "mirrorLooks": 0,
+    "paused": false,
+    "finished": false,
+    "history": [
+      "chapter:0",
+      "training.teacher",
+      "training.publicCorrection",
+      "training.book",
+      "training.search",
+      "training.exit",
+      "chapter:1",
+      "washroom.ownRed",
+      "washroom.gap",
+      "washroom.blueToRed",
+      "washroom.exit",
+      "chapter:2",
+      "office.manager",
+      "office.exit",
+      "chapter:3",
+      "night.window",
+      "night.bed",
+      "night.search",
+      "landmark:0",
+      "landmark:1",
+      "landmark:2",
+      "night.post",
+      "night.postDeleted",
+      "chapter:4",
+      "exam.otherPaper",
+      "exam.myPaper"
+    ],
+    "position": [
+      0,
+      1.6,
+      2.08
+    ],
+    "sourceEnd": "【记性不好，总是把地标建筑记错城市"
+  }
+}

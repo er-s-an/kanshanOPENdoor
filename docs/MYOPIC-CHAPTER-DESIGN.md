@@ -6,9 +6,8 @@
 
 ## 来源与覆盖
 
-- 官方原文：`/Users/xiejiachen/zhihu-hackathon-2026/kanshan-portal/pipeline/stories/api/近视眼勇闯恐怖游戏-1747681485547843585.txt`。
-- 官方原始响应：`/Users/xiejiachen/zhihu-hackathon-2026/kanshan-portal/pipeline/stories/api/raw/1747681485547843585.json`；本次仅核验`author_name`为沈南因。
-- 旧完整JSON：`/Users/xiejiachen/zhihu-hackathon-2026/kanshan-portal/game/stories/近视眼勇闯恐怖游戏-1747681485547843585.json`。
+- 官方原文与原始响应来自受控本地素材目录，不随本仓库分发；本次仅核验 `author_name` 为沈南因。
+- 旧完整 JSON 来自上一版工程副本，不随本仓库分发。
 - 本次故事：`game/stories/近视眼勇闯恐怖游戏-1747681485547843585.json`，保留原`story.id`，版本为`2.2.0-chapter-myopic`，`source.sourceUrl=/sources/myopic.html`，`release.status=preview`，`source.scope=excerpt`。
 
 原文只有113行，末句中断在主角起身斥责来人的地方。这里的“完整首章”指覆盖全部开放正文的主要事件并完成玩家自己的阶段回应，不代表获取完整小说。

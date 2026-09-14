@@ -5,7 +5,7 @@
 ## 快速入口
 
 - **线上 Demo**：https://kanshan.makebook.hk2048.online（备用 https://kanshan.hk2048.online）
-- **本地运行**：`cd game && npm install && npm run build && bash start-demo.sh`（网关+隧道，8791）
+- **本地运行**：`cd game && npm ci && npm run build:experiences && bash start-demo.sh`（网关+隧道，8791）
 - **玩法权威**：[GDD.md](GDD.md) v1.1（含 ARG 质感层）
 - **当前状态**：[STATUS.md](STATUS.md)（部署/素材/LLM/待办的最新事实）
 
@@ -25,16 +25,22 @@
 | [docs/SOCIAL-RESEARCH-NOTES.md](docs/SOCIAL-RESEARCH-NOTES.md) | 异步互助设计（roadmap） | 参考 |
 | [docs/research/](docs/research/) | ARG 经典 + 伪界面悬疑两路研究报告 | 参考 |
 | [docs/archive/](docs/archive/) | 过期 PRD、调研、阶段验收（含吸收批注） | 归档 |
+| [NOTICE.md](NOTICE.md) | 代码、平台素材与故事内容的授权边界 | **上传前必读** |
 
 ## 架构速览
 
 ```
 pipeline/   故事→game.json 编译器（analyze→design→compile→validate，开发期 kimi）
+packages/   共享 StoryPackage 契约与确定性状态 reducer
+studio/     本地故事编写/校验服务与 HTTP 适配器
 game/
-  src/      React+TS 前端（门厅/阅读/对话/调查/行动/Boss/结局 + ARG post 场景施工中）
+  src/      React+TS 门厅与运行时（阅读/对话/调查/行动/Boss/结局 + ARG post 场景）
   server/   网关（知乎直答或 kimi 可切；改写式提示词+出戏检测+磁盘缓存）
   stories/  编译产物（蓝血 31 幕旗舰切片 / 西游 / 近视眼）
   public/art/ GPT Image 场景图 + 刘看山官方素材 + 物证底板
+game-ps1/   近视眼与端妃的 PS1 复古 3D 番外（程序化几何/音效，无外部素材依赖）
 ```
 
 关键设计：主线判定全确定性（线索变量+结构化呈证），LLM 只做表达层（改写式提示词，事实零编造）；序章合规——3000 字截断故事不编造真相、结局引流原文。
+
+仓库不保存运行密钥、`.env`、缓存或构建产物；本地开发所需的 `.access_secret` 由启动者自行创建，CI 只执行不需要外部凭据的检查。

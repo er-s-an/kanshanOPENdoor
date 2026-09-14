@@ -1,6 +1,6 @@
 # 本次重做共享契约（实现约定）
 
-所有修改在 `/Users/xiejiachen/Documents/ChatGPT/rebuild/kanshan-rebuild-20260913`；实际项目最后做 hash guard 合并。
+所有修改先在隔离副本完成；实际项目最后做 hash guard 合并。隔离副本路径不随仓库分发。
 
 保留 V1 的 novel/chat/choice/ending 与 encounter。新加 `investigate`，通过下列可选字段扩展，不要求旧故事重编译。
 

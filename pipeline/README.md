@@ -41,7 +41,7 @@ Secret 解析优先级（**内容绝不进代码/日志**）：
 
 1. 环境变量 `ZHIHU_ACCESS_SECRET`
 2. `pipeline/.env`（已 gitignore）里的同名变量
-3. 本地开发文件（默认 `/Users/xiejiachen/zhihu-hackathon-2026/.access_secret`，
+3. 本地开发文件（默认仓库根目录 `.access_secret`，
    可用 `ZHIHU_DEV_SECRET_FILE` 改路径；显式设 `ZHIHU_ACCESS_SECRET_FILE=` 可强制离线）
 
 端点：`POST https://developer.zhihu.com/v1/chat/completions`

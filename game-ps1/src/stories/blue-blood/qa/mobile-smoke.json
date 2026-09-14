@@ -1,0 +1,21 @@
+{
+  "viewport": [
+    390,
+    844
+  ],
+  "overflow": false,
+  "pos0": [
+    0,
+    1.6,
+    3.65
+  ],
+  "pos1": [
+    0,
+    1.6,
+    1.7149099998712536
+  ],
+  "errors": [],
+  "limitations": [
+    "Emulated mobile only; CDP touch events for held movement. Physical touch and audio not verified."
+  ]
+}

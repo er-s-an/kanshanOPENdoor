@@ -8,6 +8,12 @@ dist/
 .env
 .env.*
 !.env.example
+.access_secret
+**/.access_secret
+.envrc
+*.pid
 pipeline/test/.tmp-out/
 pipeline/stories/api/
 coverage/
+.story-workspaces/
+studio/.story-workspaces/

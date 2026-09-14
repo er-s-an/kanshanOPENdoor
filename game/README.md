@@ -3,7 +3,8 @@
 知乎黑客松 2026「看山任意门」的**游戏运行时前端**：以第一人称穿越进知乎盐言故事的互动叙事网页应用。
 移动端优先、开箱即玩、多结局；NPC 由**知乎直答 API** 扮演，附刘看山救场与全链路优雅降级。
 
-> 只对接知乎直答（`developer.zhihu.com/v1/chat/completions`），不接入任何其它模型。
+> 默认对接知乎直答（`developer.zhihu.com/v1/chat/completions`）；只有在服务端显式设置
+> `ZHIDA_BASE_URL` 时才使用兼容端点，凭证始终只留在服务端。
 > 实现过程中未参考/复制 SillyTavern 代码，仅按其公开文档所述概念设计。
 
 ```
@@ -23,22 +24,61 @@ game/
 ## 运行
 
 ```bash
-cd kanshan-portal/game
+cd game
 npm install
 
 npm run dev          # 网关(8790) + Vite(5173)，打开 http://localhost:5173
 npm run build        # 产物到 dist/
+npm run build:experiences # 同时打包门厅与近视眼 PS1 3D 体验（/myopia-3d/）
 npm start            # 生产：单进程托管 API + dist 静态页 → http://127.0.0.1:8790
 ```
 
 移动端真机联调：`npm run dev` 后手机访问 `http://<电脑局域网IP>:5173`（Vite 已 `host: true`）。
 
+### 3D 门的开发态入口
+
+先生成近视眼 PS1 的独立产物，再照常启动门厅：
+
+```bash
+npm --prefix ../game-ps1 run build
+npm run dev
+```
+
+开发服务器会只读挂载 `../game-ps1/dist`，因此下列同源地址可直接用于开门和分享回归：
+
+```text
+http://localhost:5173/myopia-3d/
+http://localhost:5173/myopia-3d/end-consort.html
+```
+
+PS1 重新构建后刷新页面即可看到新产物，不需要重新构建门厅；若独立产物缺失，以上地址会明确返回构建命令而不是回退到门户首页。生产部署仍应使用 `npm run build:experiences`，由该命令复制产物到 `game/dist/myopia-3d/`。
+
+### 统一发布
+
+发布任意门时只使用门户目录的完整构建，而不要把 `game-ps1/dist` 单独当成最终站点：
+
+```bash
+cd kanshan-portal/game
+npm run build:experiences
+npm start
+```
+
+这会在 `dist/` 内同时产出门厅、`/myopia-3d/`（近视眼）和
+`/myopia-3d/end-consort.html`（端妃）。Node 网关会同源托管这三页；裸
+`/myopia-3d` 也会规范跳转到带尾斜杠的入口。若使用纯静态平台，部署根目录
+应为 `game/dist/`，并保留这两个目录路由及其相对 `assets/` 文件。互动故事的
+`/api` 仍需要单独托管网关或等价的服务端适配层；不要把 Access Secret 放入静态
+环境变量或前端产物。
+
+两个 3D 页的记录卡和系统分享都会回到门厅并高亮对应门：
+`?story=myopia-3d` 或 `?story=consort-3d`。链接不包含存档、恐惧值、进度或选择。
+
 ### 密钥（Access Secret）
 
-网关鉴权只发给知乎直答；**永不入库、不进日志、不回传前端**。解析顺序：
+网关鉴权只发给服务端配置的上游；**永不入库、不进日志、不回传前端**。解析顺序：
 
 1. 环境变量 `ZHIHU_ACCESS_SECRET`
-2. 本地文件（`ZHIHU_SECRET_FILE`，默认 `/Users/xiejiachen/zhihu-hackathon-2026/.access_secret`）
+2. 本地文件（`ZHIHU_SECRET_FILE`，默认仓库根目录 `.access_secret`）
 3. 都没有 → **降级模式**（见下），游戏照常可玩
 
 没有密钥也能全流程跑通：对话会触发「时空信号中断 → 刘看山救场 → 选择继续剧情」。
@@ -68,7 +108,7 @@ ZHIDA_BASE_URL=http://127.0.0.1:8791/v1 ZHIHU_ACCESS_SECRET=any npm run dev:gate
   ③ 网关报错/超时/限流/无密钥（时空信号中断）。狐狸插话（台词轮换）+ 3 个回归主线选项：
   「回到正题，继续聊」「主线提示是什么？（本地取 scene.goal，不耗额度）」「跳过这段，推进剧情」。
 - **结局页**：尾声 → 结局大字（衬线渐变）→「你的故事人格报告」（纯模板，基于变量与抉择回放拼词，不接 LLM）
-  → Canvas 海报（故事名+结局名+人格关键词+二维码占位）→ 保存 PNG →「再穿一次」。
+  → Canvas 海报（大号故事名+八型人格视觉主题）→ 保存 PNG／系统分享 →「再穿一次」。
 - **系统**：localStorage 存档（场景/变量/抉择回放/对话窗口，刷新续玩）；`?scene=<id>` 评委暗门直达
   （不读档不写档）；无声可玩，音效/打字音默认关，设置里可开；语速可调。
 - **场景图**：`scene.image` 支持完整 URL 或相对路径（放在 game/public/ 下，生产由网关同源托管）。
@@ -127,7 +167,7 @@ POST /api/chat      Content-Type: application/json
   若有真实 key，`npm run dev` + 正常对话即可直接用（消息流经真实 `developer.zhihu.com`）。
 - 支持 `zhida-thinking-1p5`/`zhida-agent` 档位（按场景传 `model` 即可切换），默认 `zhida-fast-1p5`。
 - 刘看山文案当前用 🦊 emoji + 文本；官方素材就位后替换（Boot/Doors/气泡头像三处引用）。
-- 结局海报的二维码为占位框，接真实分享码后替换 Poster.tsx 绘制逻辑。
+- 结局海报是可保存、可系统分享的静态视觉；故事入口以分享面板中的链接承接，不在卡面固化会持续变动的二维码。
 - 剧透关键词表为本地启发式列表（`src/lib/config.ts`），可按故事语料扩充；误伤时走救场而非报错。
 - 场景图资源当前走同源 /public；大量封面素材后可换成 CDN URL（`scene.image` 直填即可）。
 - 未做 PWA/离线包、无障碍读屏专项、音量分级（仅有开关）。

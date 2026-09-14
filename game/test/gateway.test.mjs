@@ -196,6 +196,7 @@ async function sandbox(t, fixtures = { '00-valid.json': storyFixture() }) {
     const request = async (route, options) => fetch(`${base}${route}`, { ...options, signal: AbortSignal.timeout(5000) });
     return {
       stop: () => stop(child),
+      request,
       get: async (route) => {
         const response = await request(route);
         return { status: response.status, body: await response.json() };
@@ -209,7 +210,12 @@ async function sandbox(t, fixtures = { '00-valid.json': storyFixture() }) {
       },
     };
   };
-  return { start, writeStory, cacheDirectory: path.join(serverDirectory, '.cache') };
+  return {
+    start,
+    writeStory,
+    cacheDirectory: path.join(serverDirectory, '.cache'),
+    staticDirectory: path.join(gameDirectory, 'dist'),
+  };
 }
 
 const chatRequest = (overrides = {}) => ({ storyId: 'preview-story', sceneId: 'chat', history: [{ role: 'user', content: '你好。' }], ...overrides });
@@ -223,6 +229,32 @@ const assertError = (events, code) => {
   assert.equal(events.find((event) => event.type === 'error')?.code, code, JSON.stringify(events));
   assert.equal(events.some((event) => event.type === 'done'), false);
 };
+
+test('a bundled 3D directory redirects to its slash route and serves its own index', async (t) => {
+  const upstream = await fakeUpstream(t);
+  const files = await sandbox(t);
+  const experienceDirectory = path.join(files.staticDirectory, 'myopia-3d');
+  await mkdir(experienceDirectory, { recursive: true });
+  await Promise.all([
+    writeFile(path.join(files.staticDirectory, 'index.html'), '<title>Portal fallback</title>', 'utf8'),
+    writeFile(path.join(experienceDirectory, 'index.html'), '<title>Myopia experience</title>', 'utf8'),
+  ]);
+
+  const gateway = await files.start({ upstream });
+  const redirect = await gateway.request('/myopia-3d', { redirect: 'manual' });
+  assert.equal(redirect.status, 302);
+  assert.equal(redirect.headers.get('location'), '/myopia-3d/');
+
+  const experience = await gateway.request('/myopia-3d/');
+  assert.equal(experience.status, 200);
+  const html = await experience.text();
+  assert.match(html, /Myopia experience/);
+  assert.doesNotMatch(html, /Portal fallback/);
+
+  const missingAsset = await gateway.request('/myopia-3d/assets/missing.js');
+  assert.equal(missingAsset.status, 404);
+  assert.match(await missingAsset.text(), /Rebuild with npm run build:experiences/);
+});
 
 test('catalog filtering and duplicate precedence are identical across list, story and chat', async (t) => {
   const upstream = await fakeUpstream(t);

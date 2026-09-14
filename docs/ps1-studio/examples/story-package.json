@@ -1,0 +1,346 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "bookstall-opening",
+  "title": "旧书亭 · 原创规格样例",
+  "runtime": {
+    "engineMajor": 1,
+    "templateVersion": 1
+  },
+  "source": {
+    "id": "bookstall-source",
+    "title": "旧书亭",
+    "author": "原创规格示例",
+    "digest": "852275c4b89acab089a7aac87896f80f192bdf2257dbff7e43aa2a6222d317a6",
+    "codepointLength": 83,
+    "extent": "excerpt",
+    "boundary": "止于门外脚步声；不解释来者身份。",
+    "usage": "private-prototype"
+  },
+  "flags": [
+    {
+      "id": "door-open",
+      "initial": false
+    }
+  ],
+  "items": [
+    {
+      "id": "brass-key",
+      "label": "钥匙"
+    }
+  ],
+  "facts": [
+    {
+      "id": "note-request",
+      "kind": "reported",
+      "text": "纸条请人打开门，让花透气。",
+      "provenance": {
+        "kind": "adapted",
+        "spans": [
+          {
+            "start": 13,
+            "end": 44
+          }
+        ],
+        "note": "原文纸条内容的转述"
+      }
+    },
+    {
+      "id": "footsteps",
+      "kind": "observed",
+      "text": "门外传来脚步声，来者身份未知。",
+      "provenance": {
+        "kind": "adapted",
+        "spans": [
+          {
+            "start": 45,
+            "end": 71
+          }
+        ],
+        "note": "保留听见的声音，不推断来者"
+      }
+    }
+  ],
+  "scenes": [
+    {
+      "id": "bookstall",
+      "template": "room-v1",
+      "spawn": {
+        "position": [
+          0,
+          1.6,
+          2.6
+        ],
+        "yaw": 0
+      },
+      "objects": [
+        {
+          "id": "counter",
+          "prefab": "table-v1",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "yaw": 0
+        },
+        {
+          "id": "key",
+          "prefab": "key-v1",
+          "position": [
+            0.4,
+            0.9,
+            0
+          ],
+          "yaw": 0,
+          "itemId": "brass-key"
+        },
+        {
+          "id": "note",
+          "prefab": "note-v1",
+          "position": [
+            -0.4,
+            0.91,
+            0
+          ],
+          "yaw": 0
+        },
+        {
+          "id": "side-door",
+          "prefab": "door-v1",
+          "position": [
+            4.6,
+            0,
+            0
+          ],
+          "yaw": 1.5707963267948966,
+          "visibleWhen": {
+            "flagId": "door-open",
+            "value": false
+          }
+        },
+        {
+          "id": "flowers",
+          "prefab": "plant-v1",
+          "position": [
+            3,
+            0,
+            -2.5
+          ],
+          "yaw": 0
+        }
+      ],
+      "anchors": [
+        {
+          "id": "at-note",
+          "targetObject": "note",
+          "position": [
+            -0.4,
+            0,
+            1.2
+          ],
+          "radius": 1
+        },
+        {
+          "id": "at-key",
+          "targetObject": "key",
+          "position": [
+            0.4,
+            0,
+            1.2
+          ],
+          "radius": 1
+        },
+        {
+          "id": "at-door",
+          "targetObject": "side-door",
+          "position": [
+            3.4,
+            0,
+            0
+          ],
+          "radius": 1
+        }
+      ]
+    }
+  ],
+  "startBeat": "read-note",
+  "beats": [
+    {
+      "id": "read-note",
+      "sceneId": "bookstall",
+      "objective": "走到柜台边，看看纸条。",
+      "entry": [
+        {
+          "kind": "narration",
+          "text": "雨停了。小满回到旧书亭。",
+          "provenance": {
+            "kind": "adapted",
+            "spans": [
+              {
+                "start": 0,
+                "end": 12
+              }
+            ],
+            "note": "保留开场事件"
+          }
+        }
+      ],
+      "action": {
+        "kind": "inspect",
+        "anchorId": "at-note"
+      },
+      "options": [
+        {
+          "id": "read",
+          "label": "阅读纸条",
+          "guards": [],
+          "cues": [
+            {
+              "kind": "narration",
+              "text": "纸条写着：请把门打开，让窗边的花透透气。",
+              "provenance": {
+                "kind": "adapted",
+                "spans": [
+                  {
+                    "start": 13,
+                    "end": 44
+                  }
+                ],
+                "note": "将纸条文字作为观察反馈"
+              }
+            }
+          ],
+          "effects": [
+            {
+              "kind": "knowledge",
+              "id": "note-request",
+              "present": true
+            }
+          ],
+          "next": "take-key"
+        }
+      ]
+    },
+    {
+      "id": "take-key",
+      "sceneId": "bookstall",
+      "objective": "拿起柜台上的钥匙。",
+      "entry": [],
+      "action": {
+        "kind": "collect",
+        "anchorId": "at-key",
+        "itemId": "brass-key"
+      },
+      "options": [
+        {
+          "id": "take",
+          "label": "拿起钥匙",
+          "guards": [
+            {
+              "kind": "inventory",
+              "id": "brass-key",
+              "present": false
+            }
+          ],
+          "cues": [
+            {
+              "kind": "narration",
+              "text": "小满拿起钥匙。",
+              "provenance": {
+                "kind": "adapted",
+                "spans": [
+                  {
+                    "start": 45,
+                    "end": 71
+                  }
+                ],
+                "note": "将原文拿钥匙变为可操作动作"
+              }
+            }
+          ],
+          "effects": [
+            {
+              "kind": "inventory",
+              "id": "brass-key",
+              "present": true
+            }
+          ],
+          "next": "open-door"
+        }
+      ]
+    },
+    {
+      "id": "open-door",
+      "sceneId": "bookstall",
+      "objective": "带着钥匙走到侧门。",
+      "entry": [],
+      "action": {
+        "kind": "use",
+        "anchorId": "at-door",
+        "itemId": "brass-key"
+      },
+      "options": [
+        {
+          "id": "unlock",
+          "label": "用钥匙打开侧门",
+          "guards": [
+            {
+              "kind": "inventory",
+              "id": "brass-key",
+              "present": true
+            }
+          ],
+          "cues": [
+            {
+              "kind": "narration",
+              "text": "侧门开了。风吹动花叶，门外传来脚步声。",
+              "provenance": {
+                "kind": "adapted",
+                "spans": [
+                  {
+                    "start": 45,
+                    "end": 71
+                  }
+                ],
+                "note": "保留开门及听见声音的顺序"
+              }
+            }
+          ],
+          "effects": [
+            {
+              "kind": "flag",
+              "id": "door-open",
+              "value": true
+            },
+            {
+              "kind": "knowledge",
+              "id": "footsteps",
+              "present": true
+            }
+          ],
+          "next": "excerpt-end"
+        }
+      ]
+    },
+    {
+      "id": "excerpt-end",
+      "sceneId": "bookstall",
+      "objective": "当前片段结束。",
+      "entry": [
+        {
+          "kind": "narration",
+          "text": "片段到此为止。来者身份尚未揭晓。",
+          "provenance": {
+            "kind": "invented",
+            "spans": [],
+            "note": "播放器边界说明，不是补写原作结局。"
+          }
+        }
+      ],
+      "action": {
+        "kind": "end"
+      },
+      "options": []
+    }
+  ]
+}

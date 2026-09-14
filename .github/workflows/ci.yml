@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            game/package-lock.json
+            game-ps1/package-lock.json
+            packages/story-contract/package-lock.json
+            studio/package-lock.json
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Check root scaffold
+        run: |
+          npm run check
+          npm test
+
+      - name: Verify the PS1 authoring contract
+        run: node scripts/verify-ps1-studio.mjs
+
+      - name: Build and test story contract
+        working-directory: packages/story-contract
+        run: |
+          npm ci
+          npm test
+
+      - name: Test story compiler
+        working-directory: pipeline
+        run: npm test
+
+      - name: Install and test PS1 studio
+        working-directory: studio
+        run: |
+          npm ci
+          npm run check
+          npm test
+
+      - name: Install and typecheck PS1 runtime
+        working-directory: game-ps1
+        run: |
+          npm ci
+          npm run check:runtime
+
+      - name: Install, test, and build the portal
+        working-directory: game
+        run: |
+          npm ci
+          npm run typecheck
+          npm test
+          npm run build:experiences

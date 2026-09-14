@@ -27,7 +27,7 @@ const ROOT = path.resolve(HERE, '..');
 const PORTAL = path.resolve(ROOT, '..');
 
 const ZHIDA_URL = 'https://developer.zhihu.com/v1';
-const SECRET_FILE_DEFAULT = '/Users/xiejiachen/zhihu-hackathon-2026/.access_secret';
+const SECRET_FILE_DEFAULT = path.join(PORTAL, '.access_secret');
 const MAX_BODY = 512 * 1024;
 const HISTORY_WINDOW = 12; // 近 12 轮
 const MAX_HISTORY = 48;
@@ -980,7 +980,33 @@ async function serveStatic(req, res, url) {
     res.end();
     return;
   }
-  if (!existsSync(file)) file = path.join(STATIC_DIR, 'index.html');
+  if (!existsSync(file)) {
+    // This mount is a separate static application, not a portal SPA route.
+    // Returning the portal shell for a missing 3D asset turns a deployment
+    // mistake into an opaque JavaScript parse/runtime failure.
+    if (url.pathname === '/myopia-3d' || url.pathname.startsWith('/myopia-3d/')) {
+      res.writeHead(404, {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Cache-Control': 'no-store',
+      });
+      res.end('3D experience asset not found. Rebuild with npm run build:experiences.\n');
+      return;
+    }
+    file = path.join(STATIC_DIR, 'index.html');
+  }
+  else if ((await stat(file)).isDirectory()) {
+    // Built 3D pages use relative asset URLs. Keep a manually entered
+    // directory route from silently falling through to the portal shell.
+    if (!url.pathname.endsWith('/')) {
+      res.writeHead(302, {
+        Location: `${url.pathname}/${url.search}`,
+        'Cache-Control': 'no-store',
+      });
+      res.end();
+      return;
+    }
+    file = path.join(file, 'index.html');
+  }
   const ext = path.extname(file).toLowerCase();
   res.writeHead(200, {
     'Content-Type': MIME.get(ext) || 'application/octet-stream',

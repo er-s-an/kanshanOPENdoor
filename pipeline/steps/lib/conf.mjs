@@ -2,13 +2,14 @@
 // Secret 优先级：环境变量 ZHIHU_ACCESS_SECRET > pipeline/.env > 本地开发文件。
 // 只读取存在性判断与来源名称，绝不打印 secret 内容本身。
 import fs from 'node:fs';
+import path from 'node:path';
 import { PKG_ROOT, loadDotEnv } from './util.mjs';
 
 export const DEFAULT_BASE_URL = 'https://developer.zhihu.com/v1';
 export const MODEL_THINKING = 'zhida-thinking-1p5'; // 分析 / 生成：需要结构化推理
 export const MODEL_FAST = 'zhida-fast-1p5'; // 简单步骤：例如刘看山引导语这类短文本
 
-export const DEV_SECRET_FILE = '/Users/xiejiachen/zhihu-hackathon-2026/.access_secret';
+export const DEV_SECRET_FILE = path.resolve(PKG_ROOT, '..', '.access_secret');
 
 export function resolveConfig() {
   loadDotEnv();

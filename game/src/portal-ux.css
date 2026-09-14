@@ -226,6 +226,27 @@
   isolation: isolate;
   box-shadow: inset 4px 0 rgba(0, 0, 0, .2), 0 10px 24px rgba(0, 0, 0, .28);
 }
+.library-story__folio--myopia {
+  background:
+    radial-gradient(circle at 64% 28%, rgba(180, 55, 63, .8) 0 2px, transparent 3px),
+    radial-gradient(circle at 36% 68%, rgba(198, 219, 231, .16) 0 13%, transparent 14%),
+    repeating-linear-gradient(0deg, rgba(229, 224, 203, .08) 0 1px, transparent 1px 4px),
+    linear-gradient(145deg, #151521 0%, #54343f 56%, #171925 100%);
+  border-color: #9a6171;
+  color: #f1e0d0;
+}
+.library-story--myopia .library-story__genre { color: #d996a9; }
+.library-story--myopia .library-story__enter { color: #efb7c4; }
+.library-story__folio--consort {
+  background:
+    linear-gradient(140deg, transparent 0 42%, rgba(30, 53, 42, .72) 42% 46%, transparent 46%),
+    radial-gradient(circle at 71% 31%, rgba(243, 220, 139, .72) 0 5%, transparent 6%),
+    linear-gradient(145deg, #5d7257 0%, #b19e70 48%, #344a3d 100%);
+  border-color: #b8a367;
+  color: #fff4cf;
+}
+.library-story--consort .library-story__genre { color: #b7a46f; }
+.library-story--consort .library-story__enter { color: #d9c987; }
 .library-story__folio::after {
   content: '';
   position: absolute;

@@ -1,0 +1,783 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:kanshan:story-package:1.0.0",
+  "title": "Proposed StoryPackage v1",
+  "description": "Design contract only. Structural validation is not runtime, source fidelity, reachability or playtest proof.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "id": {
+      "$ref": "#/$defs/id"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "engineMajor": {
+          "const": 1
+        },
+        "templateVersion": {
+          "const": 1
+        }
+      },
+      "required": [
+        "engineMajor",
+        "templateVersion"
+      ]
+    },
+    "source": {
+      "$ref": "#/$defs/source"
+    },
+    "flags": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/flag"
+      },
+      "minItems": 0,
+      "maxItems": 8
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/item"
+      },
+      "minItems": 0,
+      "maxItems": 8
+    },
+    "facts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/fact"
+      },
+      "minItems": 0,
+      "maxItems": 32
+    },
+    "scenes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/scene"
+      },
+      "minItems": 1,
+      "maxItems": 2
+    },
+    "startBeat": {
+      "$ref": "#/$defs/id"
+    },
+    "beats": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/beat"
+      },
+      "minItems": 1,
+      "maxItems": 40
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "id",
+    "title",
+    "runtime",
+    "source",
+    "flags",
+    "items",
+    "facts",
+    "scenes",
+    "startBeat",
+    "beats"
+  ],
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{0,63}$"
+    },
+    "vec3": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "minimum": -20,
+        "maximum": 20
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "author": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "codepointLength": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20000
+        },
+        "extent": {
+          "enum": [
+            "excerpt",
+            "complete"
+          ]
+        },
+        "boundary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "usage": {
+          "enum": [
+            "private-prototype",
+            "authorized-public"
+          ]
+        },
+        "verifiedUrl": {
+          "type": "string",
+          "pattern": "^https://",
+          "maxLength": 2048
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "author",
+        "digest",
+        "codepointLength",
+        "extent",
+        "boundary",
+        "usage"
+      ]
+    },
+    "span": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "start": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 20000
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20000
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ]
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "sourced",
+            "adapted",
+            "invented"
+          ]
+        },
+        "spans": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/span"
+          },
+          "minItems": 0,
+          "maxItems": 8
+        },
+        "note": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        }
+      },
+      "required": [
+        "kind",
+        "spans",
+        "note"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "sourced",
+                  "adapted"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spans": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "flag": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "initial": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "initial"
+      ]
+    },
+    "item": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        }
+      },
+      "required": [
+        "id",
+        "label"
+      ]
+    },
+    "fact": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "kind": {
+          "enum": [
+            "observed",
+            "reported",
+            "hypothesis",
+            "unknown"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "provenance": {
+          "$ref": "#/$defs/provenance"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "text",
+        "provenance"
+      ]
+    },
+    "condition": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "flag"
+            },
+            "id": {
+              "$ref": "#/$defs/id"
+            },
+            "value": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind",
+            "id",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "inventory"
+            },
+            "id": {
+              "$ref": "#/$defs/id"
+            },
+            "present": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind",
+            "id",
+            "present"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "knowledge"
+            },
+            "id": {
+              "$ref": "#/$defs/id"
+            },
+            "present": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind",
+            "id",
+            "present"
+          ]
+        }
+      ]
+    },
+    "cue": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "narration",
+            "dialogue"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "speaker": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "provenance": {
+          "$ref": "#/$defs/provenance"
+        }
+      },
+      "required": [
+        "kind",
+        "text",
+        "provenance"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "dialogue"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "speaker"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "speaker"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "worldObject": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "prefab": {
+          "enum": [
+            "table-v1",
+            "key-v1",
+            "door-v1",
+            "note-v1",
+            "person-v1",
+            "plant-v1"
+          ]
+        },
+        "position": {
+          "$ref": "#/$defs/vec3"
+        },
+        "yaw": {
+          "type": "number",
+          "minimum": -6.284,
+          "maximum": 6.284
+        },
+        "itemId": {
+          "$ref": "#/$defs/id"
+        },
+        "visibleWhen": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "flagId": {
+              "$ref": "#/$defs/id"
+            },
+            "value": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "flagId",
+            "value"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "prefab",
+        "position",
+        "yaw"
+      ]
+    },
+    "anchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "targetObject": {
+          "$ref": "#/$defs/id"
+        },
+        "position": {
+          "$ref": "#/$defs/vec3"
+        },
+        "radius": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 1.5
+        }
+      },
+      "required": [
+        "id",
+        "targetObject",
+        "position",
+        "radius"
+      ]
+    },
+    "scene": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "template": {
+          "enum": [
+            "room-v1",
+            "courtyard-v1"
+          ]
+        },
+        "spawn": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "position": {
+              "$ref": "#/$defs/vec3"
+            },
+            "yaw": {
+              "type": "number",
+              "minimum": -6.284,
+              "maximum": 6.284
+            }
+          },
+          "required": [
+            "position",
+            "yaw"
+          ]
+        },
+        "objects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/worldObject"
+          },
+          "minItems": 0,
+          "maxItems": 32
+        },
+        "anchors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/anchor"
+          },
+          "minItems": 0,
+          "maxItems": 32
+        }
+      },
+      "required": [
+        "id",
+        "template",
+        "spawn",
+        "objects",
+        "anchors"
+      ]
+    },
+    "action": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "enum": [
+                "inspect",
+                "talk"
+              ]
+            },
+            "anchorId": {
+              "$ref": "#/$defs/id"
+            }
+          },
+          "required": [
+            "kind",
+            "anchorId"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "enum": [
+                "collect",
+                "use"
+              ]
+            },
+            "anchorId": {
+              "$ref": "#/$defs/id"
+            },
+            "itemId": {
+              "$ref": "#/$defs/id"
+            }
+          },
+          "required": [
+            "kind",
+            "anchorId",
+            "itemId"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "enum": [
+                "choose",
+                "end"
+              ]
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        }
+      ]
+    },
+    "option": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "guards": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/condition"
+          },
+          "minItems": 0,
+          "maxItems": 16
+        },
+        "cues": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/cue"
+          },
+          "minItems": 0,
+          "maxItems": 8
+        },
+        "effects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/condition"
+          },
+          "minItems": 0,
+          "maxItems": 16
+        },
+        "next": {
+          "$ref": "#/$defs/id"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "guards",
+        "cues",
+        "effects",
+        "next"
+      ]
+    },
+    "beat": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "sceneId": {
+          "$ref": "#/$defs/id"
+        },
+        "objective": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "entry": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/cue"
+          },
+          "minItems": 0,
+          "maxItems": 8
+        },
+        "action": {
+          "$ref": "#/$defs/action"
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/option"
+          },
+          "minItems": 0,
+          "maxItems": 4
+        }
+      },
+      "required": [
+        "id",
+        "sceneId",
+        "objective",
+        "entry",
+        "action",
+        "options"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "action": {
+                "properties": {
+                  "kind": {
+                    "const": "end"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "maxItems": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "action": {
+                "properties": {
+                  "kind": {
+                    "const": "choose"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "minItems": 2,
+                "maxItems": 4
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "action": {
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "inspect",
+                      "collect",
+                      "use",
+                      "talk"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "minItems": 1,
+                "maxItems": 1
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

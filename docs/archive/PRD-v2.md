@@ -627,30 +627,28 @@ AI Dungeon 的常驻设定与按关键词召回卡片提供了上下文组织参
 
 ### 12.1 项目材料
 
-项目实际位置：[kanshan-portal](/Users/xiejiachen/zhihu-hackathon-2026/kanshan-portal)。本轮比对时，项目 [PRD1](/Users/xiejiachen/zhihu-hackathon-2026/kanshan-portal/PRD.md) 与桌面 [PRD1](/Users/xiejiachen/Desktop/看山任意门-PRD-v1.md) 字节一致。
+项目实际位置为上一版本地工程副本（不随当前仓库分发）。本轮比对时，项目 PRD 与桌面存档字节一致。
 
 另读：
 
-- [既有玩法调研](/Users/xiejiachen/zhihu-hackathon-2026/kanshan-portal/GAMEPLAY-RESEARCH.md)
-- [队友说明](/Users/xiejiachen/zhihu-hackathon-2026/kanshan-portal/TEAM-BRIEF.md)与[状态说明](/Users/xiejiachen/zhihu-hackathon-2026/kanshan-portal/STATUS.md)
-- [管线 README](/Users/xiejiachen/zhihu-hackathon-2026/kanshan-portal/pipeline/README.md)
-- [现有类型](/Users/xiejiachen/zhihu-hackathon-2026/kanshan-portal/game/src/types.ts)与[结构／图校验](/Users/xiejiachen/zhihu-hackathon-2026/kanshan-portal/pipeline/steps/lib/schemas.mjs)
+- 既有玩法调研、队友说明与状态说明：上一版本地工程存档（不随当前仓库分发）。
+- 管线 README、运行时类型与结构／图校验：上一版工程中的对应文件（不随当前仓库分发）。
 
 小说素材来自本地已缓存文件；由主稿和三路 Luna 阅读任务分工归纳，未调用项目故事接口：
 
 | 作品 | 本地文本 |
 |---|---|
-| 蓝血 | [阅读来源](/Users/xiejiachen/zhihu-hackathon-2026/kanshan-portal/pipeline/stories/api/蓝血-2025684191967294692.txt) |
-| 近视眼勇闯恐怖游戏 | [阅读来源](/Users/xiejiachen/zhihu-hackathon-2026/kanshan-portal/pipeline/stories/api/近视眼勇闯恐怖游戏-1747681485547843585.txt) |
-| 史密斯装穷夫妇 | [阅读来源](/Users/xiejiachen/zhihu-hackathon-2026/kanshan-portal/pipeline/stories/api/史密斯装穷夫妇-2068540656734180439.txt) |
-| 俺妈和她的丧尸闺女 | [阅读来源](/Users/xiejiachen/zhihu-hackathon-2026/kanshan-portal/pipeline/stories/api/俺妈和她的丧尸闺女-1930445234262750503.txt) |
-| 学科修仙 | [阅读来源](/Users/xiejiachen/zhihu-hackathon-2026/kanshan-portal/pipeline/stories/api/学科修仙-1760265980192886784.txt) |
-| 末世我靠钞能力躺赢 | [阅读来源](/Users/xiejiachen/zhihu-hackathon-2026/kanshan-portal/pipeline/stories/api/末世我靠钞能力躺赢-1831621186162937856.txt) |
-| 穿越大明，我被崇祯偷听心声 | [阅读来源](/Users/xiejiachen/zhihu-hackathon-2026/kanshan-portal/pipeline/stories/api/穿越大明，我被崇祯偷听心声-1654134122145320960.txt) |
-| 00后整顿后宫 | [阅读来源](/Users/xiejiachen/zhihu-hackathon-2026/kanshan-portal/pipeline/stories/api/00后整顿后宫-1793742089336532992.txt) |
-| 西游之众佛腐烂 | [阅读来源](/Users/xiejiachen/zhihu-hackathon-2026/kanshan-portal/pipeline/stories/api/西游之众佛腐烂-1617220591035113472.txt) |
-| 网恋对象真是霸总 | [阅读来源](/Users/xiejiachen/zhihu-hackathon-2026/kanshan-portal/pipeline/stories/api/网恋对象真是霸总-1981680284933063553.txt) |
-| 不提分就出不去的房间 | [阅读来源](/Users/xiejiachen/zhihu-hackathon-2026/kanshan-portal/pipeline/stories/api/不提分就出不去的房间-2050600604976803918.txt) |
+| 蓝血 | 官方阅读来源（受控素材，不随仓库分发） |
+| 近视眼勇闯恐怖游戏 | 官方阅读来源（受控素材，不随仓库分发） |
+| 史密斯装穷夫妇 | 官方阅读来源（受控素材，不随仓库分发） |
+| 俺妈和她的丧尸闺女 | 官方阅读来源（受控素材，不随仓库分发） |
+| 学科修仙 | 官方阅读来源（受控素材，不随仓库分发） |
+| 末世我靠钞能力躺赢 | 官方阅读来源（受控素材，不随仓库分发） |
+| 穿越大明，我被崇祯偷听心声 | 官方阅读来源（受控素材，不随仓库分发） |
+| 00后整顿后宫 | 官方阅读来源（受控素材，不随仓库分发） |
+| 西游之众佛腐烂 | 官方阅读来源（受控素材，不随仓库分发） |
+| 网恋对象真是霸总 | 官方阅读来源（受控素材，不随仓库分发） |
+| 不提分就出不去的房间 | 官方阅读来源（受控素材，不随仓库分发） |
 
 ### 12.2 外部研究
 

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="story-studio-token" content="__STUDIO_TOKEN__">
+  <title>看山 · PS1 Studio</title>
+  <link rel="stylesheet" href="/studio.css">
+</head>
+<body>
+  <header class="topbar"><div><span class="eyebrow">Kanshan / Local authoring</span><h1>Story to PS1 Studio</h1></div><div class="actions"><button id="capabilities">能力</button><button id="build">构建</button><button id="validate">静态校验</button><button id="preview">试玩</button><button id="export">导出私有包</button></div></header>
+  <div id="notice" class="notice" role="status">正在连接本地 Studio…</div>
+  <main class="workspace">
+    <aside class="panel source-panel">
+      <div class="panel-heading"><span class="step">01</span><div><h2>来源与项目</h2><p>只存入本地 workspace</p></div></div>
+      <label>故事片段<textarea id="sourceText" rows="9" placeholder="粘贴获授权片段或原创测试材料"></textarea></label>
+      <div class="grid2"><label>标题<input id="title" value="我的 PS1 片段"></label><label>作者<input id="author" value="本地作者"></label></div>
+      <label>片段边界<input id="boundary" value="止于本次试玩截断点，不补写结局"></label>
+      <label>用途<select id="usage"><option value="private-prototype">private-prototype</option><option value="authorized-public">authorized-public</option></select></label>
+      <label>权利说明<textarea id="authorizationNote" rows="3" placeholder="说明原创或明确授权范围"></textarea></label>
+      <label>授权来源 URL（可选）<input id="verifiedUrl" type="url" placeholder="https://…"></label>
+      <button class="primary" id="create">创建项目</button>
+      <div class="project-meta" id="projectMeta">尚未创建项目</div>
+    </aside>
+    <section class="panel author-panel">
+      <div class="panel-heading"><span class="step">02</span><div><h2>故事包</h2><p>Host-agent 产物导入；固定 revision</p></div></div>
+      <div class="revision-strip"><span>当前 revision</span><code id="revisionId">—</code></div>
+      <div class="file-row"><label>analysis.json<input id="analysisFile" type="file" accept="application/json"></label><label>blueprint.json<input id="blueprintFile" type="file" accept="application/json"></label></div>
+      <p class="hint">blueprint 须包含规范 StoryPackage（package 或 storyPackage 字段）。AI 文本属于 authoring 输入，播放器只读取构建后的包。</p>
+      <button id="import">导入新 revision</button>
+      <div class="json-preview"><div class="mini-heading">修订状态</div><pre id="revisionInfo">导入后显示 analysis / blueprint / build / validation 状态。</pre></div>
+    </section>
+    <aside class="panel review-panel">
+      <div class="panel-heading"><span class="step">03</span><div><h2>诊断与审阅</h2><p>没有自动批准；按 scope 留痕</p></div></div>
+      <div id="diagnostics" class="diagnostics"><div class="empty">尚无诊断</div></div>
+      <div class="review-form"><label>审阅范围<select id="reviewScope"><option value="source">source / 来源</option><option value="experience">experience / 体验</option><option value="public-use">public-use / 公开用途</option></select></label><label>意见<textarea id="reviewNote" rows="3" placeholder="记录具体文本、行动或公开用途意见"></textarea></label><div class="review-actions"><button id="approve">批准此 scope</button><button class="danger" id="reject">拒绝此 scope</button></div></div>
+      <div class="job-box"><span>Job</span><code id="jobStatus">—</code></div>
+    </aside>
+  </main>
+  <footer><span>本地模式 · API 绑定 127.0.0.1 · provider 不会隐式调用</span><span id="runtime">runtime —</span></footer>
+  <script type="module" src="/app.mjs"></script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+:root {
+	font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+	color: #f4efe0;
+	background: #090b0d;
+	font-synthesis: none;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #090b0d; }
+#app { position: fixed; inset: 0; }
+canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; touch-action: none; }
+.runtime-load-error { position: fixed; inset: 20vh 12vw auto; padding: 20px; color: #ffe4cf; border: 1px solid #a66d5c; background: #48251fef; font-size: 15px; line-height: 1.7; }
+
+.runtime-hud { position: fixed; inset: 0; pointer-events: none; color: #f0ead8; text-shadow: 0 1px 3px #000; }
+.runtime-hud__top { position: absolute; top: 18px; left: 22px; right: 22px; display: flex; justify-content: space-between; gap: 16px; font: 11px/1.4 monospace; letter-spacing: .14em; color: #c5d1b6; }
+.runtime-hud__title { max-width: 70vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.runtime-hud__status { color: #93a090; text-align: right; }
+.runtime-hud__objective { position: absolute; left: 22px; top: 52px; max-width: min(560px, calc(100vw - 44px)); padding: 8px 12px; border-left: 2px solid #b5c195; background: #121817bd; font-size: 15px; line-height: 1.55; }
+.runtime-hud__inventory { position: absolute; top: 85px; right: 22px; max-width: 45vw; color: #b9c5b3; font-size: 11px; text-align: right; }
+.runtime-hud__action { position: absolute; left: 50%; bottom: 54px; transform: translateX(-50%); pointer-events: auto; }
+.runtime-hud__action-button, .runtime-hud__continue, .runtime-hud__option { appearance: none; border: 1px solid #b4bd91; border-radius: 2px; background: #1d2825e8; color: #f1edda; padding: 11px 18px; font: inherit; cursor: pointer; text-shadow: none; box-shadow: 0 3px 14px #0008; }
+.runtime-hud__action-button:hover, .runtime-hud__continue:hover, .runtime-hud__option:hover { background: #314138f2; }
+.runtime-hud__action-button:disabled, .runtime-hud__option:disabled { border-color: #667069; color: #91988e; cursor: not-allowed; }
+.runtime-hud__cue { position: absolute; left: 50%; bottom: 6vh; width: min(720px, calc(100vw - 32px)); transform: translateX(-50%); padding: 18px 20px 16px; pointer-events: auto; border: 1px solid #87907a; background: #131919ed; box-shadow: 0 8px 28px #000b; }
+.runtime-hud__speaker { min-height: 1.2em; color: #bdcb9b; font-size: 12px; letter-spacing: .1em; }
+.runtime-hud__cue-text { margin: 10px 0 15px; min-height: 1.7em; font-size: 16px; line-height: 1.75; white-space: pre-wrap; }
+.runtime-hud__continue { display: block; margin-left: auto; padding: 7px 16px; font-size: 12px; }
+.runtime-hud__options { position: absolute; left: 50%; bottom: 7vh; width: min(680px, calc(100vw - 32px)); transform: translateX(-50%); display: grid; gap: 8px; pointer-events: auto; }
+.runtime-hud__option { text-align: left; font-size: 14px; }
+.runtime-hud__error { position: absolute; left: 50%; top: 20%; transform: translateX(-50%); max-width: min(600px, calc(100vw - 32px)); padding: 11px 15px; color: #ffe4cf; background: #48251fef; border: 1px solid #a66d5c; font-size: 13px; pointer-events: none; }
+
+@media (max-width: 640px) {
+	.runtime-hud__top { left: 14px; right: 14px; top: 12px; }
+	.runtime-hud__objective { left: 14px; top: 41px; font-size: 13px; }
+	.runtime-hud__inventory { top: 78px; right: 14px; font-size: 10px; }
+	.runtime-hud__cue { bottom: 12vh; padding: 15px; }
+	.runtime-hud__cue-text { font-size: 15px; }
+}

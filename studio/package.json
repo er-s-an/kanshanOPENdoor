@@ -1,0 +1,27 @@
+{
+  "name": "kanshan-ps1-studio",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Local story-to-PS1 authoring services, CLI and HTTP adapter",
+  "engines": { "node": ">=22" },
+  "bin": { "story": "src/cli.mjs", "story-studio": "src/cli.mjs" },
+  "scripts": {
+    "story": "node src/cli.mjs",
+    "server": "node src/server.mjs",
+    "build": "node --check src/cli.mjs && node --check src/services.mjs && node --check src/http.mjs && node --check src/web/app.mjs",
+    "test": "node --test test/*.test.mjs",
+    "test:core": "node --test test/*.test.mjs",
+    "check": "node --check src/cli.mjs && node --check src/services.mjs && node --check src/http.mjs"
+  },
+  "dependencies": {
+    "@kanshan/story-contract": "file:../packages/story-contract"
+  },
+  "types": "src/index.d.ts",
+  "exports": {
+    ".": "./src/index.mjs",
+    "./contract": "./src/contract.mjs",
+    "./services": "./src/services.mjs",
+    "./http": "./src/http.mjs"
+  }
+}

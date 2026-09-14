@@ -2,10 +2,10 @@ import { createHash } from 'node:crypto';
 
 // Packages an already human-reviewed GameJson chapter. It does not plan a story,
 // fetch source material, infer its author, or remove scenes to make validation pass.
-const SCENE_TYPES = new Set(['novel', 'chat', 'choice', 'investigate', 'encounter', 'ending']);
+const SCENE_TYPES = new Set(['novel', 'chat', 'choice', 'investigate', 'post', 'boss', 'encounter', 'ending']);
 const OPS = new Set(['eq', 'ne', 'gte', 'lte']);
 const CLUE_ID = /^clue_[A-Za-z0-9_]+$/;
-const VERSION = /^2\.2\.(?:0|[1-9]\d*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/;
+const VERSION = /^2\.(?:2|3)\.(?:0|[1-9]\d*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/;
 const UNKNOWN_NUMBER = Symbol('unexplored numeric state');
 const record = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const nonempty = (v) => typeof v === 'string' && v.trim().length > 0;
@@ -56,7 +56,7 @@ function strings(entries, label, { allowEmpty = true } = {}) {
 function validateShape(recipe) {
   if (!record(recipe)) fail('recipe must be a GameJson object');
   canonicalJson(recipe); // Do not silently drop undefined, non-JSON values or extension fields.
-  if (recipe.version !== undefined && !VERSION.test(recipe.version)) fail('version must be a 2.2.* semantic version');
+  if (recipe.version !== undefined && !VERSION.test(recipe.version)) fail('version must be a 2.2.* or 2.3.* semantic version');
   if (!record(recipe.story)) fail('story is required');
   for (const key of ['id', 'title']) requireText(recipe.story[key], `story.${key}`);
   if (typeof recipe.story.author !== 'string') fail('story.author must be text');
@@ -168,11 +168,22 @@ function validateShape(recipe) {
       }
     }
     if (scene.type === 'choice' && !scene.choices?.length) fail(`${at}: choice needs at least one choice`);
-    const exitKinds = Number(scene.next !== undefined) + Number(scene.goto !== undefined) + Number(!!scene.choices?.length);
+    if (scene.type === 'boss') {
+      if (!record(scene.boss)) fail(`${at}: boss content is required`);
+      if (!record(scene.boss.endings)) fail(`${at}: boss endings are required`);
+      for (const key of ['truth', 'fold']) reference(scene.boss.endings[key], sceneIds, `${at}.boss.endings.${key}`);
+      if (scene.boss.egg !== undefined) {
+        if (!record(scene.boss.egg)) fail(`${at}: boss egg must be an object`);
+        reference(scene.boss.egg.ending, sceneIds, `${at}.boss.egg.ending`);
+        clue(scene.boss.egg.clue, `${at}.boss.egg.clue`);
+      }
+    }
+    const bossExitIds = scene.type === 'boss' ? bossEndings(scene) : [];
+    const exitKinds = Number(scene.next !== undefined) + Number(scene.goto !== undefined) + Number(!!scene.choices?.length) + Number(bossExitIds.length > 0);
     if (exitKinds > 1) fail(`${at} has ambiguous exits; use one of next, goto or choices`);
     if (scene.type === 'ending' && (scene.next !== undefined || scene.goto !== undefined)) fail(`${at}: ending next/goto is not rendered`);
     if (scene.type === 'encounter' && exitKinds) fail(`${at}: encounter exits must be declared in outcomes`);
-    if (!['encounter', 'ending'].includes(scene.type) && !exitKinds) fail(`${at} has no outgoing exit`);
+    if (!['encounter', 'boss', 'ending'].includes(scene.type) && !exitKinds) fail(`${at} has no outgoing exit`);
 
     if (scene.clueDrops !== undefined) {
       uniqueIds(scene.clueDrops, `${at} clueDrop`);
@@ -266,7 +277,14 @@ function validateShape(recipe) {
   }
 }
 
+function bossEndings(scene) {
+  const ids = Object.values(scene.boss?.endings ?? {});
+  if (scene.boss?.egg?.ending) ids.push(scene.boss.egg.ending);
+  return [...new Set(ids)];
+}
+
 function edgesOf(scene) {
+  if (scene.type === 'boss') return bossEndings(scene).map((next) => ({ next, label: 'boss ending' }));
   if (scene.type === 'encounter') return scene.encounter.outcomes.map((outcome) => ({ next: outcome.next, conditions: outcome.when, label: `outcome ${outcome.id}` }));
   if (scene.choices?.length) return scene.choices.map((choice) => ({ next: choice.next, requires: choice.requires, set: choice.set, label: `choice ${choice.id}` }));
   return scene.next || scene.goto ? [{ next: scene.next || scene.goto, label: 'exit' }] : [];
@@ -398,7 +416,7 @@ export function validateChapter(recipe) {
 export function compileChapter(recipe, { version } = {}) {
   validateChapter(recipe);
   const base = version ?? recipe.version ?? '2.2.0';
-  if (typeof base !== 'string' || !VERSION.test(base)) fail('version must be a 2.2.* semantic version');
+  if (typeof base !== 'string' || !VERSION.test(base)) fail('version must be a 2.2.* or 2.3.* semantic version');
   const content = JSON.parse(canonicalJson({ ...recipe, version: base.split('+')[0] }));
   const digest = createHash('sha256').update(canonicalJson(content)).digest('hex');
   return { ...content, version: `${content.version}+sha256.${digest}` };
