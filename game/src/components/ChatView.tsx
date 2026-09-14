@@ -107,7 +107,6 @@ export function ChatView({ scene }: { scene: Scene }) {
     const earlier = topics.find((topic) => topic.grants?.includes(id));
     return earlier ? `先聊：${earlier.prompt}` : '先回到现场补充相关记录';
   };
-  const missingClues = requiredClues.filter((id) => vars[id] !== 'found');
   const availableChoices = (scene.choices || []).filter((choice) => !choiceLocked(choice, vars));
   const kind = continueKind(scene);
   const canContinue = (kind === 'next' || availableChoices.length > 0)
@@ -117,9 +116,7 @@ export function ChatView({ scene }: { scene: Scene }) {
     ? [turn.testimony?.topicId || turn.topicId].filter((id): id is string => !!id) : []));
   const pendingTopics = topics.filter((topic) => !asked.has(topic.id));
   const readyTopics = pendingTopics.filter((topic) => Object.entries(topic.requires || {}).every(([id, value]) => vars[id] === value));
-  const lockedTopics = pendingTopics.filter((topic) => Object.entries(topic.requires || {}).some(([id, value]) => vars[id] !== value));
   const askedTopics = topics.filter((topic) => asked.has(topic.id));
-  const objective = scene.objective || scene.goal || `听听${npcName}想说什么，也可以说出你的想法。`;
 
   const request = useCallback((base: BubbleTurn[], noCache: boolean, topicId?: string) => {
     const windowed = base.filter((turn) => turn.role === 'user' || turn.role === 'assistant').slice(-12)
@@ -224,20 +221,17 @@ export function ChatView({ scene }: { scene: Scene }) {
           <span className="chat__npc"><span className={`chat__avatar${npcAvatar ? ' chat__avatar--image' : ''}`} aria-hidden>{npcAvatar ? <img src={npcAvatar} alt="" width="1600" height="1600" decoding="async" /> : npcName.slice(0, 1)}</span><span className="chat__who"><b>{npcName}</b><i>{busy ? '正在回答你' : '正在交谈'}</i></span></span>
         </div>
       </div>
-      <aside className="chat__guide" aria-label="交谈指引">
-        <p className="chat__objective">{objective}</p>
+      <aside className="chat__guide" aria-label={`和${npcName}说话`}>
         {topics.length > 0 ? <>
           <button className="chat__guide-toggle" type="button" aria-expanded={guideOpen} aria-controls={`chat-guide-${scene.id}`} onClick={() => setGuideOpen((open) => !open)}>
-            <span>{readyTopics.length ? `可以聊的话题 · ${readyTopics.length}` : goalMet ? '已聊到关键内容' : '交谈指引'}</span><span aria-hidden>{guideOpen ? '收起 −' : '展开 +'}</span>
+            <span>{readyTopics.length ? `还想问的话 · ${readyTopics.length}` : `${npcName}没有移开目光`}</span><span aria-hidden>{guideOpen ? '收起 −' : '展开 +'}</span>
           </button>
           <div id={`chat-guide-${scene.id}`} className={`chat__guide-content${guideOpen ? ' is-open' : ''}`}>
-            <h2>{goalMet ? '还想聊聊' : '可以从这里问起'}</h2>
+            <h2>{goalMet ? '还想问什么？' : '你准备怎么接这句话？'}</h2>
             {readyTopics.length ? <div className="chat__topic-list">{readyTopics.map((topic) => topicButton(topic))}</div> : null}
-            {lockedTopics.length ? <details className="chat__topic-group"><summary>稍后再聊 · {lockedTopics.length}</summary>{lockedTopics.map((topic) => topicButton(topic))}</details> : null}
-            {askedTopics.length ? <details className="chat__topic-group"><summary>已经聊过 · {askedTopics.length}</summary>{askedTopics.map((topic) => topicButton(topic, true))}</details> : null}
-            {goalMet ? <p className="chat__progress-note">关键内容已记下。你可以继续追问，也可以往下走。</p> : missingClues.length > 0 ? <p className="chat__progress-note">从当前可问的话题继续，把这次谈话听完整。</p> : null}
+            {askedTopics.length ? <details className="chat__topic-group"><summary>还可以再问 · {askedTopics.length}</summary>{askedTopics.map((topic) => topicButton(topic, true))}</details> : null}
           </div>
-        </> : <p className="chat__progress-note">在下方说出你的问题或想法。{goalMet ? '对方已回应了这次谈话的要点。' : ''}</p>}
+        </> : <p className="chat__progress-note">{npcName}没有催你。</p>}
       </aside>
       <div className="chat__conversation">
       <div className="chat__scroll" ref={scrollRef} onScroll={(event) => { const el = event.currentTarget; setShowLatest(el.scrollHeight - el.scrollTop - el.clientHeight > 120); }}>
@@ -253,7 +247,7 @@ export function ChatView({ scene }: { scene: Scene }) {
           </div>)}
         </div> : null}
         <div className="chat__list">
-          {!turns.length && !busy ? <p className="chat__list-empty">对话还没有开始。先开口说点什么，或从上方的话题问起。</p> : null}
+          {!turns.length && !busy ? <p className="chat__list-empty">{npcName}正等着你开口。</p> : null}
           {turns.map((turn, index) => <Bubble key={index} turn={turn} npcName={npcName} clueName={clueName} onRetry={!busy && !deckOpen && index === turns.length - 1 && index > lastUserIndex && lastUserIndex >= 0 ? retry : undefined} />)}
         </div>
         {deckOpen ? <ChoiceDeck choices={scene.choices || []} onPick={(choice: Choice) => { flushChat(); setDeckOpen(false); chooseAndNav(choice); }} prompt="接下来，你想——" /> : null}
@@ -261,7 +255,7 @@ export function ChatView({ scene }: { scene: Scene }) {
       {showLatest ? <button type="button" className="chat__latest" onClick={() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: prefs.calm ? 'instant' : 'smooth' })}>回到最新对话 ↓</button> : null}
       </div>
       <div className="chat__compose">
-        {!deckOpen ? <label className="chat__input-label" htmlFor={`chat-input-${scene.id}`}>你的话 <span>自由提问或回应</span></label> : null}
+        {!deckOpen ? <label className="chat__input-label" htmlFor={`chat-input-${scene.id}`}>你 <span>{npcName}在听</span></label> : null}
         {!deckOpen ? <form className="chat__form" onSubmit={(event) => { event.preventDefault(); if (!composingRef.current) send(input); }}>
           <textarea id={`chat-input-${scene.id}`} ref={inputRef} className="chat__input" aria-label={`向${npcName}自由提问`} value={input} onChange={(event) => setInput(event.target.value)} onCompositionStart={() => { composingRef.current = true; }} onCompositionEnd={() => { composingRef.current = false; }} onKeyDown={(event) => {
             if (event.key === 'Enter' && !event.shiftKey) {
@@ -273,7 +267,7 @@ export function ChatView({ scene }: { scene: Scene }) {
           {busy ? <button key="stop" className="chat__send chat__send--stop" type="button" onClick={(event) => { event.preventDefault(); stop(); }}>停止</button> : <button key="send" className={`chat__send${canContinue && (goalMet || !isDialogue) ? ' chat__send--secondary' : ''}`} type="submit" disabled={!input.trim() || navBusy}>发送</button>}
         </form> : null}
         {busy ? <p className="chat__waiting" role="status">{npcName}正在回答，草稿会留在输入框里。</p> : null}
-        {!deckOpen && !canContinue && !busy ? <p className="chat__compose-note">聊到要点之后，就能继续往下走。</p> : null}
+        {!deckOpen && !canContinue && !busy ? <p className="chat__compose-note">再问一句也可以。</p> : null}
         {deckOpen ? <button className="chat__return" type="button" onClick={() => setDeckOpen(false)}>← 继续和{npcName}交谈</button> : canContinue ? <div className="chat__next"><button className={`btn ${isDialogue && !goalMet ? 'btn--ghost' : 'btn--primary'}`} type="button" onClick={doContinue} disabled={busy || navBusy}>{directChoice?.text || scene.dialogue?.leaveLabel || scene.continueLabel || '想好怎么回应了'}<span aria-hidden> →</span></button></div> : null}
       </div>
     </section>

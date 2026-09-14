@@ -19,8 +19,8 @@ export function Boot() {
     <span className="boot-ready__meet">
       {meetOk ? <img className="boot-ready__fox" src="/art/character/motion/liu-kanshan-wave.gif" alt="" loading="eager" decoding="async" onError={() => setMeetOk(false)} /> : null}
       <strong className="boot-ready__brand">看山任意门</strong>
-      <span className="boot-ready__text">系统引导·刘看山正在连接故事库…</span>
-      <span className="boot-ready__hint">刘看山会在门厅等你</span>
+      <span className="boot-ready__text">刘看山正在找那几扇亮着的门…</span>
+      <span className="boot-ready__hint">他会在门口等你</span>
     </span>
   </main>;
 }

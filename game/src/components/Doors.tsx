@@ -50,7 +50,7 @@ function PortalEntry({ entry }: { entry: EntryState }) {
     <img className="portal-entry__art" src={TRANSITION_ART} alt="" decoding="async" />
     <div className="portal-entry__veil" aria-hidden />
     <div className="portal-entry__copy">
-      <span>系统引导·刘看山</span>
+      <span>刘看山正在推门</span>
       <strong>正在为你打开《{entry.title}》</strong>
       <i aria-hidden><b /></i>
     </div>
