@@ -6,6 +6,7 @@ import { useGame } from '../state/engine';
 import { ChoiceDeck } from './ChoiceDeck';
 import { EvidenceDocument } from './EvidenceDocument';
 import { InvestigationScene } from './InvestigationScene';
+import { KanshanCue } from './KanshanCue';
 import '../investigation.css';
 
 const itemKinds = { observation: '现场观察', testimony: '人物证言', record: '书面记录' };
@@ -352,6 +353,7 @@ export function InvestigationView({ scene }: { scene: Scene }) {
 
         {checkPassed ? <div className="investigation__verified">
           <div className="investigation__feedback investigation__feedback--success" id={`${uid}-check-feedback`} tabIndex={-1} role="status"><h3 id={`${uid}-claim-title`}>这次核对得出的结论</h3><p>{currentCheck.success}</p></div>
+          <KanshanCue cue={currentCheck.kanshan} />
           <div className="investigation__conclusion-documents">{known.filter((clue) => currentCheck.grants.includes(clue.id)).map((clue) => <EvidenceDocument key={clue.id} clue={clue} body={currentCheck.success} className="investigation__document" />)}</div>
           <details className="investigation__proof-disclosure"><summary>回看依据 · {currentCheck.answer.length} 条线索</summary><ul className="investigation__proofs">{known.filter((clue) => currentCheck.answer.includes(clue.id)).map((clue) => <li key={clue.id}><EvidenceLabel clue={clue} /></li>)}</ul></details>
           <p className="investigation__hint">{requiredUnseen.length ? '结论已记下。现场还有必要记录需要找出。' : pendingCheck ? '结论已记下，还有其他说法可以核对。' : '结论已记下。你可以决定下一步，也可以回看现场。'}</p>

@@ -10,6 +10,7 @@ import { useDialog } from '../lib/useDialog';
 import { useGame } from '../state/engine';
 import { usePrefs } from '../state/prefs';
 import { EvidenceDocument } from './EvidenceDocument';
+import { KanshanCue } from './KanshanCue';
 import '../boss-ux.css';
 
 type Feedback = {
@@ -368,8 +369,9 @@ export function BossView({ scene }: { scene: Scene }) {
                   ? boss.egg?.present
                   : '你的结论来自已经公开的证据，而不是热度、猜测或立场。'}
             </p>
+            <KanshanCue cue={boss.resolvedGuides?.[bossRun.outcome || 'truth']} className="boss__resolved-guide" />
             {destination ? (
-              <button className="btn btn--primary" onClick={() => nav(destination)}>进入结果</button>
+              <button className="btn btn--primary" onClick={() => nav(destination)}>查看本局分支结局</button>
             ) : (
               <button className="btn btn--primary" onClick={() => backToDoor(true)}>返回门厅</button>
             )}

@@ -77,9 +77,16 @@ export type InvestigationBrowserOpenResult =
   | { status: 'evidence'; page: InvestigationBrowserPage; item: InvestigationItem; vars: Vars }
   | { status: 'noise'; page: InvestigationBrowserPage; item: null }
   | { status: 'miss'; page: null; item: null; feedback: string };
+export interface KanshanCueData {
+  lines: string[];
+  label?: string;
+  art?: string;
+}
+
 export interface InvestigationCheck {
   id: string; prompt: string; claim: string; answer: string[]; grants: string[]; candidates?: string[];
   success: string; failure: string;
+  kanshan?: KanshanCueData;
 }
 
 export interface EncounterCondition { key: string; op: 'eq' | 'ne' | 'gte' | 'lte'; value: string | number }
@@ -283,6 +290,8 @@ export interface BossData {
   exposure?: BossMeterConfig;
   /** 彩蛋：任何轮次呈上该线索 → 隐藏指控 → 彩蛋结局 */
   egg?: { clue: string; present: string; ending: string };
+  /** Two authored Liu Kanshan lines shown after the public argument resolves. */
+  resolvedGuides?: Partial<Record<'truth' | 'fold' | 'egg', KanshanCueData>>;
   endings: { truth: string; fold: string };
   baseLikes?: number;
   /** 群众氛围评论（闲置滚动） */
