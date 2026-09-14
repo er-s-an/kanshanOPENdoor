@@ -58,8 +58,8 @@ function CommunityFeed({ scene }: { scene: Scene }) {
   return <>
     <div className="post-feed__filters" role="group" aria-label="筛选社区回应">
       {([
-        ['all', `全部 ${post.entries.length}`],
-        ['replyable', `可回复 ${replyableCount}`],
+        ['all', `全部回应 ${post.entries.length}`],
+        ['replyable', `可继续追问 ${replyableCount}`],
         ['dm', `私信 ${dmCount}`],
       ] as const).map(([id, label]) => <button key={id} aria-pressed={filter === id} onClick={() => setFilter(id)}>{label}</button>)}
     </div>
@@ -69,10 +69,13 @@ function CommunityFeed({ scene }: { scene: Scene }) {
         const choice = entry.actionChoiceId ? choiceById.get(entry.actionChoiceId) : undefined;
         const visited = Boolean(entry.visitedVar && vars[entry.visitedVar]);
         return <article key={entry.id} className={`post-entry${entry.pinned ? ' post-entry--pinned' : ''}${choice ? ' post-entry--actionable' : ''}`}>
-          {entry.pinned ? <span className="post-entry__pin">值得查看</span> : null}
+          {entry.pinned ? <span className="post-entry__pin">可继续追问</span> : null}
           <AccountMeta entry={entry} />
           <p className="post-entry__text">{entry.text}</p>
-          <p className="post-entry__boundary"><span>知情边界</span>{entry.knowledge}</p>
+          <details className="post-entry__boundary">
+            <summary>为什么这条回应不能直接当证据？</summary>
+            <p>{entry.knowledge}</p>
+          </details>
           <footer className="post-entry__foot">
             <span>{typeof entry.likes === 'number' ? `${entry.likes} 赞同` : '刚出现的回应'}</span>
             {choice ? <ChoiceButton choice={choice} label={visited ? '再次查看' : entry.actionLabel} /> : <span className="post-entry__ambient">仅浏览</span>}
