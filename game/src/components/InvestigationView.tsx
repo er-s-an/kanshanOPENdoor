@@ -1,5 +1,5 @@
 import { useId, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
-import type { ClueMeta, InvestigationBrowserShortcut, InvestigationItem, Scene } from '../types';
+import type { ClueMeta, InvestigationItem, Scene } from '../types';
 import { renderMarkdown } from '../lib/md';
 import { choiceLocked } from '../lib/rules.mjs';
 import { useGame } from '../state/engine';
@@ -43,7 +43,6 @@ export function InvestigationView({ scene }: { scene: Scene }) {
   const [feedback, setFeedback] = useState<Record<string, { ok: boolean; text: string }>>({});
   const investigation = scene.investigation;
   if (!investigation) return <section className="investigation"><p>这一幕尚未提供调查内容。</p></section>;
-  const browser = investigation.browser;
 
   const isFound = (id: string) => vars[id] === 'found';
   const eligible = investigation.items.filter((item) => Object.entries(item.requires || {}).every(([key, value]) => vars[key] === value));
@@ -118,23 +117,20 @@ export function InvestigationView({ scene }: { scene: Scene }) {
     if (navBusy || !isFound(item.clue)) return;
     showRecord(item, false);
   };
-  const runSearch = (query: string, shortcut?: InvestigationBrowserShortcut) => {
+  const submitSearch = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     if (navBusy) return;
-    const result = searchInvestigation(query);
+    const result = searchInvestigation(draft);
     if (result.status === 'empty') {
-      setSearchFeedback({ status: 'empty', text: browser ? '输入你想核对的常识，或直接打开下面一个资料入口。' : '先输入你想查找的地点、物件或感官线索。' });
+      setSearchFeedback({ status: 'empty', text: '先输入你想查找的地点、物件或感官线索。' });
       return;
     }
     if (result.status === 'miss') {
-      setSearchFeedback({ status: 'miss', text: browser
-        ? '这个词没有直接对应当前页面，但不会浪费调查机会。可以从下方公开入口换一个方向。'
-        : '没有找到能对应的记录。换一个更具体的说法，或查看调查方向。' });
+      setSearchFeedback({ status: 'miss', text: '没有找到能对应的记录。换一个更具体的说法，或查看调查方向。' });
       return;
     }
     if (result.status === 'ambiguous') {
-      setSearchFeedback({ status: 'ambiguous', text: browser
-        ? '这个词关联到不止一类资料。直接选下面一个来源，或补充“地标、河流、记忆”等方向。'
-        : '这个说法可能指向多处。再补充一个更具体的特征。' });
+      setSearchFeedback({ status: 'ambiguous', text: '这个说法可能指向多处。再补充一个更具体的特征。' });
       return;
     }
     if (!result.item) {
@@ -142,18 +138,8 @@ export function InvestigationView({ scene }: { scene: Scene }) {
       return;
     }
     const alreadyFound = isFound(result.item.clue);
-    setSearchFeedback({ status: 'found', text: alreadyFound
-      ? `已打开已有记录：${result.item.title}`
-      : shortcut ? `从${shortcut.source}打开一条新记录：${result.item.title}` : `找到一条新记录：${result.item.title}` });
+    setSearchFeedback({ status: 'found', text: alreadyFound ? '已打开已有记录。' : `找到一条新记录：${result.item.title}` });
     showRecord(result.item, !alreadyFound);
-  };
-  const submitSearch = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    runSearch(draft);
-  };
-  const openBrowserShortcut = (shortcut: InvestigationBrowserShortcut) => {
-    setDraft(shortcut.query);
-    runSearch(shortcut.query, shortcut);
   };
   const returnToPlaces = () => {
     setActiveItemId(null);
@@ -248,32 +234,15 @@ export function InvestigationView({ scene }: { scene: Scene }) {
         <ChoiceDeck choices={choices} onPick={chooseAndNav} disabled={navBusy} />
       </section> : null}
 
-      {hasItems ? <section className={`investigation__search-panel${browser ? ' investigation__search-panel--browser' : ''}`} aria-labelledby={`${uid}-search-title`}>
-        {browser ? <header className="investigation-browser__chrome">
-          <span className="investigation-browser__traffic" aria-hidden><i /><i /><i /></span>
-          <span className="investigation-browser__title">{browser.title}</span>
-          <span className="investigation-browser__address"><span aria-hidden>⌕</span>{browser.address}</span>
-        </header> : null}
-        <div className="investigation__section-heading">
-          <div>{browser ? <small className="investigation-browser__eyebrow">故事世界公开网络</small> : null}<h3 id={`${uid}-search-title`}>{browser ? browser.prompt : '搜寻现场'}</h3></div>
-          <span className="investigation__count">已记录 {visited} 条</span>
-        </div>
+      {hasItems ? <section className="investigation__search-panel" aria-labelledby={`${uid}-search-title`}>
+        <div className="investigation__section-heading"><h3 id={`${uid}-search-title`}>搜寻现场</h3><span className="investigation__count">已记录 {visited} 条</span></div>
         <form className="investigation__search" role="search" onSubmit={submitSearch}>
           <label htmlFor={`${uid}-search`} className="sr-only">搜寻本场景的地点、物件或感官线索</label>
           <input ref={searchRef} id={`${uid}-search`} type="search" value={draft} maxLength={120} placeholder={investigation.searchPlaceholder || '输入地点、物件或你注意到的特征'} onChange={(event) => { setDraft(event.target.value); setSearchFeedback(null); }} aria-describedby={`${uid}-search-note ${uid}-search-feedback`} />
           <button type="submit" disabled={navBusy}>搜寻</button>
         </form>
-        <p className="investigation__search-note" id={`${uid}-search-note`}>{browser ? '可以自己输入，也可以像正常上网一样，从相关页面继续点开。搜错不会扣进度。' : '用你想到的词搜寻；没有明确命中时不会添加线索。场景图上的标记也可以用键盘操作。'}</p>
+        <p className="investigation__search-note" id={`${uid}-search-note`}>用你想到的词搜寻；没有明确命中时不会添加线索。场景图上的标记也可以用键盘操作。</p>
         <p className={`investigation__search-feedback${searchFeedback?.status === 'found' ? ' is-found' : ''}`} id={`${uid}-search-feedback`} role="status">{searchFeedback?.text || ''}</p>
-        {browser ? <nav className="investigation-browser__results" aria-label="可访问的网页与记录">
-          <p>当前页面与相关入口</p>
-          {browser.shortcuts.map((shortcut) => <button type="button" key={shortcut.id} disabled={navBusy} onClick={() => openBrowserShortcut(shortcut)}>
-            <small>{shortcut.source}</small>
-            <strong>{shortcut.label}</strong>
-            <span>{shortcut.note}</span>
-            <i aria-hidden>打开 →</i>
-          </button>)}
-        </nav> : null}
         <InvestigationScene key={scene.id} scene={scene} items={undiscovered} disabled={navBusy} onDiscover={discoverHotspot} />
       </section> : null}
 
