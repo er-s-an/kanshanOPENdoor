@@ -623,18 +623,18 @@ export class HUD {
       announce('本局记录卡暂时未能生成。')
     })
 
-    const copy = makeAction('复制近视眼入口')
+    const copy = makeAction('复制知乎项目页')
     copy.onclick = async () => {
       copy.disabled = true
       try {
         await copyMyopiaShareLink()
-        copy.textContent = '入口已复制'
-        announce('近视眼入口已复制。')
+        copy.textContent = '项目页已复制'
+        announce('知乎黑客松项目页已复制。')
       } catch {
         copy.textContent = '复制失败，请保存记录卡'
-        announce('复制入口失败，请保存记录卡后手动打开。')
+        announce('复制项目页失败，请保存记录卡后扫码打开。')
       } finally {
-        window.setTimeout(() => { copy.disabled = false; copy.textContent = '复制近视眼入口' }, 1_800)
+        window.setTimeout(() => { copy.disabled = false; copy.textContent = '复制知乎项目页' }, 1_800)
       }
     }
     const portal = makeAction('回任意门')
@@ -644,7 +644,7 @@ export class HUD {
     footerActions.append(copy, portal, again)
     const footerNote = document.createElement('p')
     footerNote.className = 'hud-ending__footer-note'
-    footerNote.textContent = '分享入口只会带你回到任意门，不会带走存档、恐惧值或本局记录。'
+    footerNote.textContent = '二维码和分享链接会打开知乎黑客松项目页，不会带走存档、恐惧值或本局记录。'
 
     sheet.append(intro, gift, footerActions, actionStatus, footerNote)
     e.appendChild(sheet)

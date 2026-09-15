@@ -30,6 +30,7 @@ export type PreparedMyopiaShareCard = {
 const W = 1080
 const H = 1440
 const CANONICAL_PORTAL_URL = 'https://kanshan.makebook.hk2048.online/'
+const HACKATHON_PROJECT_URL = 'https://www.zhihu.com/hackathon/project/60065?activity_code=zhihu_hackathon_2026_p2'
 export const MYOPIA_EXPERIENCE_ID = 'myopia-3d'
 const SERIF = '"Songti SC","Noto Serif SC",serif'
 const SANS = 'system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif'
@@ -152,6 +153,11 @@ export function buildMyopiaPortalUrl(): string {
   }
 }
 
+/** The public submission page is the stable destination printed in share-card QR codes. */
+export function buildMyopiaShareUrl(): string {
+  return HACKATHON_PROJECT_URL
+}
+
 async function copyText(value: string): Promise<void> {
   if (navigator.clipboard?.writeText) {
     await navigator.clipboard.writeText(value)
@@ -227,7 +233,7 @@ function drawCenteredLines(ctx: CanvasRenderingContext2D, text: string, x: numbe
 export async function createMyopiaShareCard(
   ending: MyopiaEnding,
   imprint: MyopiaJourneyImprint,
-  portalUrl = buildMyopiaPortalUrl(),
+  shareUrl = buildMyopiaShareUrl(),
 ): Promise<HTMLCanvasElement> {
   const theme = imprint.theme
   const record = chapterRecordFor(ending)
@@ -309,16 +315,16 @@ export async function createMyopiaShareCard(
   ctx.textAlign = 'left'
   ctx.fillStyle = theme.accent2
   ctx.font = `700 27px ${SERIF}`
-  ctx.fillText('扫二维码，进入盐选宇宙', 116, 1222)
+  ctx.fillText('扫二维码，查看知乎黑客松项目', 116, 1222)
   ctx.fillStyle = rgba(theme.paper, 0.78)
   ctx.font = `19px ${SANS}`
-  ctx.fillText('看山任意门 · 每次打开，都是另一段故事', 116, 1270)
+  ctx.fillText('看山任意门 · 知乎黑客松参赛作品', 116, 1270)
   ctx.fillStyle = rgba(theme.paper, 0.52)
   ctx.font = `16px ${SANS}`
-  ctx.fillText('固定入口 · 不带走你的存档或本局记录', 116, 1314)
+  ctx.fillText('固定项目页 · 不带走你的存档或本局记录', 116, 1314)
   ctx.textAlign = 'center'
   try {
-    const code = await loadImage(await QRCode.toDataURL(portalUrl, {
+    const code = await loadImage(await QRCode.toDataURL(shareUrl, {
       errorCorrectionLevel: 'M',
       margin: 1,
       width: 240,
@@ -353,8 +359,8 @@ export async function prepareMyopiaShareCard(
   ending: MyopiaEnding,
   imprint: MyopiaJourneyImprint,
 ): Promise<PreparedMyopiaShareCard> {
-  const portalUrl = buildMyopiaPortalUrl()
-  const canvas = await createMyopiaShareCard(ending, imprint, portalUrl)
+  const shareUrl = buildMyopiaShareUrl()
+  const canvas = await createMyopiaShareCard(ending, imprint, shareUrl)
   const blob = await asBlob(canvas)
   const file = new File([blob], CARD_FILENAME, { type: 'image/png' })
   const record = chapterRecordFor(ending)
@@ -363,9 +369,9 @@ export async function prepareMyopiaShareCard(
     text: imprint.kind === 'keepsake'
       ? `我在《近视眼勇闯恐怖游戏》收到「${imprint.title}」，第一章记下的是「${record.title}」。你会怎么选？`
       : '我在《近视眼勇闯恐怖游戏》的惊悚值到达阈值，本局在这里停下。你会怎么选？',
-    // This is always the fixed portal door. It carries no ending, fear, card,
-    // or progress state.
-    url: portalUrl,
+    // This is always the fixed public project page. It carries no ending,
+    // fear, card, or progress state.
+    url: shareUrl,
   }
   return { canvas, blob, file, shareData }
 }
@@ -444,7 +450,7 @@ export async function saveMyopiaShareCard(
     canvas: card,
     blob,
     file: new File([blob], CARD_FILENAME, { type: 'image/png' }),
-    shareData: { url: buildMyopiaPortalUrl() },
+    shareData: { url: buildMyopiaShareUrl() },
   })
 }
 
@@ -465,14 +471,14 @@ export async function shareMyopiaShareCard(
       text: imprint.kind === 'keepsake'
         ? `我在《近视眼勇闯恐怖游戏》收到「${imprint.title}」，第一章记下的是「${record.title}」。你会怎么选？`
         : '我在《近视眼勇闯恐怖游戏》的惊悚值到达阈值，本局在这里停下。你会怎么选？',
-      url: buildMyopiaPortalUrl(),
+      url: buildMyopiaShareUrl(),
     },
   }
   return sharePreparedMyopiaShareCard(prepared)
 }
 
 export async function copyMyopiaShareLink(): Promise<void> {
-  await copyText(buildMyopiaPortalUrl())
+  await copyText(buildMyopiaShareUrl())
 }
 
 export function returnToMyopiaPortal(): void {

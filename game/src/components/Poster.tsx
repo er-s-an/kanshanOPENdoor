@@ -8,7 +8,7 @@ import { buildPersonaShareUrl } from '../lib/persona.mjs';
 
 const W = 1080;
 const H = 1440;
-const CANONICAL_PORTAL_URL = 'https://kanshan.makebook.hk2048.online/';
+const HACKATHON_PROJECT_URL = 'https://www.zhihu.com/hackathon/project/60065?activity_code=zhihu_hackathon_2026_p2';
 const SERIF = '"Songti SC","Noto Serif SC","Source Han Serif SC",serif';
 const SANS = 'system-ui,-apple-system,"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif';
 
@@ -72,7 +72,7 @@ function loadImage(src: string) {
 }
 
 function createPortalCode() {
-  return QRCode.toDataURL(CANONICAL_PORTAL_URL, {
+  return QRCode.toDataURL(HACKATHON_PROJECT_URL, {
     errorCorrectionLevel: 'M',
     margin: 1,
     width: 240,
@@ -271,13 +271,13 @@ function drawCard(
   c.fillStyle = theme.accent2;
   c.font = `700 27px ${SERIF}`;
   c.textAlign = 'left';
-  c.fillText('扫二维码，进入盐选宇宙', 116, 1250);
+  c.fillText('扫二维码，查看知乎黑客松项目', 116, 1250);
   c.fillStyle = rgba(theme.paper, .78);
   c.font = `19px ${SANS}`;
-  c.fillText('看山任意门 · 每次打开，都是另一段故事', 116, 1295);
+  c.fillText('看山任意门 · 知乎黑客松参赛作品', 116, 1295);
   c.fillStyle = rgba(theme.paper, .52);
   c.font = `16px ${SANS}`;
-  c.fillText('固定入口 · 不带走你的存档', 116, 1333);
+  c.fillText('固定项目页 · 不带走你的存档', 116, 1333);
   c.textAlign = 'center';
   if (portalCode) {
     c.fillStyle = '#fffdf7';
@@ -340,7 +340,7 @@ export function Poster({ storyId, storyTitle, persona }: PosterProps) {
       if (!active) return;
       drawCard(context, character, portalCode, storyTitle, persona);
       setReady(true);
-      setFeedback(character && portalCode ? '分享卡已排好：二维码回到看山任意门，系统分享保留本局入口。' : '分享卡已排好，可以保存或从系统分享面板发出。');
+      setFeedback(character && portalCode ? '分享卡已排好：二维码会打开知乎黑客松项目页，系统分享保留本局入口。' : '分享卡已排好，可以保存或从系统分享面板发出。');
     })();
     return () => { active = false; };
   }, [signature, persona, shareUrl, storyTitle]);

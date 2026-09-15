@@ -4,6 +4,7 @@ const W = 1080
 const H = 1440
 const STORY_QUERY = 'story=consort-3d'
 const CANONICAL_PORTAL_URL = `https://kanshan.makebook.hk2048.online/?${STORY_QUERY}`
+const HACKATHON_PROJECT_URL = 'https://www.zhihu.com/hackathon/project/60065?activity_code=zhihu_hackathon_2026_p2'
 const SERIF = '"Songti SC","Noto Serif SC",serif'
 const SANS = 'system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif'
 
@@ -71,6 +72,11 @@ export function getConsortPortalUrl(page: PageLocation | undefined = typeof wind
   if (start < 0) return CANONICAL_PORTAL_URL
   const portalPath = page.pathname.slice(0, start + 1)
   return new URL(`${portalPath}?${STORY_QUERY}`, page.origin).toString()
+}
+
+/** The public submission page is used for the record-card QR code and share URL. */
+export function getConsortShareUrl(): string {
+  return HACKATHON_PROJECT_URL
 }
 
 const rounded = (ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number) => {
@@ -250,16 +256,16 @@ export async function createConsortShareCard(record: ConsortKeepsake): Promise<H
   ctx.textAlign = 'left'
   ctx.fillStyle = '#efd787'
   ctx.font = `700 27px ${SERIF}`
-  ctx.fillText('扫二维码，打开这扇门', 116, 1240)
+  ctx.fillText('扫二维码，查看知乎黑客松项目', 116, 1240)
   ctx.fillStyle = 'rgba(242, 229, 199, .78)'
   ctx.font = `19px ${SANS}`
-  ctx.fillText('看山任意门 · 每次打开，都是另一段故事', 116, 1284)
+  ctx.fillText('看山任意门 · 知乎黑客松参赛作品', 116, 1284)
   ctx.fillStyle = 'rgba(242, 229, 199, .52)'
   ctx.font = `16px ${SANS}`
-  ctx.fillText('固定入口 · 不带走你的进度或选择', 116, 1323)
+  ctx.fillText('固定项目页 · 不带走你的进度或选择', 116, 1323)
   ctx.textAlign = 'center'
   try {
-    const code = await loadImage(await QRCode.toDataURL(getConsortPortalUrl(), {
+    const code = await loadImage(await QRCode.toDataURL(getConsortShareUrl(), {
       errorCorrectionLevel: 'M', margin: 1, width: 240,
       color: { dark: '#173c32', light: '#fffdf7' },
     }))
@@ -314,7 +320,7 @@ export async function prepareConsortShareCard(record: ConsortKeepsake): Promise<
     text: shareText(record),
     // The portal route is deliberately the door only. It does not encode the
     // random card, play progress, or any in-game actions.
-    url: getConsortPortalUrl(),
+    url: getConsortShareUrl(),
   }
   return { record, canvas, blob, file, shareData }
 }
