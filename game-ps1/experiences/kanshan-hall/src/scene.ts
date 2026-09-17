@@ -348,7 +348,26 @@ export function createKanshanHallModule(
 
       // ---- input -----------------------------------------------------------------
       const hasDom = typeof globalThis.window !== 'undefined' && typeof globalThis.document !== 'undefined';
-      const device: InputDevice = options.device ?? (hasDom ? new DomInputDevice({ scope: ctx.scope }) : new HeadlessInputDevice());
+      const pointerCanvas = hasDom ? (globalThis.document.querySelector('canvas') ?? globalThis.document.body) : null;
+      const device: InputDevice =
+        options.device ??
+        (hasDom
+          ? new DomInputDevice({
+              scope: ctx.scope,
+              // 鼠标视角：点击画面锁定鼠标（浏览器内置 Esc 释放），未锁定时
+              // 鼠标增量不积累，避免拖选/误转。
+              requirePointerLock: true,
+              pointerLockElement: pointerCanvas,
+            })
+          : new HeadlessInputDevice());
+      if (!options.device && hasDom && pointerCanvas) {
+        const lockTarget = pointerCanvas as { requestPointerLock?: () => Promise<void> | void };
+        const lock = (): void => {
+          void lockTarget.requestPointerLock?.();
+        };
+        globalThis.window.addEventListener('pointerdown', lock);
+        ctx.scope.defer(() => globalThis.window.removeEventListener('pointerdown', lock));
+      }
       const actionMap = mergeActionMaps(fpsDefaults, {
         actions: {
           skip: [{ kind: 'key', code: 'Escape' }],

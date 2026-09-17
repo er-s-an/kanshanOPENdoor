@@ -25,6 +25,31 @@ await page.waitForFunction(() => globalThis.__kanshanPlayer !== undefined, { tim
 await page.evaluate(() => { /* no direct skip handle on player; press Escape */ });
 await page.keyboard.press('Escape');
 await page.waitForFunction(() => globalThis.__kanshanPlayer.host.clock.time >= 16, { timeout: 60000 });
+// pointer lock: the hall requires lock for look. This headless Chromium
+// build refuses real requestPointerLock (WrongDocumentError even on a blank
+// page), so stub the browser-native call and verify OUR wiring: click ->
+// lock request -> deltas accumulate.
+const yawProbe = () => page.evaluate(() => globalThis.__kanshanPlayer.camera.rotation.y);
+const yawBefore = await yawProbe();
+await page.mouse.move(640, 360);
+await page.mouse.move(900, 360, { steps: 4 });
+await page.waitForTimeout(300);
+const yawUnlocked = await yawProbe();
+await page.evaluate(() => {
+  const canvas = document.querySelector('canvas');
+  Object.defineProperty(document, 'pointerLockElement', { get: () => canvas, configurable: true });
+  canvas.requestPointerLock = () => {
+    document.dispatchEvent(new Event('pointerlockchange'));
+    return Promise.resolve();
+  };
+});
+await page.mouse.click(640, 360);
+await page.waitForTimeout(300);
+await page.mouse.move(900, 360, { steps: 4 });
+await page.mouse.move(640, 360, { steps: 4 });
+await page.waitForTimeout(300);
+const yawLocked = await yawProbe();
+console.log('look gated when unlocked:', yawUnlocked === yawBefore, '| look works when locked:', yawLocked !== yawUnlocked);
 
 const sense = 0.0025; // look.x scale from fpsDefaults
 async function locate() {
