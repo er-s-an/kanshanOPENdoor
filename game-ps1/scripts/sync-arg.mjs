@@ -17,6 +17,19 @@ if (!fs.existsSync(path.join(SRC, 'index.html'))) {
   console.warn(`[sync-arg] ${SRC} not built — skipping (the 蓝血门 will not work until game/ is built).`);
   process.exit(0);
 }
+// Pollution guard: assemble-root promotes the ps1 build INTO game/dist, so
+// after an assemble the root contains portal.html / myopia-3d/ / arg/ and an
+// index.html that is the HALL. Copying that into dist/arg would serve the
+// hall inside the hall (the "enter 蓝血 bounces back to 门厅" bug). A clean
+// React build (vite empties outDir) must not contain any of these.
+const POLLUTION_MARKERS = ['portal.html', 'myopia-3d', 'stories.html', 'myopia.html'];
+const polluted = POLLUTION_MARKERS.filter((m) => fs.existsSync(path.join(SRC, m)));
+if (polluted.length > 0 || fs.existsSync(path.join(SRC, 'arg'))) {
+  console.error(`[sync-arg] REFUSING to sync: ${SRC} looks like an ASSEMBLED root (found: ${polluted.join(', ') || 'arg/'}).`);
+  console.error('[sync-arg] Its index.html is the hall, not the React app. Fix: rebuild the React app first —');
+  console.error('             cd game && npm run build   (or the full chain: npm run build:experiences)');
+  process.exit(1);
+}
 fs.rmSync(DST, { recursive: true, force: true });
 fs.mkdirSync(DST, { recursive: true });
 copy(SRC, DST);
