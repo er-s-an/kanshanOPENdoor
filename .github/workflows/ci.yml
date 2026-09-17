@@ -83,3 +83,7 @@ jobs:
           npm run typecheck
           npm test
           npm run build:experiences
+
+      - name: Sync the ARG build into the portal bundle (dist/arg)
+        working-directory: game-ps1
+        run: node scripts/sync-arg.mjs

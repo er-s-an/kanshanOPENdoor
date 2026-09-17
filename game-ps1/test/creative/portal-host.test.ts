@@ -364,16 +364,22 @@ test('door config maps the three door ids to the real dist-relative story pages'
   assert.deepEqual([...DOOR_IDS].sort(), ['blue-blood', 'duanfei', 'myopia']);
   assert.deepEqual(Object.keys(DOOR_PAGES).sort(), [...DOOR_IDS].sort());
   assert.equal(DOOR_PAGES.duanfei, './end-consort.html');
-  assert.equal(DOOR_PAGES['blue-blood'], './blue-blood.html');
+  // 蓝血门走 ARG 版（dist/arg + ?story= 深链），结局含人格分享卡。
+  assert.equal(DOOR_PAGES['blue-blood'], './arg/?story=蓝血-2025684191967294692');
   assert.equal(DOOR_PAGES.myopia, './index.html');
   assert.ok(DEFAULT_PORTAL_TIMINGS.readyTimeoutMs > DEFAULT_PORTAL_TIMINGS.fadeMs);
   assert.ok(DEFAULT_PORTAL_TIMINGS.fadeMs > 0);
 });
 
 test('story source pages exist as vite inputs at the game-ps1 root', () => {
-  for (const page of ['end-consort.html', 'blue-blood.html', 'index.html']) {
+  for (const page of ['end-consort.html', 'index.html']) {
     assert.ok(fs.existsSync(path.join(REPO_ROOT, page)), `${page} exists`);
   }
+  // 蓝血门改走 ARG 版：其同步源是 game/dist（gitignored 构建产物，不总存在），
+  // 这里只锁定集成契约本身（sync 脚本 + game 的构建入口）。
+  assert.ok(fs.existsSync(path.join(REPO_ROOT, 'scripts', 'sync-arg.mjs')), 'sync-arg script exists');
+  const gamePkg = JSON.parse(fs.readFileSync(path.resolve(REPO_ROOT, '..', 'game', 'package.json'), 'utf8'));
+  assert.ok(gamePkg.scripts['build:experiences'], 'game build:experiences exists');
 });
 
 // ------------------------------ host state machine ------------------------
@@ -389,7 +395,7 @@ test('boot lands in the hall; portalEnter drives enter() into a sandboxed iframe
   const frames = f.frames();
   assert.equal(frames.length, 1);
   const frame = frames[0];
-  assert.equal(frame.getAttribute('src'), './blue-blood.html');
+  assert.equal(frame.getAttribute('src'), './arg/?story=蓝血-2025684191967294692');
   // Door title from the hall contract's doors table, not the raw id.
   assert.equal(frame.getAttribute('title'), '蓝血');
   const perms = (frame.getAttribute('sandbox') ?? '').split(/\s+/);

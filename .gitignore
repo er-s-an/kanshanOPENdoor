@@ -20,3 +20,6 @@ studio/.story-workspaces/
 
 # R1 engine tool state (builds, sessions, authoring)
 game-ps1/.kanshan/
+
+# ARG portal build artifact (synced from game/dist)
+game-ps1/dist/arg/

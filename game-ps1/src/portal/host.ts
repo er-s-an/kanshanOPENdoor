@@ -111,7 +111,11 @@ export type DoorId = (typeof DOOR_IDS)[number];
 
 export const DOOR_PAGES: DoorConfig = {
   duanfei: './end-consort.html',
-  'blue-blood': './blue-blood.html',
+  // ARG 版蓝血（调查论证玩法，结局含人格分享卡）: served same-origin from
+  // dist/arg (synced by scripts/sync-arg.mjs), /api proxied by portal-serve.
+  // Story id from the gateway registry (game/stories/蓝血-*.json, 36 幕完整版；
+  // playable-blue.json 是 6 幕切片，网关不注册它)。
+  'blue-blood': './arg/?story=蓝血-2025684191967294692',
   myopia: './index.html',
 };
 
