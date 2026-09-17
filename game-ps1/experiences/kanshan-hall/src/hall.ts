@@ -1,25 +1,32 @@
 /**
  * 看山任意门 · the portal hall environment.
  *
- * A dark, misty circular hall: glossy black floor with faint gold ring
- * inlays, slow-drifting ground mist (creative/effects ParticleEmitter),
- * floating rock shards (instanced jittered tetrahedra, slow bob), and three
- * ornate door assemblies arranged in an arc facing the spawn point —
- * 端妃 (gold), 蓝血 (blue), 近视眼 (teal) — each with a procedural arch frame,
- * a hinged door leaf, a colored emissive portal plane behind the leaf, a
- * story-art plaque above, and a colored point light. A fourth, plain entry
- * door stands behind the spawn (it opens during the intro).
+ * A bright, slightly dreamy Zhihu-brand circular hall: near-white glossy
+ * floor with blue ring inlays and a softly pulsing center ring, a ring of
+ * slim white columns (blue capital bands) at r≈11, and slow-bobbing
+ * translucent blue crystals as floating decor. Three door assemblies stand
+ * in an arc facing the spawn point — 端妃 (gold), 蓝血 (blue), 近视眼 (teal) —
+ * each with a white arch frame with blue trim, a hinged white door leaf, a
+ * colored emissive portal plane behind the leaf (the wayfinding accent on
+ * this light hall), a story-art plaque above, and a colored point light.
+ * A fourth, plain entry door stands behind the spawn (it opens during the
+ * intro, revealing a blue-white crack of light).
+ *
+ * No scene fog and no scene.background here: the background is the host
+ * pipeline's concern. Lighting is a bright hemisphere (sky #dfeaff /
+ * ground #b8c8e8) plus per-door point lights; the whole hall illumination
+ * rides a `lightRamp` multiplier (0..1) so the intro can start the hall
+ * essentially dark and ramp the lights up around 看山 after he steps out.
  *
  * Headless safety: plaque textures load only through an injected loader (or
  * a DOM-guarded TextureLoader). Without one, or when loading errors, the
  * plaques keep their fallback materials — geometry is always built. Physics
- * colliders (floor, perimeter, frames, closed leaves) are registered only
- * when a PhysicsWorld is passed in.
+ * colliders (floor, perimeter, columns, frames, closed leaves) are
+ * registered only when a PhysicsWorld is passed in.
  */
 import * as THREE from './three.ts';
 import type { SceneContext } from '../../../src/creative/core/context.ts';
 import type { Vec3 } from '../../../src/creative/core/spatial.ts';
-import { ParticleEmitter } from '../../../src/creative/effects/particles.ts';
 import type { PhysicsWorld } from '../../../src/creative/physics/world.ts';
 
 export type DoorState = 'closed' | 'opening' | 'open';
@@ -43,13 +50,15 @@ export interface Hall {
   readonly doors: DoorHandle[];
   readonly entryDoor: DoorHandle;
   update(dt: number): void;
-  /** Live-apply author parameter: mist emission multiplier (0..2). */
-  setMistDensity(multiplier: number): void;
   /** Live-apply author parameter: door glow/point-light multiplier (0..3). */
   setGlowIntensity(multiplier: number): void;
+  /** Hall illumination ramp 0..1 (intro lighting ramp; 1 = full daylight). */
+  setLightRamp(ramp: number): void;
+  /** Current light ramp value (test/tool observable). */
+  lightRamp(): number;
   /**
-   * Intro beat: thin warm slit of light in the shut entry doorway (0..1).
-   * Fades back to 0 when the entry door starts opening.
+   * Intro beat: thin blue-white slit of light in the shut entry doorway
+   * (0..1). Fades back to 0 when the entry door starts opening.
    */
   setEntryCrack(level: number): void;
 }
@@ -63,7 +72,7 @@ export interface HallOptions {
   textureLoader?: HallTextureLoader;
   /** Physics world: when given, floor/perimeter/frame/leaf colliders are added. */
   physics?: PhysicsWorld;
-  /** Injectable RNG for shard jitter (deterministic tests/tools). */
+  /** Injectable RNG for decor jitter (deterministic tests/tools). */
   random?: () => number;
   /** Seconds for a door leaf to swing fully open. Default 1.4. */
   openSeconds?: number;
@@ -80,13 +89,17 @@ const DOOR_ARC_RADIUS = 9;
 const OPEN_SECONDS_DEFAULT = 1.4;
 const LEAF_SWING = 1.85; // rad (~106°), inward, away from the approaching player
 
-const FLOOR_COLOR = 0x12141a;
-const RING_COLOR = 0x8a6f3a;
-const WOOD_COLOR = 0x35271a;
-const LEAF_COLOR = 0x2a1e12;
-const SHARD_COLOR = 0x3a3f4c;
-const MIST_START = 0x2b3648;
-const MIST_END = 0x11161f;
+// Zhihu blue-white palette.
+const FLOOR_COLOR = 0xf5f8ff;
+const FLOOR_SPECULAR = 0x9db8e8;
+const RING_COLOR = 0x0066ff; // primary blue inlays
+const COLUMN_COLOR = 0xf5f8ff;
+const TRIM_COLOR = 0x0066ff; // blue capital bands / arch trim
+const FRAME_COLOR = 0xf5f8ff; // white door frames
+const LEAF_COLOR = 0xeaf1fc; // white door leaf
+const CRYSTAL_COLOR = 0xaed4ff;
+const CRYSTAL_EMISSIVE = 0x1c4fd8;
+const ENTRY_LIGHT = 0xdfeaff; // blue-white entry light (crack + spill)
 
 export interface DoorSpec {
   readonly id: string;
@@ -176,27 +189,30 @@ function buildDoor(
   const yaw = Math.atan2(forward[0], forward[2]);
   group.rotation.y = yaw;
 
-  const wood = new THREE.MeshLambertMaterial({ color: WOOD_COLOR });
-  const woodDark = new THREE.MeshLambertMaterial({ color: LEAF_COLOR });
+  const frameMat = new THREE.MeshLambertMaterial({ color: FRAME_COLOR });
+  const leafMat = new THREE.MeshLambertMaterial({ color: LEAF_COLOR });
+  const trimMat = new THREE.MeshLambertMaterial({ color: TRIM_COLOR });
 
-  // Arch frame: pillars + lintel + two stepped trim courses (procedural boxes).
+  // Arch frame: white pillars + lintel + two stepped blue trim courses
+  // (procedural boxes); the door color survives on the glow plane, plaque
+  // accent, and point light — wayfinding on a light hall.
   const pillarGeo = new THREE.BoxGeometry(0.22, 2.6, 0.3);
   for (const side of [-1, 1] as const) {
-    const pillar = new THREE.Mesh(pillarGeo, wood);
+    const pillar = new THREE.Mesh(pillarGeo, frameMat);
     pillar.position.set(side * 0.85, 1.3, 0);
     pillar.name = `hall/door/${spec.id}/pillar-${side < 0 ? 'l' : 'r'}`;
     group.add(pillar);
-    const plinth = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.18, 0.42), wood);
+    const plinth = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.18, 0.42), frameMat);
     plinth.position.set(side * 0.85, 0.09, 0);
     group.add(plinth);
   }
-  const lintel = new THREE.Mesh(new THREE.BoxGeometry(1.95, 0.28, 0.34), wood);
+  const lintel = new THREE.Mesh(new THREE.BoxGeometry(1.95, 0.28, 0.34), frameMat);
   lintel.position.set(0, 2.72, 0);
   group.add(lintel);
-  const trimA = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.18, 0.36), wood);
+  const trimA = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.18, 0.36), trimMat);
   trimA.position.set(0, 2.95, 0);
   group.add(trimA);
-  const trimB = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.14, 0.38), wood);
+  const trimB = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.14, 0.38), trimMat);
   trimB.position.set(0, 3.11, 0);
   group.add(trimB);
 
@@ -218,7 +234,7 @@ function buildDoor(
   const hinge = new THREE.Group();
   hinge.name = `hall/door/${spec.id}/hinge`;
   hinge.position.set(-0.6, 0, 0);
-  const leaf = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.15, 0.07), woodDark);
+  const leaf = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.15, 0.07), leafMat);
   leaf.name = `hall/door/${spec.id}/leaf`;
   leaf.position.set(0.6, 1.1, 0);
   hinge.add(leaf);
@@ -227,7 +243,7 @@ function buildDoor(
   // Plaque with the story art above the arch (fallback material, texture via
   // injected loader; failures keep the fallback and never throw).
   if (opts.plaque) {
-    const fallback = new THREE.MeshLambertMaterial({ color: 0x241c12 });
+    const fallback = new THREE.MeshLambertMaterial({ color: 0xdfe7f5 });
     const plaque = new THREE.Mesh(new THREE.PlaneGeometry(spec.plaqueSize[0], spec.plaqueSize[1]), fallback);
     plaque.name = `hall/door/${spec.id}/plaque`;
     plaque.position.set(0, 3.2 + spec.plaqueSize[1] / 2, 0.1);
@@ -254,8 +270,9 @@ function buildDoor(
     }
   }
 
-  // Colored point light in front of the doorway; intensity follows the glow.
-  const light = new THREE.PointLight(spec.color, 3.2, 13, 1.4);
+  // Colored point light in front of the doorway; intensity follows the glow
+  // (base wayfinding accent + surge while open), toned for the bright hall.
+  const light = new THREE.PointLight(spec.color, 1.2, 13, 1.4);
   light.position.set(0, 1.6, 0.8);
   group.add(light);
 
@@ -334,17 +351,17 @@ export function createHall(ctx: SceneContext, opts: HallOptions = {}): Hall {
   const object = new THREE.Group();
   object.name = 'kanshan-hall';
 
-  // ---- base illumination: dim cool ambient so silhouettes read ------------
-  // (the hall is dark by design, but pitch-black reads as a rendering bug;
-  // doors add their colored accents on top of this)
-  const hemi = new THREE.HemisphereLight(0x3a4460, 0x0b0d14, 2.4);
+  // ---- base illumination: bright blue-white hemisphere --------------------
+  // (the pipeline preset owns scene.background; fog stays absent). The whole
+  // hall rides a lightRamp multiplier so the intro can start near-dark.
+  const hemi = new THREE.HemisphereLight(0xdfeaff, 0xb8c8e8, 2.6);
   hemi.name = 'hall/ambient';
   object.add(hemi);
 
-  // ---- floor: dark glossy disc + faint gold ring inlays -------------------
+  // ---- floor: light glossy disc + blue ring inlays ------------------------
   const floor = new THREE.Mesh(
     new THREE.CylinderGeometry(HALL_RADIUS, HALL_RADIUS, 0.5, 48),
-    new THREE.MeshLambertMaterial({ color: FLOOR_COLOR }),
+    new THREE.MeshPhongMaterial({ color: FLOOR_COLOR, specular: FLOOR_SPECULAR, shininess: 80 }),
   );
   floor.name = 'hall/floor';
   floor.position.y = -0.25;
@@ -352,13 +369,27 @@ export function createHall(ctx: SceneContext, opts: HallOptions = {}): Hall {
   for (const [i, r] of [4, 7, 10].entries()) {
     const ring = new THREE.Mesh(
       new THREE.RingGeometry(r - 0.035, r + 0.035, 64),
-      new THREE.MeshBasicMaterial({ color: RING_COLOR, transparent: true, opacity: 0.32, side: THREE.DoubleSide }),
+      new THREE.MeshBasicMaterial({ color: RING_COLOR, transparent: true, opacity: 0.4, side: THREE.DoubleSide }),
     );
     ring.name = `hall/ring-${i}`;
     ring.rotation.x = -Math.PI / 2;
     ring.position.y = 0.005;
     object.add(ring);
   }
+  // Soft emissive blue pulse ring at the floor center (gentle decor motion).
+  const pulseMaterial = new THREE.MeshBasicMaterial({
+    color: RING_COLOR,
+    transparent: true,
+    opacity: 0.25,
+    side: THREE.DoubleSide,
+    toneMapped: false,
+    depthWrite: false,
+  });
+  const pulse = new THREE.Mesh(new THREE.RingGeometry(1.55, 1.8, 64), pulseMaterial);
+  pulse.name = 'hall/center-pulse';
+  pulse.rotation.x = -Math.PI / 2;
+  pulse.position.y = 0.01;
+  object.add(pulse);
 
   // ---- physics floor + perimeter ring wall --------------------------------
   if (physics) {
@@ -380,6 +411,38 @@ export function createHall(ctx: SceneContext, opts: HallOptions = {}): Hall {
     }
   }
 
+  // ---- column ring: slim white columns, blue capital bands, at r≈11 -------
+  // (half-step offset keeps every doorway sightline clear)
+  const COLUMN_COUNT = 10;
+  const COLUMN_RADIUS = 11;
+  const columnGeo = new THREE.CylinderGeometry(0.14, 0.16, 4.2, 10);
+  const capitalGeo = new THREE.CylinderGeometry(0.21, 0.17, 0.26, 10);
+  const columnMat = new THREE.MeshLambertMaterial({ color: COLUMN_COLOR });
+  const capitalMat = new THREE.MeshLambertMaterial({ color: TRIM_COLOR });
+  for (let i = 0; i < COLUMN_COUNT; i += 1) {
+    const a = ((i + 0.5) / COLUMN_COUNT) * Math.PI * 2;
+    const x = COLUMN_RADIUS * Math.sin(a);
+    const z = -COLUMN_RADIUS * Math.cos(a);
+    const column = new THREE.Group();
+    column.name = `hall/column-${i}`;
+    column.position.set(x, 0, z);
+    const shaft = new THREE.Mesh(columnGeo, columnMat);
+    shaft.name = `hall/column-${i}/shaft`;
+    shaft.position.y = 2.1;
+    const capital = new THREE.Mesh(capitalGeo, capitalMat);
+    capital.name = `hall/column-${i}/capital`;
+    capital.position.y = 4.05;
+    column.add(shaft, capital);
+    object.add(column);
+    if (physics) {
+      physics.addBody(
+        `hall/column-${i}`,
+        { shape: { kind: 'box', halfExtents: [0.18, 2.1, 0.18] }, body: 'static' },
+        { position: [x, 2.1, z] },
+      );
+    }
+  }
+
   // ---- the three portal doors in an arc facing the spawn -------------------
   const doors: DoorRig[] = [];
   for (const spec of DOOR_SPECS) {
@@ -396,7 +459,7 @@ export function createHall(ctx: SceneContext, opts: HallOptions = {}): Hall {
     {
       id: 'entry',
       title: '入口',
-      color: 0xffe9c4,
+      color: ENTRY_LIGHT,
       plaqueAsset: 'door-card-closed.jpg',
       plaqueSize: [0.62, 0.92],
       angle: 0,
@@ -414,10 +477,10 @@ export function createHall(ctx: SceneContext, opts: HallOptions = {}): Hall {
       { position: [ENTRY_DOOR_POSITION[0], 1.1, ENTRY_DOOR_POSITION[2]], quaternion: quatYaw(Math.PI) },
     );
   }
-  // Crack-of-light slit: a hair of warm light along the shut entry leaf's
-  // free edge, revealed during the intro before the door swings open.
+  // Crack-of-light slit: a hair of blue-white light along the shut entry
+  // leaf's free edge, revealed during the intro before the door swings open.
   const crackMaterial = new THREE.MeshBasicMaterial({
-    color: 0xffe9c4,
+    color: ENTRY_LIGHT,
     transparent: true,
     opacity: 0,
     toneMapped: false,
@@ -429,69 +492,44 @@ export function createHall(ctx: SceneContext, opts: HallOptions = {}): Hall {
   entryRig.group.add(crack);
   object.add(entryRig.group);
 
-  // ---- ground mist: low rate, big particles, dark blue-grey ----------------
-  const mistEmitters: ParticleEmitter[] = [];
-  const mistRates: number[] = [];
-  for (let i = 0; i < 3; i += 1) {
-    const a = (i / 3) * Math.PI * 2 + Math.PI / 6;
-    const emitter = new ParticleEmitter({
-      scope: ctx.scope,
-      maxParticles: 110,
-      rate: 5,
-      lifetime: { min: 7, max: 11 },
-      speed: { min: 0.12, max: 0.3 },
-      cone: { axis: [0, 1, 0], angle: 0.55 },
-      size: { start: 22, end: 44 },
-      color: { start: MIST_START, end: MIST_END },
-      random,
-    });
-    emitter.object.name = `hall/mist-${i}`;
-    emitter.object.position.set(4.5 * Math.sin(a), 0.25, -4.5 * Math.cos(a));
-    mistEmitters.push(emitter);
-    mistRates.push(5);
-    object.add(emitter.object);
-  }
-
-  // ---- floating rock shards: instanced jittered tetrahedra, slow bob -------
-  const SHARD_COUNT = 26;
-  const shardGeo = new THREE.TetrahedronGeometry(0.5);
-  {
-    const posAttr = shardGeo.attributes.position;
-    for (let v = 0; v < posAttr.count; v += 1) {
-      posAttr.setXYZ(
-        v,
-        posAttr.getX(v) * (0.7 + random() * 0.6),
-        posAttr.getY(v) * (0.7 + random() * 0.6),
-        posAttr.getZ(v) * (0.7 + random() * 0.6),
-      );
-    }
-    shardGeo.computeVertexNormals();
-  }
-  const shards = new THREE.InstancedMesh(shardGeo, new THREE.MeshLambertMaterial({ color: SHARD_COLOR }), SHARD_COUNT);
-  shards.name = 'hall/shards';
-  const shardBase: THREE.Vector3[] = [];
-  const shardPhase: number[] = [];
-  const shardSpin: number[] = [];
-  const shardScale: number[] = [];
-  for (let i = 0; i < SHARD_COUNT; i += 1) {
+  // ---- floating decor: translucent blue crystals, slow bob + spin ----------
+  const CRYSTAL_COUNT = 18;
+  const crystalGeo = new THREE.OctahedronGeometry(0.5);
+  crystalGeo.scale(1, 1.9, 1);
+  const crystals = new THREE.InstancedMesh(
+    crystalGeo,
+    new THREE.MeshLambertMaterial({
+      color: CRYSTAL_COLOR,
+      emissive: CRYSTAL_EMISSIVE,
+      transparent: true,
+      opacity: 0.55,
+    }),
+    CRYSTAL_COUNT,
+  );
+  crystals.name = 'hall/crystals';
+  const crystalBase: THREE.Vector3[] = [];
+  const crystalPhase: number[] = [];
+  const crystalSpin: number[] = [];
+  const crystalScale: number[] = [];
+  for (let i = 0; i < CRYSTAL_COUNT; i += 1) {
     // Scatter on a ring outside the stage; keep the sightline to the doors.
     const a = random() * Math.PI * 2;
-    const r = 5.5 + random() * 6.5;
-    shardBase.push(new THREE.Vector3(r * Math.sin(a), 2.2 + random() * 3.3, -r * Math.cos(a)));
-    shardPhase.push(random() * Math.PI * 2);
-    shardSpin.push(0.05 + random() * 0.12);
-    shardScale.push(0.5 + random() * 1.1);
+    const r = 5.5 + random() * 6.0;
+    crystalBase.push(new THREE.Vector3(r * Math.sin(a), 2.4 + random() * 3.2, -r * Math.cos(a)));
+    crystalPhase.push(random() * Math.PI * 2);
+    crystalSpin.push(0.08 + random() * 0.16);
+    crystalScale.push(0.5 + random() * 1.0);
   }
-  object.add(shards);
+  object.add(crystals);
 
-  let mistDensity = 1;
   let glowIntensity = 1;
-  let shardTime = 0;
-  const shardMatrix = new THREE.Matrix4();
-  const shardQuat = new THREE.Quaternion();
-  const shardEuler = new THREE.Euler();
-  const shardPos = new THREE.Vector3();
-  const shardScaleV = new THREE.Vector3();
+  let lightRamp = 1;
+  let decorTime = 0;
+  const decorMatrix = new THREE.Matrix4();
+  const decorQuat = new THREE.Quaternion();
+  const decorEuler = new THREE.Euler();
+  const decorPos = new THREE.Vector3();
+  const decorScaleV = new THREE.Vector3();
 
   const updateDoor = (rig: DoorRig, dt: number): void => {
     if (rig.state === 'opening') {
@@ -502,8 +540,8 @@ export function createHall(ctx: SceneContext, opts: HallOptions = {}): Hall {
     const rate = dt / 1.1;
     rig.glow = Math.min(1, Math.max(0, rig.glow + (targetGlow > rig.glow ? rate : -rate)));
     rig.hinge.rotation.y = LEAF_SWING * smooth01(rig.progress);
-    rig.glowMaterial.opacity = rig.glow * 0.85 * glowIntensity;
-    rig.light.intensity = (3.2 + rig.glow * 9.0) * glowIntensity;
+    rig.glowMaterial.opacity = rig.glow * 0.7 * glowIntensity;
+    rig.light.intensity = (1.2 + rig.glow * 4.0) * glowIntensity * lightRamp;
   };
 
   return {
@@ -514,30 +552,34 @@ export function createHall(ctx: SceneContext, opts: HallOptions = {}): Hall {
       if (!(dt >= 0) || !Number.isFinite(dt)) return;
       for (const rig of doors) updateDoor(rig, dt);
       updateDoor(entryRig, dt);
-      for (const emitter of mistEmitters) emitter.update(dt);
-      shardTime += dt;
-      for (let i = 0; i < SHARD_COUNT; i += 1) {
-        const base = shardBase[i];
-        shardPos.set(
-          base.x + Math.sin(shardTime * 0.11 + shardPhase[i]) * 0.35,
-          base.y + Math.sin(shardTime * 0.35 + shardPhase[i] * 1.7) * 0.28,
-          base.z + Math.cos(shardTime * 0.09 + shardPhase[i]) * 0.35,
+      hemi.intensity = 2.6 * lightRamp;
+      // Gentle decor motion: crystal bob + spin, floor-center ring pulse.
+      decorTime += dt;
+      pulseMaterial.opacity = 0.16 + (Math.sin(decorTime * 0.9) * 0.5 + 0.5) * 0.24;
+      for (let i = 0; i < CRYSTAL_COUNT; i += 1) {
+        const base = crystalBase[i];
+        decorPos.set(
+          base.x + Math.sin(decorTime * 0.11 + crystalPhase[i]) * 0.35,
+          base.y + Math.sin(decorTime * 0.35 + crystalPhase[i] * 1.7) * 0.3,
+          base.z + Math.cos(decorTime * 0.09 + crystalPhase[i]) * 0.35,
         );
-        shardEuler.set(shardTime * shardSpin[i], shardPhase[i] + shardTime * shardSpin[i] * 0.7, 0);
-        shardQuat.setFromEuler(shardEuler);
-        const s = shardScale[i];
-        shardScaleV.set(s, s, s);
-        shardMatrix.compose(shardPos, shardQuat, shardScaleV);
-        shards.setMatrixAt(i, shardMatrix);
+        decorEuler.set(decorTime * crystalSpin[i], crystalPhase[i] + decorTime * crystalSpin[i] * 0.7, 0);
+        decorQuat.setFromEuler(decorEuler);
+        const s = crystalScale[i];
+        decorScaleV.set(s, s, s);
+        decorMatrix.compose(decorPos, decorQuat, decorScaleV);
+        crystals.setMatrixAt(i, decorMatrix);
       }
-      shards.instanceMatrix.needsUpdate = true;
-    },
-    setMistDensity(multiplier: number): void {
-      mistDensity = Math.min(2, Math.max(0, multiplier));
-      for (let i = 0; i < mistEmitters.length; i += 1) mistEmitters[i].setRate(mistRates[i] * mistDensity);
+      crystals.instanceMatrix.needsUpdate = true;
     },
     setGlowIntensity(multiplier: number): void {
       glowIntensity = Math.min(3, Math.max(0, multiplier));
+    },
+    setLightRamp(ramp: number): void {
+      lightRamp = Math.min(1, Math.max(0, ramp));
+    },
+    lightRamp(): number {
+      return lightRamp;
     },
     setEntryCrack(level: number): void {
       crackMaterial.opacity = Math.min(1, Math.max(0, level)) * 0.9;

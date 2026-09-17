@@ -5,10 +5,12 @@
  * 亲切、松弛、偶尔皮一下、有知识分子的冷幽默）。文本定稿前请勿视作最终文案。
  *
  * All lines are subtitle-only (no voice). Keyed by story beat; scene.ts
- * renders them through the HUD subtitle queue.
+ * renders 看山's lines as a DOM bubble above his head (falling back to the
+ * HUD subtitle when he is off-camera or too far away).
  */
 
 export type DialogueBeat =
+  | 'peek'
   | 'greet'
   | 'intro'
   | 'guide'
@@ -19,6 +21,7 @@ export type DialogueBeat =
   | 'return';
 
 export const DIALOGUE: Record<DialogueBeat, string> = {
+  peek: '……来啦？',
   greet: '来啦？欢迎。我是刘看山——这片地方的看门人，也算是向导。',
   intro: '这里是所有故事的中转站。看到那三扇门了吗？每扇后面，都是一个世界。',
   guide: '想去哪个，走过去就行。门我来开——开锁这件事，我略懂。',

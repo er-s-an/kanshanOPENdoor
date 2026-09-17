@@ -7,7 +7,6 @@
   "runtimeApiVersion": "r1.0",
   "checkpointSchemaVersion": 1,
   "params": {
-    "kanshan-hall.mist-density": { "schemaVersion": 1, "value": 1 },
     "kanshan-hall.door-glow": { "schemaVersion": 1, "value": 1 }
   },
   "portal": {

@@ -141,14 +141,14 @@ async function main(): Promise<void> {
   const hallModule = createKanshanHallModule();
   const host = createPortalHost({
     boot: async () => {
-      // The hall is its own art direction: dark blue void, very light fog,
-      // defocus off — door glows must read from across the room (the generic
-      // default preset is tuned for the old horror look: heavy fog + defocus).
+      // The hall is its own art direction: bright Zhihu blue-white brand
+      // space (fog-free, defocus off) — very different from the default
+      // preset's dark horror tuning.
       const player = await bootExperience({ default: hallModule }, {
         container,
         preset: {
-          background: 0x0b0e16,
-          fog: { color: 0x0b0e16, density: 0.012 },
+          background: 0xe9f1fb,
+          fog: null,
           distanceDefocus: { enabled: false },
           vignette: { enabled: false },
         },

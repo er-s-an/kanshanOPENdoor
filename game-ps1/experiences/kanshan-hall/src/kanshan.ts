@@ -17,14 +17,16 @@
  *   walk     waddle: body roll ±0.08 rad, bounce, legs/arms counter-swing
  *   wave     right arm raised, oscillating
  *   openDoor lean forward + right arm reach (with a small confident tremble)
- *   sit      body lowered, legs folded (used pre-intro, behind the entry door)
+ *   sit      body lowered, legs folded (roam pauses, pre-intro)
+ *   peek     intro beat: up on tiptoes, leaning out, ears perked — head and
+ *            eyes visible around the doorway while the body stays hidden
  *
  * The rig is plain Object3D groups; this file never touches physics, commits
  * or the scene graph beyond its own root group.
  */
 import * as THREE from './three.ts';
 
-export type KanshanAction = 'idle' | 'walk' | 'wave' | 'openDoor' | 'sit';
+export type KanshanAction = 'idle' | 'walk' | 'wave' | 'openDoor' | 'sit' | 'peek';
 
 export interface KanshanPlayOptions {
   /** Cross-fade into the new action, seconds. Default 0.22. */
@@ -184,6 +186,21 @@ function poseFor(action: KanshanAction, t: number, out: Channels): Channels {
       out.earRz = -0.24;
       return out;
     }
+    case 'peek': {
+      // Tiptoes + lean out around the door edge; ears perked upright with a
+      // small alert wiggle. Channels not named stay at zero (blend target).
+      const w = Math.sin(t * 5.2);
+      out.bodyY = 0.045;
+      out.bodyTiltX = 0.38;
+      out.bodyRollZ = w * 0.03;
+      out.armLx = -0.5;
+      out.armRx = -0.5;
+      out.armLz = 0.3;
+      out.armRz = -0.3;
+      out.earLz = 0.07 + w * 0.02;
+      out.earRz = -0.07 - w * 0.02;
+      return out;
+    }
   }
 }
 
@@ -236,10 +253,10 @@ export function createKanshan(opts: KanshanOptions = {}): Kanshan {
   const root = new THREE.Group();
   root.name = `${prefix}-root`;
 
-  // Stage light: 看山 is the focal character in a dark hall — a small warm
-  // fill riding above/front of him keeps his white body readable from any
-  // angle without flattening the scene lighting.
-  const fill = new THREE.PointLight(0xfff2dd, 3.0, 5.5, 1.6);
+  // Stage light: 看山 is the focal character in a bright hall — a small warm
+  // fill riding above/front of him keeps his white body readable and softly
+  // separated from the blue daylight without flattening the scene.
+  const fill = new THREE.PointLight(0xfff2dd, 2.0, 3.5, 1.6);
   fill.name = `${prefix}/fill-light`;
   fill.position.set(0, 1.5, 0.6);
   root.add(fill);
