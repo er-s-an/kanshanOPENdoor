@@ -310,7 +310,10 @@ export function createPortalHost(deps: PortalHostDeps): PortalHost {
       // allow-forms: the ARG investigation search is a real <form onSubmit>;
       //   Chrome blocks ALL form submissions (Enter AND the submit button) in
       //   a sandboxed iframe without this token — the search silently dead.
-      frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-pointer-lock allow-forms');
+      // allow-popups: 结局页/门页的「阅读开放原文」是 target=_blank 链接，
+      //   无此令牌会被静默拦截。不给 allow-popups-to-escape-sandbox，
+      //   弹窗继承沙箱（原文页是纯静态 HTML，无需脚本）。
+      frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-pointer-lock allow-forms allow-popups');
       frame.setAttribute('title', titleFor(target));
       frame.classList.add(FRAME_CLASS);
       const readyTimer = deps.win.setTimeout(() => {

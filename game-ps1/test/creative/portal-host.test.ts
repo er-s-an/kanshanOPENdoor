@@ -403,9 +403,10 @@ test('boot lands in the hall; portalEnter drives enter() into a sandboxed iframe
   assert.ok(perms.includes('allow-same-origin'), 'sandbox allows same-origin');
   assert.ok(perms.includes('allow-pointer-lock'), 'sandbox allows pointer lock (legacy stories mouse-look)');
   assert.ok(perms.includes('allow-forms'), 'sandbox allows forms (ARG investigation search is a real <form>)');
+  assert.ok(perms.includes('allow-popups'), 'sandbox allows popups (结局页「阅读开放原文」是 target=_blank)');
   assert.equal(perms.includes('allow-top-navigation'), false, 'no top-navigation permission');
   assert.equal(perms.some((p) => p.startsWith('allow-top-navigation')), false);
-  assert.equal(perms.length, 4, 'exactly four sandbox permissions, no extras');
+  assert.equal(perms.length, 5, 'exactly five sandbox permissions, no extras (no escape/popup-to-escape)');
   assert.ok(frame.classList.contains('portal-frame'));
   assert.equal(frame.hidden, false);
   assert.equal(frame.focusCount, 1, 'iframe focused on entry');

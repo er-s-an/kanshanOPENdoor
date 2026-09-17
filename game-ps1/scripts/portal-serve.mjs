@@ -17,6 +17,21 @@ const GAME_PS1 = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
 
 // Keep dist/arg in sync with the ARG build (game/dist) when it exists.
 spawnSync(process.execPath, [path.join(GAME_PS1, 'scripts', 'sync-arg.mjs')], { stdio: 'inherit' });
+
+// Staleness guard: when serving the ASSEMBLED root (game/dist), its hall
+// bundle is a copy of game-ps1/dist made by assemble-root. If game-ps1/dist
+// has been rebuilt since, the served pages are stale code — fail loudly
+// instead of letting anyone (including me) test old bundles again.
+const ps1Index = path.join(GAME_PS1, 'dist', 'index.html');
+const servedIndex = path.join(root, 'index.html');
+if (path.resolve(root) !== path.join(GAME_PS1, 'dist') && fs.existsSync(ps1Index) && fs.existsSync(servedIndex)) {
+  const ps1Mtime = Math.max(fs.statSync(ps1Index).mtimeMs, fs.statSync(path.join(GAME_PS1, 'dist', 'portal.html')).mtimeMs);
+  const servedMtime = fs.statSync(servedIndex).mtimeMs;
+  if (ps1Mtime > servedMtime + 500) {
+    console.warn(`[portal] ⚠ STALE: game-ps1/dist is newer than the served root (${root}).`);
+    console.warn('[portal] ⚠ You are testing old code. Fix:  node ../game-ps1/scripts/sync-arg.mjs && node scripts/assemble-root.mjs  (from game/)');
+  }
+}
 const GATEWAY_PORT = Number(process.env.CHAT_PORT || 8790);
 const GATEWAY_URL = `http://127.0.0.1:${GATEWAY_PORT}`;
 const MIME = {
