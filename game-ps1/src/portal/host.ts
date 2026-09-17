@@ -305,10 +305,12 @@ export function createPortalHost(deps: PortalHostDeps): PortalHost {
       frame.setAttribute('src', url);
       // Exactly these two permissions — the works are first-party same-origin
       // pages and need script + same-origin; nothing else (no top navigation).
-      // allow-pointer-lock: the legacy stories (近视眼 etc.) acquire pointer
-      // lock on canvas mousedown for mouse-look; without this token the
-      // sandboxed iframe's requestPointerLock is rejected.
-      frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-pointer-lock');
+      // allow-pointer-lock: legacy stories acquire pointer lock on canvas
+      //   mousedown for mouse-look.
+      // allow-forms: the ARG investigation search is a real <form onSubmit>;
+      //   Chrome blocks ALL form submissions (Enter AND the submit button) in
+      //   a sandboxed iframe without this token — the search silently dead.
+      frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-pointer-lock allow-forms');
       frame.setAttribute('title', titleFor(target));
       frame.classList.add(FRAME_CLASS);
       const readyTimer = deps.win.setTimeout(() => {
