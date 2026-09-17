@@ -1,0 +1,10 @@
+{
+  "format": "kanshan-experience",
+  "formatVersion": 1,
+  "id": "noop-patch",
+  "title": "空转补丁 · Noop Patch",
+  "entry": "src/main.ts",
+  "runtimeApiVersion": "r1.0",
+  "checkpointSchemaVersion": 1,
+  "params": { "spinSpeed": 0.5 }
+}

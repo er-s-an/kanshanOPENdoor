@@ -1,4 +1,6 @@
-# StoryPackage v1 reference
+# StoryPackage v1 reference (LEGACY — explicit opt-in only)
+
+> **Scope:** this reference covers the **legacy StoryPackage 1.0** catalog format, kept for the explicit opt-in legacy path only (see "Legacy StoryPackage mode" in `SKILL.md`). The default authoring mode is the free-code experience project (`experience.json` + `source.json` + plain TS/Three `src/scene.ts`); see `scene-sdk.md`. Never downgrade a free-code brief to this format to make it pass.
 
 The machine-readable authority is [`story-package.schema.json`](story-package.schema.json), schema version `1.0.0`, using JSON Schema draft 2020-12. In this repository it is a release copy of `docs/ps1-studio/schema/story-package.schema.json`; the canonical schema is edited there and a packaging step must refresh this copy and verify its digest. The current release-copy SHA-256 is `9f86f898d332ab498efca6fd0d8159b9c53d7648d596597c46cef40aae9c7c71`. Do not maintain a divergent hand-written schema in the Skill.
 

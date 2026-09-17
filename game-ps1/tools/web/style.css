@@ -1,0 +1,275 @@
+/* 看山工作室 · Studio — daemon-served UI styles (no build step). */
+
+:root {
+  color-scheme: dark;
+  --bg: #14161a;
+  --bg-pane: #1c1f26;
+  --bg-card: #23262f;
+  --border: #333845;
+  --text: #e6e8ee;
+  --muted: #9aa1b0;
+  --accent: #6ea8fe;
+  --warn: #e3a008;
+  --danger: #e05252;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+}
+
+#control-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg-pane);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.brand {
+  font-weight: 700;
+  margin-right: 8px;
+}
+
+.status-chip {
+  color: var(--muted);
+  margin-right: 8px;
+}
+
+button {
+  background: var(--bg-card);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+button:hover {
+  border-color: var(--accent);
+}
+
+input,
+select {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 3px 6px;
+  width: 9em;
+}
+
+#step-count {
+  width: 6em;
+}
+
+.step-field {
+  color: var(--muted);
+}
+
+#panes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  min-height: 60vh;
+}
+
+#scene-pane,
+#params-pane {
+  background: var(--bg-pane);
+  padding: 12px;
+  overflow: auto;
+}
+
+h2 {
+  font-size: 13px;
+  text-transform: none;
+  color: var(--muted);
+  margin: 10px 0 6px;
+}
+
+.tree-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.tree-row:hover {
+  background: var(--bg-card);
+}
+
+.tree-row.selected {
+  background: var(--bg-card);
+  outline: 1px solid var(--accent);
+}
+
+.tree-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tree-type {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.inspector,
+.param-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+}
+
+.inspector-row {
+  display: flex;
+  gap: 10px;
+  padding: 2px 0;
+}
+
+.inspector-label {
+  color: var(--muted);
+  min-width: 7em;
+}
+
+.inspector-value {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+}
+
+.readonly-note {
+  color: var(--warn);
+}
+
+.bound-note {
+  color: var(--accent);
+}
+
+.params-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.param-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+}
+
+.param-id {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.param-badges {
+  display: flex;
+  gap: 4px;
+}
+
+.badge {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0 6px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.badge-overridden {
+  color: var(--warn);
+  border-color: var(--warn);
+}
+
+.badge-kind {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.param-desc {
+  color: var(--muted);
+  margin: 4px 0;
+}
+
+.param-edit,
+.gizmo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.gizmo {
+  border-top: 1px dashed var(--border);
+  padding-top: 6px;
+}
+
+.gizmo-title {
+  width: 100%;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.gizmo-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+}
+
+.gizmo-field {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.gizmo-label {
+  color: var(--muted);
+}
+
+#metrics-pane,
+#diagnostics {
+  background: var(--bg-pane);
+  border-top: 1px solid var(--border);
+  padding: 10px 12px;
+}
+
+#metrics-view {
+  margin: 0;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+}
+
+#diagnostics-list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--danger);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.note {
+  font-size: 12px;
+}

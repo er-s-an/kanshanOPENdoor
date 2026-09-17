@@ -1,0 +1,5 @@
+{
+  "kind": "original",
+  "provenance": "invented",
+  "note": "Synthetic acceptance fixture for the author-tool loop: a deliberately narrow gate (default 0.4m) that the player cannot pass until the exposed opening-width parameter is patched. Not a user-work defect."
+}

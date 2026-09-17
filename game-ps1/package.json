@@ -3,15 +3,19 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "engines": { "node": ">=24" },
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "check:runtime": "tsc --noEmit",
+    "test:creative": "node --test test/creative/*.test.ts",
     "build:player": "tsc --noEmit && vite build --mode player",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@dimforge/rapier3d-compat": "0.20.0",
     "@kanshan/story-contract": "file:../packages/story-contract",
     "qrcode": "^1.5.4",
     "three": "^0.180.0"

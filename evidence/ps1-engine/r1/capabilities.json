@@ -1,0 +1,194 @@
+{
+  "version": "r1.0",
+  "generated": "2026-09-17",
+  "head": "ff5c4f1db32fe558d0a66b1bb2103a6ae76dc894",
+  "note": "S -> minimum feature -> G/sub-item -> evidence mapping. Evidence = real test files under game-ps1/test/creative/ (run: node --test test/creative/*.test.ts, 519 pass) plus tool/CLI runs recorded in results.json. No inherited historical PASS. GPU/shader-compile/audible output are B-group or NOT_MEASURED as marked.",
+  "systems": {
+    "S01": {
+      "name": "运行/脚本", "status": "PASS",
+      "features": {
+        "scene-module-lifecycle": { "gates": ["G01", "G02"], "status": "PASS", "evidence": ["core-host.test.ts"] },
+        "fixed-step-clock": { "gates": ["G02"], "status": "PASS", "evidence": ["core-clock.test.ts"] },
+        "scope": { "gates": ["G02", "G02.a"], "status": "PASS", "evidence": ["core-scope.test.ts"] },
+        "events-commit": { "gates": ["G11"], "status": "PASS", "evidence": ["core-events.test.ts"] },
+        "error-boundary": { "gates": ["G02.a"], "status": "PASS", "evidence": ["core-host.test.ts"] }
+      }
+    },
+    "S02": {
+      "name": "场景/搭建", "status": "PASS",
+      "features": {
+        "hierarchy-transform": { "gates": ["G03"], "status": "PASS", "evidence": ["scene-helpers.test.ts"] },
+        "free-mesh": { "gates": ["G03"], "status": "PASS", "evidence": ["scene-examples.test.ts", "work-clockwork-flat.test.ts", "work-signal-field.test.ts", "work-keepers-last-shift.test.ts"] },
+        "wall-opening-helpers": { "gates": ["G03"], "status": "PASS", "evidence": ["scene-helpers.test.ts"], "note": "real openings: raycast-through-opening positive+negative tests" },
+        "user-factories": { "gates": ["G03"], "status": "PASS", "evidence": ["scene-examples.test.ts"] },
+        "stable-author-id": { "gates": ["G03", "G14"], "status": "PASS", "evidence": ["scene-authoring.test.ts", "tools-author.test.ts"] }
+      }
+    },
+    "S03": {
+      "name": "资产", "status": "PASS",
+      "features": {
+        "glb-texture-audio-loading": { "gates": ["G04"], "status": "PASS", "evidence": ["assets-loaders.test.ts"], "note": "real GLB parse headless; texture DataTexture path; audio bytes + injectable decode" },
+        "cache-lease": { "gates": ["G04"], "status": "PASS", "evidence": ["assets-cache.test.ts"], "note": "shared resource survives one of two releases" },
+        "dependency-attribution": { "gates": ["G04", "G16"], "status": "PASS", "evidence": ["assets-cache.test.ts", "tools-build.test.ts"] },
+        "missing-asset-diagnostics": { "gates": ["G04"], "status": "PASS", "evidence": ["assets-cache.test.ts", "assets-loaders.test.ts"] },
+        "preload-manifest": { "gates": ["G04"], "status": "PASS", "evidence": ["assets-cache.test.ts"] }
+      }
+    },
+    "S04": {
+      "name": "渲染/美术", "status": "PASS",
+      "features": {
+        "ps1-preset-adjustable": { "gates": ["G04"], "status": "PASS", "evidence": ["render-preset.test.ts", "render-pipeline.test.ts"] },
+        "independent-nearsight-effect": { "gates": ["G04"], "status": "PASS", "evidence": ["render-pipeline.test.ts"], "note": "myopia->fog coupling removed; vignette is an opt-in channel" },
+        "material-light-fog-shadow-config": { "gates": ["G04"], "status": "PASS", "evidence": ["render-preset.test.ts"] },
+        "native-shader-entry": { "gates": ["G04"], "status": "PASS", "evidence": ["render-pipeline.test.ts"], "note": "per-material patch opt-out (PS1_SKIP_PATCH); ShaderMaterial bypass" },
+        "quality-tiers": { "gates": ["G04"], "status": "PASS", "evidence": ["render-preset.test.ts"] },
+        "real-raster": { "gates": ["B01"], "status": "PASS", "evidence": ["scripts/b01-browser-smoke.mjs runs on 3 exports"], "note": "real Chromium + WebGL; visual quality itself UNREVIEWED" }
+      }
+    },
+    "S05": {
+      "name": "输入/角色/镜头", "status": "PASS",
+      "features": {
+        "action-mapping": { "gates": ["G05"], "status": "PASS", "evidence": ["input-actionmapper.test.ts", "input-defaults.test.ts"] },
+        "kbd-mouse-touch-focus": { "gates": ["G05"], "status": "PASS", "evidence": ["input-devices.test.ts", "input-focus.test.ts"], "note": "modal-ui suppresses game input; blur cleanup; no phantom edges" },
+        "first-person-controller": { "gates": ["G05"], "status": "PASS", "evidence": ["controllers-first-person.test.ts", "work-clockwork-flat.test.ts"] },
+        "topdown-controller": { "gates": ["G05"], "status": "PASS", "evidence": ["controllers-top-down.test.ts", "work-signal-field.test.ts"] },
+        "camera-rigs": { "gates": ["G09"], "status": "PASS", "evidence": ["camera-rigs.test.ts"] }
+      }
+    },
+    "S06": {
+      "name": "物理/空间查询", "status": "PASS",
+      "features": {
+        "static-kinematic-dynamic-bodies": { "gates": ["G06"], "status": "PASS", "evidence": ["physics-world.test.ts"], "note": "real Rapier 0.20.0 adapter (AD-01); dynamic concave -> honest OUT_OF_SCOPE" },
+        "triggers": { "gates": ["G06"], "status": "PASS", "evidence": ["physics-triggers.test.ts", "interaction-triggers.test.ts"] },
+        "ray-shape-overlap-queries": { "gates": ["G06.a"], "status": "PASS", "evidence": ["physics-queries.test.ts"], "note": "self/layer filters, nearest-hit, removed-collider negative" },
+        "gravity-jump-slope-step": { "gates": ["G06"], "status": "PASS", "evidence": ["controllers-first-person.test.ts"], "note": "jump arc ~= v^2/2g; 30deg climbs / 55deg rejected at 45deg limit; 0.3m step climbs / 0.6m blocks" },
+        "moving-platform": { "gates": ["G06"], "status": "PASS", "evidence": ["physics-mechanisms.test.ts", "work-clockwork-flat.test.ts"], "note": "kinematic carry, collider and render pose from one source" }
+      }
+    },
+    "S07": {
+      "name": "动画/过场", "status": "PASS",
+      "features": {
+        "mixer-clip": { "gates": ["G07"], "status": "PASS", "evidence": ["animation-mixer.test.ts"] },
+        "procedural-update": { "gates": ["G07"], "status": "PASS", "evidence": ["work-keepers-last-shift.test.ts"], "note": "lamp rotor is procedural; mixer not forced" },
+        "code-timeline": { "gates": ["G07", "G07.a"], "status": "PASS", "evidence": ["animation-timeline.test.ts"], "note": "sequence/parallel/wait/tween/clip/camera/cue; plain TS, no DSL" },
+        "pause-skip-resume-policy": { "gates": ["G07.a"], "status": "PASS", "evidence": ["animation-timeline.test.ts", "work-clockwork-flat.test.ts"], "note": "skip == natural semantic end state; commit dedupe; scrub isolation" }
+      }
+    },
+    "S08": {
+      "name": "音频", "status": "PASS",
+      "features": {
+        "owned-sound-resources": { "gates": ["G08"], "status": "PASS", "evidence": ["audio-player.test.ts"] },
+        "buses": { "gates": ["G08"], "status": "PASS", "evidence": ["audio-graph.test.ts"] },
+        "spatial-sources": { "gates": ["G08"], "status": "PASS", "evidence": ["audio-player.test.ts", "work-signal-field.test.ts"], "note": "gain-based distance attenuation; panner is a later backend option" },
+        "fade-mute-volume": { "gates": ["G08"], "status": "PASS", "evidence": ["audio-player.test.ts", "audio-graph.test.ts"] },
+        "unlock-release": { "gates": ["G08"], "status": "PASS", "evidence": ["audio-policy.test.ts"], "note": "AUDIO_SCHEDULING_ONLY; real gesture unlock; no audible claim; queued one-shot replays exactly once, never a burst" }
+      }
+    },
+    "S09": {
+      "name": "特效", "status": "PASS",
+      "features": {
+        "particle-emitter": { "gates": ["G09"], "status": "PASS", "evidence": ["effects-particles.test.ts", "work-keepers-last-shift.test.ts"] },
+        "screen-flash-shake-fade": { "gates": ["G09"], "status": "PASS", "evidence": ["effects-screen.test.ts"], "note": "shake is camera-local and restores the base pose; never writes player transform" },
+        "simple-weather": { "gates": ["G09"], "status": "PASS", "evidence": ["work-keepers-last-shift.test.ts"], "note": "rain via particle emitter" },
+        "disableable": { "gates": ["G09", "G13"], "status": "PASS", "evidence": ["effects-screen.test.ts", "work-keepers-last-shift.test.ts"] }
+      }
+    },
+    "S10": {
+      "name": "NPC/导航", "status": "PASS",
+      "features": {
+        "state-machine": { "gates": ["G10"], "status": "PASS", "evidence": ["ai-fsm.test.ts"] },
+        "waypoint-graph-astar": { "gates": ["G10"], "status": "PASS", "evidence": ["ai-nav.test.ts"], "note": "gated replan on door state; NO_PATH with reason + blocked edges" },
+        "perception-sight": { "gates": ["G10"], "status": "PASS", "evidence": ["ai-perception.test.ts"], "note": "fake + real Rapier raycast LOS through a real opening" },
+        "follow-patrol": { "gates": ["G10"], "status": "PASS", "evidence": ["ai-behaviors.test.ts", "work-signal-field.test.ts"], "note": "intent-only; controller+physics own motion; no wall-clipping" },
+        "stuck-diagnostics": { "gates": ["G10"], "status": "PASS", "evidence": ["ai-behaviors.test.ts"], "note": "stalled/no-path reasons; zero-velocity hold while stalled" }
+      }
+    },
+    "S11": {
+      "name": "UI/可访问性", "status": "PASS",
+      "features": {
+        "chinese-subtitles-options": { "gates": ["G13"], "status": "PASS", "evidence": ["ui-hud.test.ts"], "note": "DOM/state assertions; typography not eyeball-verified" },
+        "interaction-prompts": { "gates": ["G13"], "status": "PASS", "evidence": ["ui-hud.test.ts", "work-*"] },
+        "pause-settings": { "gates": ["G13"], "status": "PASS", "evidence": ["ui-menu.test.ts"] },
+        "keyboard-touch-focus": { "gates": ["G05", "G13"], "status": "PASS", "evidence": ["input-focus.test.ts", "ui-menu.test.ts"] },
+        "text-scale-reduce-motion": { "gates": ["G13"], "status": "PASS", "evidence": ["ui-menu.test.ts", "work-keepers-last-shift.test.ts"] },
+        "custom-dom-ui": { "gates": ["G13"], "status": "PASS", "evidence": ["ui-hud.test.ts"] }
+      }
+    },
+    "S12": {
+      "name": "玩法工具库", "status": "PASS",
+      "features": {
+        "optional-dialogue": { "gates": ["G12"], "status": "PASS", "evidence": ["gameplay-dialogue.test.ts", "work-keepers-last-shift.test.ts"], "note": "cancel settles pending promises (legacy HUD bug not repeated)" },
+        "optional-inventory": { "gates": ["G12"], "status": "PASS", "evidence": ["gameplay-inventory.test.ts", "work-keepers-last-shift.test.ts"] },
+        "optional-objectives": { "gates": ["G12"], "status": "PASS", "evidence": ["gameplay-objectives.test.ts", "all work-* tests"], "note": "duplicate completion dedupes" },
+        "trigger-volumes": { "gates": ["G12"], "status": "PASS", "evidence": ["interaction-triggers.test.ts"], "note": "sensor path (real Rapier) + pure-AABB no-physics path" },
+        "custom-reducer-state": { "gates": ["G12"], "status": "PASS", "evidence": ["gameplay-state.test.ts"] },
+        "source-boundary": { "gates": ["G12.a"], "status": "PASS", "evidence": ["gameplay-provenance.test.ts"] }
+      }
+    },
+    "S13": {
+      "name": "状态/存档", "status": "PASS",
+      "features": {
+        "versioned-checkpoint": { "gates": ["G11", "G11.a"], "status": "PASS", "evidence": ["state-checkpoint-store.test.ts"], "note": "CAS single-winner; idempotent duplicate; quarantine; pendingRevision vs persistedRevision distinct (D05 not repeated)" },
+        "resumable": { "gates": ["G11"], "status": "PASS", "evidence": ["gameplay-state.test.ts", "work-* checkpoint restore tests"] },
+        "cross-scene-restore": { "gates": ["G11"], "status": "PASS", "evidence": ["state-cross-scene.test.ts", "work-signal-field.test.ts"], "note": "two sessions + SessionStateBag; unload never clears persistent state" },
+        "receipts": { "gates": ["G11"], "status": "PASS", "evidence": ["core-events.test.ts"] },
+        "stable-identity": { "gates": ["G11"], "status": "PASS", "evidence": ["core-identity.test.ts", "state-manifest.test.ts", "tools-build.test.ts"], "note": "same content in two clean checkouts -> same experienceDigest; code/param/asset change isolates" },
+        "failure-feedback": { "gates": ["G11.a"], "status": "PASS", "evidence": ["state-checkpoint-store.test.ts"], "note": "corrupt quarantined before clone; unavailable backend never fakes persist; failed copy/migrate preserves source" }
+      }
+    },
+    "S14": {
+      "name": "Studio 编辑", "status": "PASS",
+      "features": {
+        "scene-tree": { "gates": ["G14"], "status": "PASS", "evidence": ["tools-web.test.ts"], "note": "served by the session daemon at /studio; HTTP-level tested; browser clicking is B-group" },
+        "readonly-runtime-inspector": { "gates": ["G14"], "status": "PASS", "evidence": ["tools-web.test.ts", "core-host.test.ts"] },
+        "explicit-param-edit": { "gates": ["G14"], "status": "PASS", "evidence": ["tools-author.test.ts", "tools-web.test.ts"] },
+        "gizmo-snap": { "gates": ["G14"], "status": "PASS", "evidence": ["tools-web.test.ts"], "note": "numeric transform editor with snap steps for exposed transform params only, via the same author patch command; 2D drag viewport is R2" },
+        "undo-redo": { "gates": ["G14", "G17.a"], "status": "PASS", "evidence": ["tools-author.test.ts"], "note": "inverse-as-new-command; staleness conflict never overwrites" },
+        "preview-edit-separation": { "gates": ["G14", "G17"], "status": "PASS", "evidence": ["tools-web.test.ts"], "note": "token-gated author routes; runtime objects read-only" }
+      }
+    },
+    "S15": {
+      "name": "调试/Agent 工具", "status": "PASS",
+      "features": {
+        "capability-catalog": { "gates": ["G15", "G18"], "status": "PASS", "evidence": ["tools-caps.test.ts"] },
+        "state-object-query": { "gates": ["G15"], "status": "PASS", "evidence": ["tools-session.test.ts"], "note": "bounded, versioned, session-fenced" },
+        "collision-viz-data": { "gates": ["G15"], "status": "PASS", "evidence": ["tools-loop.test.ts"], "note": "inspect.physics returns real Rapier collider list" },
+        "input-trace-replay": { "gates": ["G15", "G15.a"], "status": "PASS", "evidence": ["tools-session.test.ts", "tools-loop.test.ts"], "note": "normal-input traces only; debug-assisted rejected" },
+        "fixed-step-debug": { "gates": ["G15.a"], "status": "PASS", "evidence": ["core-host.test.ts", "tools-session.test.ts"], "note": "step/pause/stop over the wire; stop invalidates handles" },
+        "build-diagnostics": { "gates": ["G15.b"], "status": "PASS", "evidence": ["tools-build.test.ts"] },
+        "perf-counters": { "gates": ["G15.b"], "status": "PASS", "evidence": ["tools-session.test.ts"], "note": "tick/discardedTime/commits/objects; GPU/FPS/screenshot NOT_MEASURED headless" }
+      }
+    },
+    "S16": {
+      "name": "构建/扩展", "status": "PASS",
+      "features": {
+        "on-demand-bundle": { "gates": ["G01", "G16"], "status": "PASS", "evidence": ["tools-build.test.ts"], "note": "no-physics fixture bundle is 116KB with zero rapier bytes; physics work is ~3.4MB" },
+        "private-static-export": { "gates": ["G16"], "status": "PASS", "evidence": ["tools-build.test.ts", "b01 smoke runs"], "note": "index.html + real playable boot shell; no tokens/author APIs in the bundle" },
+        "asset-closure": { "gates": ["G16"], "status": "PASS", "evidence": ["tools-build.test.ts"] },
+        "version-report": { "gates": ["G16"], "status": "PASS", "evidence": ["tools-build.test.ts"], "note": "experienceDigest/artifactDigest/buildId kept distinct" },
+        "adapter-contracts": { "gates": ["G16"], "status": "PASS", "evidence": ["architecture-decisions.md"] },
+        "legacy-package-compat": { "gates": ["G17"], "status": "PASS", "evidence": ["legacy-story-package.test.ts"], "note": "explicit adapter; real shared validator; declared provenance backfill; separate save identity" }
+      }
+    }
+  },
+  "subAssertions": {
+    "G02.a": { "status": "PASS", "evidence": ["core-host.test.ts", "core-scope.test.ts"] },
+    "G06.a": { "status": "PASS", "evidence": ["physics-queries.test.ts"] },
+    "G07.a": { "status": "PASS", "evidence": ["animation-timeline.test.ts"] },
+    "G11.a": { "status": "PASS", "evidence": ["state-checkpoint-store.test.ts"] },
+    "G12.a": { "status": "PASS", "evidence": ["gameplay-provenance.test.ts"] },
+    "G15.a": { "status": "PASS", "evidence": ["tools-session.test.ts", "core-host.test.ts"] },
+    "G15.b": { "status": "PASS", "evidence": ["tools-session.test.ts"] },
+    "G17.a": { "status": "PASS", "evidence": ["tools-author.test.ts"], "note": "two-process race single-winner; idempotent retry; crash recovery" }
+  },
+  "toolLoop": {
+    "status": "PASS",
+    "evidence": ["tools-loop.test.ts"],
+    "note": "narrow-gate: failing replay -> inspect.physics (panel + player collider) -> author patch (idempotent) -> fresh session -> SAME recorded trace replayed -> goal committed"
+  },
+  "browser": {
+    "B01": { "status": "PASS", "evidence": ["scripts/b01-browser-smoke.mjs on all three exports"], "note": "real Chromium (playwright-core, chromium-1243): boots, WebGL canvas, frames render, keyboard input visibly moves the player, gesture path clean, zero page errors. Visual quality itself UNREVIEWED." },
+    "B02": { "status": "INCONCLUSIVE", "note": "gesture/no-error verified in B01; audible output, Chinese font rendering and reduce-motion visuals not asserted" },
+    "B03": { "status": "PASS", "evidence": ["b01 runs against the exported static bundles over plain HTTP"], "note": "sub-path static serving + playability; same-content-rebuild-loads-save covered offline by state-* tests" }
+  }
+}

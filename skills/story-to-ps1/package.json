@@ -1,14 +1,16 @@
 {
   "name": "@kanshan/story-to-ps1-skill",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Project-local Skill adapter for authorized story-to-PS1 authoring.",
+  "description": "Project-local Skill adapter: story/creative brief -> playable Three.js PS1 experience project on the kanshan creative runtime (R1).",
   "engines": {
-    "node": ">=22"
+    "node": ">=24"
   },
   "scripts": {
     "story": "node scripts/story-to-ps1.mjs",
-    "check": "node --check scripts/story-to-ps1.mjs"
+    "check": "node --check scripts/story-to-ps1.mjs && node --test test/parse.test.mjs",
+    "test:integration": "node --test test/wrapper-integration.test.ts",
+    "test": "npm run check && npm run test:integration"
   }
 }

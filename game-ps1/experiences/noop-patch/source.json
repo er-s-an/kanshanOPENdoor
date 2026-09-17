@@ -1,0 +1,5 @@
+{
+  "kind": "original",
+  "provenance": "invented",
+  "notes": "Minimal build-hygiene fixture: one rotating marker box, one exposed numeric parameter, no physics, no sampled assets. Used to prove unused systems (rapier/WASM) stay out of bundles."
+}

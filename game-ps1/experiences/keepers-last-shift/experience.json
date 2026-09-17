@@ -1,0 +1,9 @@
+{
+  "format": "kanshan-experience",
+  "formatVersion": 1,
+  "id": "keepers-last-shift",
+  "title": "灯塔最后一班 · The Keeper's Last Shift",
+  "entry": "src/scene.ts",
+  "runtimeApiVersion": "r1.0",
+  "checkpointSchemaVersion": 1
+}

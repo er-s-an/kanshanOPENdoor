@@ -1,0 +1,9 @@
+{
+  "format": "kanshan-experience",
+  "formatVersion": 1,
+  "id": "clockwork-flat",
+  "title": "钟鸣陋室 · Clockwork Flat",
+  "entry": "src/scene.ts",
+  "runtimeApiVersion": "r1.0",
+  "checkpointSchemaVersion": 1
+}

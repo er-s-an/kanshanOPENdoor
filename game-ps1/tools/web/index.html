@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- The session daemon replaces the placeholder with the real session token
+       when serving this page. The app reads the token only from this meta
+       tag — never from the URL or localStorage. -->
+  <meta name="kanshan-studio-token" content="%KANSHAN_STUDIO_TOKEN%">
+  <title>看山工作室 · Studio</title>
+  <link rel="stylesheet" href="/studio/style.css">
+</head>
+<body>
+  <header id="control-bar">
+    <span class="brand">看山工作室</span>
+    <span id="session-status" class="status-chip">会话状态：加载中…</span>
+    <button id="btn-pause" type="button">暂停</button>
+    <button id="btn-resume" type="button">继续</button>
+    <label class="step-field" for="step-count">步数</label>
+    <input id="step-count" type="number" min="1" max="100000" value="1">
+    <button id="btn-step" type="button">步进</button>
+    <button id="btn-metrics" type="button">指标</button>
+    <button id="btn-refresh-scene" type="button">刷新场景</button>
+  </header>
+
+  <main id="panes">
+    <section id="scene-pane" aria-label="场景树">
+      <h2>场景树</h2>
+      <div id="scene-tree" class="tree"></div>
+      <h2>检查器（只读）</h2>
+      <div id="inspector" class="inspector">
+        <p class="muted">在场景树中选择一个节点。</p>
+      </div>
+    </section>
+
+    <section id="params-pane" aria-label="作者参数">
+      <h2>作者参数</h2>
+      <div class="params-toolbar">
+        <button id="btn-undo" type="button">撤销</button>
+        <button id="btn-redo" type="button">重做</button>
+        <button id="btn-reload-params" type="button">重新加载</button>
+        <span id="params-head" class="muted"></span>
+      </div>
+      <div id="params-list" class="params-list"></div>
+      <p class="muted note">只有声明过的作者参数可以修改；所有修改都走带版本号的作者补丁命令。</p>
+    </section>
+  </main>
+
+  <section id="metrics-pane" aria-label="会话指标" hidden>
+    <h2>会话指标</h2>
+    <pre id="metrics-view"></pre>
+  </section>
+
+  <section id="diagnostics" aria-label="诊断" hidden>
+    <h2>诊断</h2>
+    <ul id="diagnostics-list"></ul>
+  </section>
+
+  <script type="module" src="/studio/app.js"></script>
+</body>
+</html>

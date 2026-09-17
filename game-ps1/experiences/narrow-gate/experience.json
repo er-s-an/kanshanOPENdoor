@@ -1,0 +1,12 @@
+{
+  "format": "kanshan-experience",
+  "formatVersion": 1,
+  "id": "narrow-gate",
+  "title": "窄门（合成验收 fixture）",
+  "entry": "src/scene.ts",
+  "runtimeApiVersion": "r1.0",
+  "checkpointSchemaVersion": 1,
+  "params": {
+    "gate.opening-width": 0.4
+  }
+}
