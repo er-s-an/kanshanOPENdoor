@@ -66,9 +66,10 @@ jobs:
           npm run test:creative
 
       - name: Test the authoring skill against the real CLI
+        # The skill wrapper is dependency-free (no lockfile); it drives the
+        # already-installed engine-cli from the previous steps.
         working-directory: skills/story-to-ps1
         run: |
-          npm ci
           npm run check
           npm run test:integration
 
