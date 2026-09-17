@@ -36,14 +36,16 @@ jobs:
           npm run check
           npm test
 
-      - name: Verify the PS1 authoring contract
-        run: node scripts/verify-ps1-studio.mjs
-
       - name: Build and test story contract
         working-directory: packages/story-contract
         run: |
           npm ci
           npm test
+
+      - name: Verify the PS1 authoring contract
+        # Needs story-contract/dist (built above): the verifier checks the
+        # package's real export targets.
+        run: node scripts/verify-ps1-studio.mjs
 
       - name: Test story compiler
         working-directory: pipeline
