@@ -52,6 +52,7 @@ before(() => {
   // Disposable experience dir under game-ps1/.kanshan. Its scene.ts is a
   // re-export of the real fixture so engine-relative imports keep resolving;
   // author patches (params.overrides.json) land in the disposable copy only.
+  fs.mkdirSync(path.join(GAME_DIR, '.kanshan'), { recursive: true });
   workRoot = fs.mkdtempSync(path.join(GAME_DIR, '.kanshan', 'loop-test-'));
   workDir = path.join(workRoot, 'narrow-gate');
   fs.mkdirSync(path.join(workDir, 'src'), { recursive: true });
