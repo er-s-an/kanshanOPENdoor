@@ -1,0 +1,5 @@
+{
+  "kind": "mixed",
+  "provenance": "derived",
+  "notes": "看山任意门门厅（产品 3D 入口）。 halls/角色/音频全部程序化生成；门牌贴图 3 张复制自项目自有素材（知乎 IP 授权范围内）：assets/blue-cover.jpg（蓝血门牌，来自 game/public/art/blue/）、assets/door-card-closed.jpg 与 assets/door-card-open.jpg（通用门牌，来自 game/public/art/portal/）。角色造型依据 game/public/art/character/reference/liu-kanshan-turnaround.jpg（刘看山三视图，知乎 IP 授权）。台词为现场创作的初稿（见 src/dialogue.ts 顶部注释），待用户审阅。音频为运行时 WebAudio 合成，无采样资产。"
+}

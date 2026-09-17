@@ -1,0 +1,21 @@
+{
+  "format": "kanshan-experience",
+  "formatVersion": 1,
+  "id": "kanshan-hall",
+  "title": "看山任意门 · Kanshan Hall",
+  "entry": "src/scene.ts",
+  "runtimeApiVersion": "r1.0",
+  "checkpointSchemaVersion": 1,
+  "params": {
+    "kanshan-hall.mist-density": { "schemaVersion": 1, "value": 1 },
+    "kanshan-hall.door-glow": { "schemaVersion": 1, "value": 1 }
+  },
+  "portal": {
+    "comment": "门的 target 页面由宿主 portal.html 负责映射；此处仅作参考记录，模块本身不消费这些 URL。",
+    "doors": [
+      { "id": "duanfei", "title": "端妃", "target": "end-consort.html", "color": "#d4a24e" },
+      { "id": "blue-blood", "title": "蓝血", "target": "blue-blood.html", "color": "#5a8fd4" },
+      { "id": "myopia", "title": "近视眼", "target": "index.html", "color": "#58c9c0" }
+    ]
+  }
+}

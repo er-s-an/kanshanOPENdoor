@@ -64,7 +64,9 @@ varying vec3 vColor;
 void main() {
   vColor = pcolor;
   vec4 mv = modelViewMatrix * vec4(position, 1.0);
-  gl_PointSize = psize * (240.0 / max(0.1, -mv.z));
+  // Inverse-depth sizing blows up for particles drifting at/behind the
+  // camera; cap the sprite so near particles stay atmosphere, not walls.
+  gl_PointSize = min(psize * (240.0 / max(0.35, -mv.z)), 150.0);
   gl_Position = projectionMatrix * mv;
 }
 `;
