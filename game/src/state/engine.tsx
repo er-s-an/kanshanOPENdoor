@@ -213,6 +213,26 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   // 立即换场景，短暂保留防重复点击保护。
   const [navBusy, setNavBusy] = useState(false);
+  // 看门狗：navBusy 只允许存在几百毫秒（场景切换动画）。它一旦卡住，
+  // 搜索框的提交会被静默丢弃、搜索按钮保持 disabled —— 表现就是
+  // “Enter 和点击搜索都没反应”的软锁。任何置忙都必须带兜底复位。
+  const mountedRef = useRef(true);
+  const busySafetyRef = useRef<number | null>(null);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      if (busySafetyRef.current !== null) window.clearTimeout(busySafetyRef.current);
+    };
+  }, []);
+  const armBusySafety = useCallback(() => {
+    if (busySafetyRef.current !== null) window.clearTimeout(busySafetyRef.current);
+    busySafetyRef.current = window.setTimeout(() => {
+      busyRef.current = false;
+      if (mountedRef.current) setNavBusy(false);
+      busySafetyRef.current = null;
+    }, 900);
+  }, []);
   const [navToken, setNavToken] = useState(0);
   const busyRef = useRef(false);
   const timers = useRef<number[]>([]);
@@ -228,6 +248,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       if (state.sceneId === sceneId || !state.story.scenes.some((sc) => sc.id === sceneId)) return;
       setNavBusy(true);
       busyRef.current = true;
+      armBusySafety();
       later(() => {
         dispatch({ type: 'GOTO', sceneId, from: state.sceneId });
         setNavToken((t) => t + 1);
@@ -323,6 +344,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       busyRef.current = true;
       dispatch({ type: 'CHOOSE', choiceId: c.id, from: state.sceneId });
       setNavBusy(true);
+      armBusySafety();
       later(() => {
         setNavToken((t) => t + 1);
         later(() => { setNavBusy(false); busyRef.current = false; }, 160);

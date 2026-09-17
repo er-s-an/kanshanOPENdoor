@@ -125,7 +125,12 @@ export function InvestigationView({ scene }: { scene: Scene }) {
   };
   const submitSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (navBusy) return;
+    if (navBusy) {
+      // 曾经在场景切换的忙窗口内静默丢弃，玩家看到的就是“Enter 和搜索都没反应”。
+      // 忙状态现在自带看门狗（engine），这里再给出可见反馈，绝不静默。
+      setSearchFeedback({ status: 'miss', text: '页面还在切换，稍等片刻再搜。' });
+      return;
+    }
     if (browser) {
       const result = queryInvestigationBrowser(draft);
       if (result.status === 'empty') {
