@@ -83,7 +83,5 @@ jobs:
           npm run typecheck
           npm test
           npm run build:experiences
-
-      - name: Sync the ARG build into the portal bundle (dist/arg)
-        working-directory: game-ps1
-        run: node scripts/sync-arg.mjs
+      # build:experiences 的链尾已是 sync-arg + assemble-root，
+      # 这里不需要再单独同步（对组装根再跑 sync-arg 会被污染守卫正确拒绝）。
