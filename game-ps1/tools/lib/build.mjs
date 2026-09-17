@@ -223,7 +223,7 @@ export async function build({ experience, out, replace } = {}) {
     }
   }
 
-  const artifactDigest = digestOverFiles(built.files, built.bytesByPath, sha256Hex);
+  const artifactDigest = await digestOverFiles(built.files, finalDir, sha256Hex);
   const data = {
     buildId,
     experienceDigest,
@@ -290,7 +290,8 @@ export async function exportBundle({ experience, out, replace } = {}) {
   let rapierPresent = false;
   for (const f of report.files) {
     if (!f.path.endsWith('.js') && !f.path.endsWith('.css')) continue;
-    const content = await fs.readFile(path.join(outDir, f.path), 'utf8');
+    // Read from THIS export's staging dir (report.outDir), never a bare name.
+    const content = await fs.readFile(path.join(staged, f.path), 'utf8');
     if (/rapier/i.test(content) || content.includes('@dimforge')) {
       rapierPresent = true;
       break;
@@ -311,6 +312,7 @@ export async function exportBundle({ experience, out, replace } = {}) {
       experienceDigest: report.experienceDigest,
       buildId: report.buildId,
       runtimeApiVersion: report.runtimeApiVersion,
+      hasOverrides: await fs.stat(path.join(experienceDir, 'params.overrides.json')).then(() => true).catch(() => false),
     })}</script>`,
     ...cssLinks.map((f) => `  <link rel="stylesheet" href="./${f.path}" />`),
     '</head>',
@@ -352,7 +354,7 @@ export async function exportBundle({ experience, out, replace } = {}) {
   // List files before writing report.json so the report does not carry a
   // self-reference; that exclusion is stated in the report itself.
   const { files } = await collectBundleBytes(staged);
-  const artifactDigest = digestOverFiles(files, Object.fromEntries(files.map((f) => [f.path, f.bytes])), sha256Hex);
+  const artifactDigest = await digestOverFiles(files, staged, sha256Hex);
   const data = {
     ...report,
     title,
@@ -362,7 +364,7 @@ export async function exportBundle({ experience, out, replace } = {}) {
     generatedAt: new Date().toISOString(),
     toolVersion: PROTOCOL_VERSION,
     artifactDigestScope:
-      'canonical digest over the exported file manifest [{path, bytes, sha256}] — covers every exported file listed; report.json excludes itself (documented), boot/identity values are inside index.html',
+      'canonical digest over the exported file manifest [{path, bytes, sha256(file)}] — covers every exported file listed; report.json excludes itself (documented), boot/identity values are inside index.html',
     filesNote: 'report.json is written after this listing and is therefore not part of it',
     closure: { referenced: closure.referenced.length, missing: 0 },
   };

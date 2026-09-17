@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-09-16T23:17:06.754Z",
+  "generatedAt": "2026-09-17T10:31:00.186Z",
   "node": "v25.9.0",
-  "head": "ff5c4f1db32fe558d0a66b1bb2103a6ae76dc894",
-  "workingTreeChanges": 25,
+  "head": "de8c0660175494b774817b8311337504d909f505",
+  "workingTreeChanges": 35,
   "checks": [
     {
       "id": "story-contract.test",
@@ -12,7 +12,7 @@
         "legacy-contract",
         "G12.a-foundation"
       ],
-      "startedAt": "2026-09-16T23:16:39.276Z",
+      "startedAt": "2026-09-17T10:30:28.162Z",
       "exitCode": 0,
       "signal": null,
       "status": "PASS",
@@ -24,16 +24,16 @@
         "> @kanshan/story-contract@0.1.0 build",
         "> tsc -p tsconfig.json",
         "",
-        "✔ canonical JSON sorts objects but retains arrays (1.078041ms)",
-        "✔ source normalization follows the source contract (0.116416ms)",
-        "✔ fixture passes structural, semantic, and bounded state validation (2.148291ms)",
-        "✔ structural validator rejects unknown properties and malformed IDs (0.254541ms)",
-        "✔ semantic validator catches broken references and effect conflicts (0.181792ms)",
-        "✔ reducer applies collect and end atomically (0.136875ms)",
-        "✔ generation/revision fencing rejects stale async work and prior events are idempotent (0.100542ms)",
-        "✔ bounded BFS explores every fixture branch and reaches confirm-end (0.697792ms)",
-        "✔ bounded BFS reports inconclusive instead of passing when capped (0.138542ms)",
-        "✔ package digest is stable and independent of object insertion order (0.291459ms)",
+        "✔ canonical JSON sorts objects but retains arrays (1.115375ms)",
+        "✔ source normalization follows the source contract (0.118625ms)",
+        "✔ fixture passes structural, semantic, and bounded state validation (2.140708ms)",
+        "✔ structural validator rejects unknown properties and malformed IDs (0.259917ms)",
+        "✔ semantic validator catches broken references and effect conflicts (0.18375ms)",
+        "✔ reducer applies collect and end atomically (0.140916ms)",
+        "✔ generation/revision fencing rejects stale async work and prior events are idempotent (0.109042ms)",
+        "✔ bounded BFS explores every fixture branch and reaches confirm-end (0.663708ms)",
+        "✔ bounded BFS reports inconclusive instead of passing when capped (0.120167ms)",
+        "✔ package digest is stable and independent of object insertion order (0.313208ms)",
         "ℹ tests 10",
         "ℹ suites 0",
         "ℹ pass 10",
@@ -41,7 +41,7 @@
         "ℹ cancelled 0",
         "ℹ skipped 0",
         "ℹ todo 0",
-        "ℹ duration_ms 64.738542"
+        "ℹ duration_ms 66.069333"
       ]
     },
     {
@@ -53,7 +53,7 @@
         "G16"
       ],
       "note": "tsc --noEmit over src+test, then vite build of the legacy entries",
-      "startedAt": "2026-09-16T23:16:39.860Z",
+      "startedAt": "2026-09-17T10:30:28.777Z",
       "exitCode": 0,
       "signal": null,
       "status": "PASS",
@@ -82,7 +82,7 @@
         "dist/assets/end-consort-CkPz0e4N.js    58.17 kB │ gzip:  24.30 kB",
         "dist/assets/index-D5dM_-Qi.js          99.03 kB │ gzip:  33.91 kB",
         "dist/assets/renderer-H_KHcsU6.js      520.77 kB │ gzip: 133.10 kB",
-        "✓ built in 541ms"
+        "✓ built in 658ms"
       ]
     },
     {
@@ -119,36 +119,61 @@
         "G19"
       ],
       "note": "G08 audio = AUDIO_SCHEDULING_ONLY; GPU/FPS/audible output NOT_MEASURED here",
-      "startedAt": "2026-09-16T23:16:41.813Z",
+      "startedAt": "2026-09-17T10:30:31.103Z",
       "exitCode": 0,
       "signal": null,
       "status": "PASS",
       "outputTail": [
-        "✔ full public-input replay: spawn → switch → door → lift → bronze bell (359.6685ms)",
-        "✔ checkpoint mid-route: destroy the session, restore into a fresh one, reach the same goal (220.775625ms)",
-        "✔ parameters: validation rejects bad values; live apply rebuilds the mechanisms (52.791916ms)",
-        "✔ dialogue tree: three branch points, input-edge driven, effects and talk objective commit exactly once (513.250375ms)",
-        "✔ inventory: the stuck drawer blocks its page until opened; three pages complete the gather objective once (217.971375ms)",
-        "✔ full public-input replay: talk → three pages → light the lamp → outro (skipped) completes the shift exactly once (255.575667ms)",
-        "✔ outro: natural completion and input-driven skip reach the same semantic end state (398.495167ms)",
-        "✔ checkpoint mid-route: destroy the session, restore into a fresh one, finish the same goal (128.598875ms)",
-        "✔ rain outside the window honors reduce-motion; fades resolve instantly, flashes suppressed (16.937833ms)",
-        "✔ parameters: validation rejects bad values; live apply retunes rain, the lamp and the stuck drawer (28.350583ms)",
-        "✔ top-down control: screen-relative movement on a fixed camera yaw (494.519792ms)",
-        "✔ full public-input replay: memos -> three masts -> beacon timeline (skipped) fires exactly once (585.559541ms)",
-        "✔ NPC guide: perception-gated follow — blocked LOS never follows, open ground closes in, loss resumes patrol (466.515167ms)",
-        "✔ checkpoint mid-route: destroy the session, restore into a fresh one, reach the same beacon (144.1595ms)",
-        "✔ cross-scene persistence: field -> bunker -> field keeps notebook, objectives and mast progress (173.949167ms)",
-        "✔ parameters: validation rejects bad values; live apply re-tunes masts and the NPC (31.377875ms)",
-        "✔ reduce motion: fades resolve instantly, flashes suppressed (46.381708ms)",
-        "ℹ tests 519",
+        "✔ full public-input replay: spawn → switch → door → lift → bronze bell (238.754916ms)",
+        "✔ checkpoint mid-route: destroy the session, restore into a fresh one, reach the same goal (155.207458ms)",
+        "✔ parameters: validation rejects bad values; live apply rebuilds the mechanisms (25.122625ms)",
+        "✔ dialogue tree: three branch points, input-edge driven, effects and talk objective commit exactly once (467.816584ms)",
+        "✔ inventory: the stuck drawer blocks its page until opened; three pages complete the gather objective once (204.35175ms)",
+        "✔ full public-input replay: talk → three pages → light the lamp → outro (skipped) completes the shift exactly once (121.286292ms)",
+        "✔ outro: natural completion and input-driven skip reach the same semantic end state (154.2245ms)",
+        "✔ checkpoint mid-route: destroy the session, restore into a fresh one, finish the same goal (83.933042ms)",
+        "✔ rain outside the window honors reduce-motion; fades resolve instantly, flashes suppressed (15.564917ms)",
+        "✔ parameters: validation rejects bad values; live apply retunes rain, the lamp and the stuck drawer (14.926833ms)",
+        "✔ top-down control: screen-relative movement on a fixed camera yaw (312.845167ms)",
+        "✔ full public-input replay: memos -> three masts -> beacon timeline (skipped) fires exactly once (347.11575ms)",
+        "✔ NPC guide: perception-gated follow — blocked LOS never follows, open ground closes in, loss resumes patrol (367.325542ms)",
+        "✔ checkpoint mid-route: destroy the session, restore into a fresh one, reach the same beacon (113.022709ms)",
+        "✔ cross-scene persistence: field -> bunker -> field keeps notebook, objectives and mast progress (118.282709ms)",
+        "✔ parameters: validation rejects bad values; live apply re-tunes masts and the NPC (21.619958ms)",
+        "✔ reduce motion: fades resolve instantly, flashes suppressed (36.000167ms)",
+        "ℹ tests 521",
         "ℹ suites 0",
-        "ℹ pass 519",
+        "ℹ pass 521",
         "ℹ fail 0",
         "ℹ cancelled 0",
         "ℹ skipped 0",
         "ℹ todo 0",
-        "ℹ duration_ms 17948.103292"
+        "ℹ duration_ms 12294.0795"
+      ]
+    },
+    {
+      "id": "game-ps1.test-browser",
+      "cwd": "game-ps1",
+      "command": "node --test test/browser/*.test.ts",
+      "gates": [
+        "B01",
+        "PR-03"
+      ],
+      "note": "browser/hosts are separated from the fast suite because real Chromium + SwiftShader is timing-sensitive under parallel load; skips as NOT_RUN without a local browser",
+      "startedAt": "2026-09-17T10:30:43.466Z",
+      "exitCode": 0,
+      "signal": null,
+      "status": "PASS",
+      "outputTail": [
+        "✔ browser boot consumes export identity + author overrides (mechanism parity) (11998.191125ms)",
+        "ℹ tests 1",
+        "ℹ suites 0",
+        "ℹ pass 1",
+        "ℹ fail 0",
+        "ℹ cancelled 0",
+        "ℹ skipped 0",
+        "ℹ todo 0",
+        "ℹ duration_ms 12127.7995"
       ]
     },
     {
@@ -158,7 +183,7 @@
       "gates": [
         "legacy-studio"
       ],
-      "startedAt": "2026-09-16T23:16:59.816Z",
+      "startedAt": "2026-09-17T10:30:55.673Z",
       "exitCode": 0,
       "signal": null,
       "status": "PASS",
@@ -174,7 +199,7 @@
       "gates": [
         "legacy-studio"
       ],
-      "startedAt": "2026-09-16T23:17:00.120Z",
+      "startedAt": "2026-09-17T10:30:56.026Z",
       "exitCode": 0,
       "signal": null,
       "status": "PASS",
@@ -182,9 +207,9 @@
         "> kanshan-ps1-studio@0.1.0 test",
         "> node --test test/*.test.mjs",
         "",
-        "✔ offline host-agent path: project -> import -> build -> validate -> preview -> private export (25.516333ms)",
-        "✔ provider is explicit and mock is labelled; idempotency detects body conflicts (9.035917ms)",
-        "✔ HTTP adapter exposes capabilities and protects local session (18.093542ms)",
+        "✔ offline host-agent path: project -> import -> build -> validate -> preview -> private export (26.360291ms)",
+        "✔ provider is explicit and mock is labelled; idempotency detects body conflicts (10.162208ms)",
+        "✔ HTTP adapter exposes capabilities and protects local session (15.964875ms)",
         "ℹ tests 3",
         "ℹ suites 0",
         "ℹ pass 3",
@@ -192,7 +217,7 @@
         "ℹ cancelled 0",
         "ℹ skipped 0",
         "ℹ todo 0",
-        "ℹ duration_ms 164.015375"
+        "ℹ duration_ms 161.526375"
       ]
     },
     {
@@ -202,7 +227,7 @@
       "gates": [
         "G18"
       ],
-      "startedAt": "2026-09-16T23:17:00.439Z",
+      "startedAt": "2026-09-17T10:30:56.341Z",
       "exitCode": 0,
       "signal": null,
       "status": "PASS",
@@ -210,13 +235,13 @@
         "> @kanshan/story-to-ps1-skill@1.0.0 check",
         "> node --check scripts/story-to-ps1.mjs && node --test test/parse.test.mjs",
         "",
-        "✔ command table covers the real R1 engine-cli surface (0.740625ms)",
-        "✔ multi-word commands resolve by longest prefix (0.698792ms)",
-        "✔ --cli may appear before or after the command; only command args are forwarded (0.121167ms)",
-        "✔ --cli=PATH form is accepted and --json is stripped from forwarded args (0.057875ms)",
-        "✔ unknown command and empty argv are BAD_INPUT errors (0.075333ms)",
-        "✔ target resolution: explicit path wins, then env, then repo default (0.333625ms)",
-        "✔ emit writes one JSON line and returns the exit code (0.085208ms)",
+        "✔ command table covers the real R1 engine-cli surface (0.599959ms)",
+        "✔ multi-word commands resolve by longest prefix (0.58575ms)",
+        "✔ --cli may appear before or after the command; only command args are forwarded (0.1005ms)",
+        "✔ --cli=PATH form is accepted and --json is stripped from forwarded args (0.047042ms)",
+        "✔ unknown command and empty argv are BAD_INPUT errors (0.065791ms)",
+        "✔ target resolution: explicit path wins, then env, then repo default (0.291458ms)",
+        "✔ emit writes one JSON line and returns the exit code (0.067708ms)",
         "ℹ tests 7",
         "ℹ suites 0",
         "ℹ pass 7",
@@ -224,7 +249,7 @@
         "ℹ cancelled 0",
         "ℹ skipped 0",
         "ℹ todo 0",
-        "ℹ duration_ms 82.916333"
+        "ℹ duration_ms 68.84625"
       ]
     },
     {
@@ -235,7 +260,7 @@
         "G15",
         "G18"
       ],
-      "startedAt": "2026-09-16T23:17:00.727Z",
+      "startedAt": "2026-09-17T10:30:56.597Z",
       "exitCode": 0,
       "signal": null,
       "status": "PASS",
@@ -243,14 +268,14 @@
         "> @kanshan/story-to-ps1-skill@1.0.0 test:integration",
         "> node --test test/wrapper-integration.test.ts",
         "",
-        "✔ test prerequisites: real engine-cli and experiences exist (0.764125ms)",
-        "✔ capabilities forwards the real envelope (exit 0) (127.648958ms)",
-        "✔ session start/step/query/stop on clockwork-flat via wrapper (1543.289125ms)",
-        "✔ author parameters list (multi-word) on noop-patch (203.073834ms)",
-        "✔ build + export noop-patch into temp dirs (2783.251208ms)",
-        "✔ target failure codes pass through exactly: missing experience -> 3 (250.302041ms)",
-        "✔ missing configured target -> wrapper NOT_IMPLEMENTED exit 3 (110.01425ms)",
-        "✔ unknown wrapper command -> BAD_INPUT exit 2 (95.350042ms)",
+        "✔ test prerequisites: real engine-cli and experiences exist (0.575417ms)",
+        "✔ capabilities forwards the real envelope (exit 0) (105.895792ms)",
+        "✔ session start/step/query/stop on clockwork-flat via wrapper (1210.515459ms)",
+        "✔ author parameters list (multi-word) on noop-patch (158.999667ms)",
+        "✔ build + export noop-patch into temp dirs (1297.831959ms)",
+        "✔ target failure codes pass through exactly: missing experience -> 3 (107.172791ms)",
+        "✔ missing configured target -> wrapper NOT_IMPLEMENTED exit 3 (52.787ms)",
+        "✔ unknown wrapper command -> BAD_INPUT exit 2 (51.694625ms)",
         "ℹ tests 8",
         "ℹ suites 0",
         "ℹ pass 8",
@@ -258,7 +283,7 @@
         "ℹ cancelled 0",
         "ℹ skipped 0",
         "ℹ todo 0",
-        "ℹ duration_ms 5411.887333"
+        "ℹ duration_ms 3179.234083"
       ]
     },
     {
@@ -268,7 +293,7 @@
       "gates": [
         "legacy-static"
       ],
-      "startedAt": "2026-09-16T23:17:06.322Z",
+      "startedAt": "2026-09-17T10:30:59.919Z",
       "exitCode": 0,
       "signal": null,
       "status": "PASS",
@@ -307,7 +332,7 @@
       "gates": [
         "legacy-root"
       ],
-      "startedAt": "2026-09-16T23:17:06.420Z",
+      "startedAt": "2026-09-17T10:30:59.979Z",
       "exitCode": 0,
       "signal": null,
       "status": "PASS",
@@ -315,7 +340,7 @@
         "> zhihu-hackathon-hello-world@1.0.0 test",
         "> node --test tests/*.test.mjs",
         "",
-        "✔ basic template excludes OAuth configuration (3.196583ms)",
+        "✔ basic template excludes OAuth configuration (2.015584ms)",
         "ℹ tests 1",
         "ℹ suites 0",
         "ℹ pass 1",
@@ -323,13 +348,13 @@
         "ℹ cancelled 0",
         "ℹ skipped 0",
         "ℹ todo 0",
-        "ℹ duration_ms 97.858958"
+        "ℹ duration_ms 63.260958"
       ]
     }
   ],
   "summary": {
-    "total": 9,
-    "pass": 9,
+    "total": 10,
+    "pass": 10,
     "fail": 0,
     "status": "PASS"
   },

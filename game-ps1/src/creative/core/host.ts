@@ -121,6 +121,12 @@ export class RuntimeSessionHost {
     return this.diagnostics;
   }
 
+  /** Append a diagnostic (bounded); used by hosts/shells wrapping a session. */
+  report(diagnostic: Diagnostic): void {
+    if (this.diagnostics.length >= this.maxDiagnostics) return;
+    this.diagnostics.push({ ...diagnostic, sessionId: this.sessionId, tick: diagnostic.tick ?? this.clock.tick });
+  }
+
   async start(module: SceneModule): Promise<SessionHandle> {
     this.assertNotStopped('command');
     this.status = 'loading';

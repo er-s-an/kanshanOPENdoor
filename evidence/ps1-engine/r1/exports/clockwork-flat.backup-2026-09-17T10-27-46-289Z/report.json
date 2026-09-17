@@ -1,0 +1,46 @@
+{
+  "buildId": "build-2026-09-17T10:26:21.564Z-d950a346",
+  "experienceDigest": "ccfbc4c84168141480ed52b626bca77da67de817a1f0163c48278039477e408a",
+  "artifactDigest": "0bf696f26e6a458e09e6d4fb3e44e77a2f10f3e99b50d50419612319bb0ae589",
+  "runtimeApiVersion": "r1.0",
+  "entry": "assets/main-Dxusu9Na.js",
+  "outDir": "/Users/xiejiachen/zhihu-hackathon-2026/kanshan-v2/game-ps1/.kanshan/builds/build-2026-09-17T10:26:21.564Z-d950a346",
+  "files": [
+    {
+      "path": "NOTICE.md",
+      "bytes": 540
+    },
+    {
+      "path": "assets/main-Dxusu9Na.js",
+      "bytes": 3479799
+    },
+    {
+      "path": "experience.json",
+      "bytes": 220
+    },
+    {
+      "path": "index.html",
+      "bytes": 499
+    },
+    {
+      "path": "source.json",
+      "bytes": 299
+    }
+  ],
+  "diagnostics": [
+    {
+      "code": "VITE_WARN",
+      "message": "(!) Some chunks are larger than 500 kB after minification. Consider:\n- Using dynamic import() to code-split the application\n- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks\n- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit."
+    }
+  ],
+  "title": "钟鸣陋室 · Clockwork Flat",
+  "rapierPresent": true,
+  "generatedAt": "2026-09-17T10:26:22.568Z",
+  "toolVersion": "r1.0",
+  "artifactDigestScope": "canonical digest over the exported file manifest [{path, bytes, sha256(file)}] — covers every exported file listed; report.json excludes itself (documented), boot/identity values are inside index.html",
+  "filesNote": "report.json is written after this listing and is therefore not part of it",
+  "closure": {
+    "referenced": 1,
+    "missing": 0
+  }
+}

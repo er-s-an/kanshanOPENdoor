@@ -1,18 +1,18 @@
 {
-  "buildId": "build-2026-09-16T23:08:57.408Z-eeab498b",
+  "buildId": "build-2026-09-17T10:27:46.444Z-ce8873d7",
   "experienceDigest": "a5ca756fe6c7a31a89b102870e8856cf3ac6721794e25fe1293e4ec1fbcbfb1a",
-  "artifactDigest": "c38a2bd09c127c74ed7f32121fcffb761c8033cfe512e61d73d3f9f685ee19f1",
+  "artifactDigest": "e0b2669a557114fefa27f955c2d80c2a653248410bca4507f5ab82f4d1219529",
   "runtimeApiVersion": "r1.0",
-  "entry": "assets/main-Ct6oCXtJ.js",
-  "outDir": "/Users/xiejiachen/zhihu-hackathon-2026/evidence/ps1-engine/r1/exports/signal-field",
+  "entry": "assets/main-CTHH2Z9U.js",
+  "outDir": "/Users/xiejiachen/zhihu-hackathon-2026/kanshan-v2/game-ps1/.kanshan/builds/build-2026-09-17T10:27:46.444Z-ce8873d7",
   "files": [
     {
       "path": "NOTICE.md",
       "bytes": 541
     },
     {
-      "path": "assets/main-Ct6oCXtJ.js",
-      "bytes": 3503020
+      "path": "assets/main-CTHH2Z9U.js",
+      "bytes": 3504012
     },
     {
       "path": "experience.json",
@@ -20,7 +20,7 @@
     },
     {
       "path": "index.html",
-      "bytes": 286
+      "bytes": 521
     },
     {
       "path": "source.json",
@@ -35,9 +35,9 @@
   ],
   "title": "旷野信号站 · Signal Field",
   "rapierPresent": true,
-  "generatedAt": "2026-09-16T23:08:59.132Z",
+  "generatedAt": "2026-09-17T10:27:47.360Z",
   "toolVersion": "r1.0",
-  "artifactDigestScope": "vite-emitted bundle assets (index.html, experience.json, source.json, NOTICE.md and report.json are excluded)",
+  "artifactDigestScope": "canonical digest over the exported file manifest [{path, bytes, sha256(file)}] — covers every exported file listed; report.json excludes itself (documented), boot/identity values are inside index.html",
   "filesNote": "report.json is written after this listing and is therefore not part of it",
   "closure": {
     "referenced": 1,

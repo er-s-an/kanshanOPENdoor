@@ -1,0 +1,46 @@
+{
+  "buildId": "build-2026-09-16T23:08:56.367Z-73e25c9b",
+  "experienceDigest": "ccfbc4c84168141480ed52b626bca77da67de817a1f0163c48278039477e408a",
+  "artifactDigest": "3c1c5e3887842e48057033efada99f8a366fc3de0015217e28bbd4e1e47de2f5",
+  "runtimeApiVersion": "r1.0",
+  "entry": "assets/main--b0E-7hn.js",
+  "outDir": "/Users/xiejiachen/zhihu-hackathon-2026/evidence/ps1-engine/r1/exports/clockwork-flat",
+  "files": [
+    {
+      "path": "NOTICE.md",
+      "bytes": 540
+    },
+    {
+      "path": "assets/main--b0E-7hn.js",
+      "bytes": 3478830
+    },
+    {
+      "path": "experience.json",
+      "bytes": 220
+    },
+    {
+      "path": "index.html",
+      "bytes": 285
+    },
+    {
+      "path": "source.json",
+      "bytes": 299
+    }
+  ],
+  "diagnostics": [
+    {
+      "code": "VITE_WARN",
+      "message": "(!) Some chunks are larger than 500 kB after minification. Consider:\n- Using dynamic import() to code-split the application\n- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks\n- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit."
+    }
+  ],
+  "title": "钟鸣陋室 · Clockwork Flat",
+  "rapierPresent": true,
+  "generatedAt": "2026-09-16T23:08:57.217Z",
+  "toolVersion": "r1.0",
+  "artifactDigestScope": "vite-emitted bundle assets (index.html, experience.json, source.json, NOTICE.md and report.json are excluded)",
+  "filesNote": "report.json is written after this listing and is therefore not part of it",
+  "closure": {
+    "referenced": 1,
+    "missing": 0
+  }
+}

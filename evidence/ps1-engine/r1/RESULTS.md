@@ -92,6 +92,12 @@ $CLI session stop --session <id>
 
 人类 Studio UI：会话启动后由 daemon 同源服务 `http://127.0.0.1:<port>/studio`（token 注入页面，不经 URL/localStorage；作者写操作需 token；未绑定对象只读）。场景树/只读 inspector/参数编辑/吸附步长变换编辑/undo-redo/会话控制条，全部走同一 command 协议。
 
+## 审计响应（2026-09-17，针对 de8c066 的外部审计）
+
+独立审计复现了导出链两处 P0（F01 未定义 outDir、F02 摘要参数类型不符）——已在固定提交上亲自复现（真实 CLI export exit 5），并全部修复 + 加固：artifactDigest 升级为防篡改规范清单（F03）；browser-player 消费导出身份与作者覆盖并与 headless 机制等价（F04，browser-config.test.ts）；生命周期句柄 + 真实表现时钟（F05）；CI 覆盖实际分支与 test:creative/skill 集成（F06）；能力报告拆分 源码存在/静态测试发现/运行记录 三级（F07）；新增 `check --experience` 真实类型检查（F08）。细节见 architecture-decisions.md AD-09。
+
+重要修正：先前报告的一次「519/519 + 导出全绿」汇总结果与固定提交上的确定性失败矛盾，说明那次绿灯不可从该提交复现。当前所有结论以修复后的新提交 + 新汇总 run（含独立 browser 层级）为准；导出类断言已升级为「先真实失败、修复后真实通过」的形态。
+
 ## 已知限制（诚实清单）
 
 - 传感器不参与角色控制器的障碍计算（Rapier 0.20 KinematicCharacterController 不过滤 sensor），目标区域用接近检测实现——已在作品 README 记录。

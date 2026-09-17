@@ -3,12 +3,19 @@
  * tool transport actually implement, with honest evidence levels.
  *
  * Evidence levels:
- * - LOCAL_ENGINEERING: proven by this repo's node:test suites against the real
- *   engine code, or by the session daemon driving a real RuntimeSessionHost.
+ * - LOCAL_ENGINEERING: the engine-side behavior is covered by this repo's
+ *   node:test suites against the real code, or by the session daemon driving
+ *   a real RuntimeSessionHost.
  * - BROWSER_RENDER_AUDIO: the engine-side logic is covered headless, but
  *   full-fidelity output (on-screen raster / audible device sound) only exists
  *   in a browser host. No capability is claimed from a dependency name alone;
  *   versions below are reported for identity, not as proof of function.
+ *
+ * Verification semantics (F07): `implemented` means "source exists and is
+ * reachable"; `testDiscovery` is a STATIC count of test() occurrences (it
+ * does NOT mean those tests passed); `runRecord` reports the last aggregate
+ * acceptance run when its results file is present, else 'unknown'. Missing
+ * run record = unknown, never pass.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -19,6 +26,7 @@ import { PROTOCOL_VERSION, ok } from './envelope.mjs';
 const MODULE_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(MODULE_DIR, '..', '..');
 const TEST_DIR = path.join(REPO_ROOT, 'test', 'creative');
+const RUN_RECORD = path.resolve(REPO_ROOT, '..', 'evidence', 'ps1-engine', 'r1', 'results.json');
 
 const LOCAL = 'LOCAL_ENGINEERING';
 const BROWSER = 'BROWSER_RENDER_AUDIO';
@@ -127,17 +135,34 @@ function libImplemented(module) {
 
 export function capabilities() {
   const evidence = collectTestEvidence();
+  // The aggregate acceptance run record, when present. Absent = unknown.
+  let runRecord;
+  try {
+    const raw = JSON.parse(fs.readFileSync(RUN_RECORD, 'utf8'));
+    runRecord = {
+      status: raw?.summary?.status ?? 'unknown',
+      generatedAt: raw?.generatedAt ?? null,
+      head: raw?.head ?? null,
+      pass: raw?.summary?.pass ?? null,
+      fail: raw?.summary?.fail ?? null,
+      source: path.relative(REPO_ROOT, RUN_RECORD),
+    };
+  } catch {
+    runRecord = { status: 'unknown', note: 'no aggregate run record found; run scripts/verify-ps1-engine.mjs' };
+  }
   const systems = SYSTEMS.map((sys) => ({
     ...sys,
     implemented: true,
-    testEvidence: evidence.perSystem[sys.id] ?? { files: 0, tests: 0 },
+    testDiscovery: evidence.perSystem[sys.id] ?? { files: 0, tests: 0 },
+    runRecord,
   }));
   systems.push({
     id: 'tools-transport',
     evidence: LOCAL,
     implemented: true,
     detail: 'session daemon owning a real RuntimeSessionHost; tools-session/tools-caps suites drive the real CLI entry',
-    testEvidence: evidence.perSystem['tools-transport'] ?? { files: 0, tests: 0 },
+    testDiscovery: evidence.perSystem['tools-transport'] ?? { files: 0, tests: 0 },
+    runRecord,
   });
 
   const operations = {

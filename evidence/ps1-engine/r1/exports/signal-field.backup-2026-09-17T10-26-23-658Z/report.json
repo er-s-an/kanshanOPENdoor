@@ -1,0 +1,46 @@
+{
+  "buildId": "build-2026-09-16T23:08:57.408Z-eeab498b",
+  "experienceDigest": "a5ca756fe6c7a31a89b102870e8856cf3ac6721794e25fe1293e4ec1fbcbfb1a",
+  "artifactDigest": "c38a2bd09c127c74ed7f32121fcffb761c8033cfe512e61d73d3f9f685ee19f1",
+  "runtimeApiVersion": "r1.0",
+  "entry": "assets/main-Ct6oCXtJ.js",
+  "outDir": "/Users/xiejiachen/zhihu-hackathon-2026/evidence/ps1-engine/r1/exports/signal-field",
+  "files": [
+    {
+      "path": "NOTICE.md",
+      "bytes": 541
+    },
+    {
+      "path": "assets/main-Ct6oCXtJ.js",
+      "bytes": 3503020
+    },
+    {
+      "path": "experience.json",
+      "bytes": 219
+    },
+    {
+      "path": "index.html",
+      "bytes": 286
+    },
+    {
+      "path": "source.json",
+      "bytes": 344
+    }
+  ],
+  "diagnostics": [
+    {
+      "code": "VITE_WARN",
+      "message": "(!) Some chunks are larger than 500 kB after minification. Consider:\n- Using dynamic import() to code-split the application\n- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks\n- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit."
+    }
+  ],
+  "title": "旷野信号站 · Signal Field",
+  "rapierPresent": true,
+  "generatedAt": "2026-09-16T23:08:59.132Z",
+  "toolVersion": "r1.0",
+  "artifactDigestScope": "vite-emitted bundle assets (index.html, experience.json, source.json, NOTICE.md and report.json are excluded)",
+  "filesNote": "report.json is written after this listing and is therefore not part of it",
+  "closure": {
+    "referenced": 1,
+    "missing": 0
+  }
+}

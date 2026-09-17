@@ -1,0 +1,46 @@
+{
+  "buildId": "build-2026-09-17T10:26:23.837Z-5088e51a",
+  "experienceDigest": "4645a54ff192c168734159538ad76c80a44cfa4ce14a0d9b28eec6dbdbd2f434",
+  "artifactDigest": "5fc331cf26a88c9543a471debfb0fea65d4a211e0d83d0fb55578bae4e3523ba",
+  "runtimeApiVersion": "r1.0",
+  "entry": "assets/main-B-1Vz5tr.js",
+  "outDir": "/Users/xiejiachen/zhihu-hackathon-2026/kanshan-v2/game-ps1/.kanshan/builds/build-2026-09-17T10:26:23.837Z-5088e51a",
+  "files": [
+    {
+      "path": "NOTICE.md",
+      "bytes": 555
+    },
+    {
+      "path": "assets/main-B-1Vz5tr.js",
+      "bytes": 3508109
+    },
+    {
+      "path": "experience.json",
+      "bytes": 239
+    },
+    {
+      "path": "index.html",
+      "bytes": 518
+    },
+    {
+      "path": "source.json",
+      "bytes": 326
+    }
+  ],
+  "diagnostics": [
+    {
+      "code": "VITE_WARN",
+      "message": "(!) Some chunks are larger than 500 kB after minification. Consider:\n- Using dynamic import() to code-split the application\n- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks\n- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit."
+    }
+  ],
+  "title": "灯塔最后一班 · The Keeper's Last Shift",
+  "rapierPresent": true,
+  "generatedAt": "2026-09-17T10:26:24.793Z",
+  "toolVersion": "r1.0",
+  "artifactDigestScope": "canonical digest over the exported file manifest [{path, bytes, sha256(file)}] — covers every exported file listed; report.json excludes itself (documented), boot/identity values are inside index.html",
+  "filesNote": "report.json is written after this listing and is therefore not part of it",
+  "closure": {
+    "referenced": 1,
+    "missing": 0
+  }
+}

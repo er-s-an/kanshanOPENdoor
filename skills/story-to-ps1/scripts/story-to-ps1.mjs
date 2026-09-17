@@ -53,6 +53,8 @@ export const COMMANDS = Object.freeze([
   "author redo",
   "build",
   "export",
+  "check",
+  "query physics",
 ]);
 
 export const EXIT = Object.freeze({ ok: 0, badInput: 2, notImplemented: 3, failed: 5 });

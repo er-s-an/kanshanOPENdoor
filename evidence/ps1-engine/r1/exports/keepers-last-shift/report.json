@@ -1,18 +1,18 @@
 {
-  "buildId": "build-2026-09-16T23:08:59.560Z-de0d7a15",
+  "buildId": "build-2026-09-17T10:27:47.524Z-65b5acde",
   "experienceDigest": "4645a54ff192c168734159538ad76c80a44cfa4ce14a0d9b28eec6dbdbd2f434",
-  "artifactDigest": "6fe43c7f2b7d29ee346416b093d1356067306bd8b66498d16f051eb976d57fd4",
+  "artifactDigest": "7e6a9f9c6565803ed257e7efad2acf618eb6e54cdd4e53bc1b4531cb546bd2f7",
   "runtimeApiVersion": "r1.0",
-  "entry": "assets/main-BtSW-VM4.js",
-  "outDir": "/Users/xiejiachen/zhihu-hackathon-2026/evidence/ps1-engine/r1/exports/keepers-last-shift",
+  "entry": "assets/main-BazHxttE.js",
+  "outDir": "/Users/xiejiachen/zhihu-hackathon-2026/kanshan-v2/game-ps1/.kanshan/builds/build-2026-09-17T10:27:47.524Z-65b5acde",
   "files": [
     {
       "path": "NOTICE.md",
       "bytes": 555
     },
     {
-      "path": "assets/main-BtSW-VM4.js",
-      "bytes": 3507143
+      "path": "assets/main-BazHxttE.js",
+      "bytes": 3508132
     },
     {
       "path": "experience.json",
@@ -20,7 +20,7 @@
     },
     {
       "path": "index.html",
-      "bytes": 304
+      "bytes": 539
     },
     {
       "path": "source.json",
@@ -35,9 +35,9 @@
   ],
   "title": "灯塔最后一班 · The Keeper's Last Shift",
   "rapierPresent": true,
-  "generatedAt": "2026-09-16T23:09:01.052Z",
+  "generatedAt": "2026-09-17T10:27:48.424Z",
   "toolVersion": "r1.0",
-  "artifactDigestScope": "vite-emitted bundle assets (index.html, experience.json, source.json, NOTICE.md and report.json are excluded)",
+  "artifactDigestScope": "canonical digest over the exported file manifest [{path, bytes, sha256(file)}] — covers every exported file listed; report.json excludes itself (documented), boot/identity values are inside index.html",
   "filesNote": "report.json is written after this listing and is therefore not part of it",
   "closure": {
     "referenced": 1,

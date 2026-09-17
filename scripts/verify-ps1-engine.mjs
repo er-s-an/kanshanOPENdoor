@@ -44,6 +44,13 @@ const CHECKS = [
     note: 'G08 audio = AUDIO_SCHEDULING_ONLY; GPU/FPS/audible output NOT_MEASURED here',
   },
   {
+    id: 'game-ps1.test-browser',
+    cwd: 'game-ps1',
+    command: 'node --test test/browser/*.test.ts',
+    gates: ['B01', 'PR-03'],
+    note: 'browser/hosts are separated from the fast suite because real Chromium + SwiftShader is timing-sensitive under parallel load; skips as NOT_RUN without a local browser',
+  },
+  {
     id: 'studio.build',
     cwd: 'studio',
     command: 'npm run build',

@@ -1,0 +1,46 @@
+{
+  "buildId": "build-2026-09-17T10:26:22.743Z-100c4d62",
+  "experienceDigest": "a5ca756fe6c7a31a89b102870e8856cf3ac6721794e25fe1293e4ec1fbcbfb1a",
+  "artifactDigest": "c6bec198e72a92f94fab714cd9121b2d95bbe9f2e668c45db0ed857d5c2f4eb2",
+  "runtimeApiVersion": "r1.0",
+  "entry": "assets/main-AiPzokMk.js",
+  "outDir": "/Users/xiejiachen/zhihu-hackathon-2026/kanshan-v2/game-ps1/.kanshan/builds/build-2026-09-17T10:26:22.743Z-100c4d62",
+  "files": [
+    {
+      "path": "NOTICE.md",
+      "bytes": 541
+    },
+    {
+      "path": "assets/main-AiPzokMk.js",
+      "bytes": 3503989
+    },
+    {
+      "path": "experience.json",
+      "bytes": 219
+    },
+    {
+      "path": "index.html",
+      "bytes": 500
+    },
+    {
+      "path": "source.json",
+      "bytes": 344
+    }
+  ],
+  "diagnostics": [
+    {
+      "code": "VITE_WARN",
+      "message": "(!) Some chunks are larger than 500 kB after minification. Consider:\n- Using dynamic import() to code-split the application\n- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks\n- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit."
+    }
+  ],
+  "title": "旷野信号站 · Signal Field",
+  "rapierPresent": true,
+  "generatedAt": "2026-09-17T10:26:23.657Z",
+  "toolVersion": "r1.0",
+  "artifactDigestScope": "canonical digest over the exported file manifest [{path, bytes, sha256(file)}] — covers every exported file listed; report.json excludes itself (documented), boot/identity values are inside index.html",
+  "filesNote": "report.json is written after this listing and is therefore not part of it",
+  "closure": {
+    "referenced": 1,
+    "missing": 0
+  }
+}

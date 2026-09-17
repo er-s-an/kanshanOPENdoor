@@ -1,0 +1,46 @@
+{
+  "buildId": "build-2026-09-16T23:08:59.560Z-de0d7a15",
+  "experienceDigest": "4645a54ff192c168734159538ad76c80a44cfa4ce14a0d9b28eec6dbdbd2f434",
+  "artifactDigest": "6fe43c7f2b7d29ee346416b093d1356067306bd8b66498d16f051eb976d57fd4",
+  "runtimeApiVersion": "r1.0",
+  "entry": "assets/main-BtSW-VM4.js",
+  "outDir": "/Users/xiejiachen/zhihu-hackathon-2026/evidence/ps1-engine/r1/exports/keepers-last-shift",
+  "files": [
+    {
+      "path": "NOTICE.md",
+      "bytes": 555
+    },
+    {
+      "path": "assets/main-BtSW-VM4.js",
+      "bytes": 3507143
+    },
+    {
+      "path": "experience.json",
+      "bytes": 239
+    },
+    {
+      "path": "index.html",
+      "bytes": 304
+    },
+    {
+      "path": "source.json",
+      "bytes": 326
+    }
+  ],
+  "diagnostics": [
+    {
+      "code": "VITE_WARN",
+      "message": "(!) Some chunks are larger than 500 kB after minification. Consider:\n- Using dynamic import() to code-split the application\n- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks\n- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit."
+    }
+  ],
+  "title": "灯塔最后一班 · The Keeper's Last Shift",
+  "rapierPresent": true,
+  "generatedAt": "2026-09-16T23:09:01.052Z",
+  "toolVersion": "r1.0",
+  "artifactDigestScope": "vite-emitted bundle assets (index.html, experience.json, source.json, NOTICE.md and report.json are excluded)",
+  "filesNote": "report.json is written after this listing and is therefore not part of it",
+  "closure": {
+    "referenced": 1,
+    "missing": 0
+  }
+}

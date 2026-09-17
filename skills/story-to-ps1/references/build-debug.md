@@ -6,6 +6,9 @@ The feedback loop for experience projects: real build → real session → inspe
 
 `build --experience <dir> --out <dir>` runs a real bundler over the entry module's dependency graph. A successful result carries `buildId`, `experienceDigest`, `artifactDigest` (output bytes), `runtimeApiVersion`, the emitted `entry`, and a `files[]` listing with byte sizes. A failed build fails — diagnostics name the file/line or asset. Never present a schema/JSON check, a type check, or an explainer page as a build.
 
+
+`check --experience <dir>` runs the real TypeScript compiler over the experience entry plus the engine sources it imports (vite only transpiles — it does NOT typecheck). Run it after writing or editing a work, before `build`; a green bundle is not proof of type-correctness. `query physics --session <id>` returns the live adapter's collider/contact list for collision debugging.
+
 `export --experience <dir> --out <dir>` produces the **private static bundle**: `index.html`, emitted assets, `experience.json`, `source.json`, `NOTICE.md` (dependency/attribution), and `report.json` with the asset-closure check (`referenced` vs `missing`) and `rapierPresent` — `false` proves unused physics WASM stayed out. `artifactDigestScope` tells you exactly which files the digest covers. Publishing a bundle is a separate human decision, not a build flag.
 
 ## The run/inspect loop

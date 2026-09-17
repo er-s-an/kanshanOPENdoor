@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, codex/initial-upload]
   pull_request:
 
 permissions:
@@ -11,7 +11,7 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -56,11 +56,22 @@ jobs:
           npm run check
           npm test
 
-      - name: Install and typecheck PS1 runtime
+      - name: Install, typecheck, and test the creative runtime
         working-directory: game-ps1
         run: |
           npm ci
           npm run check:runtime
+          npm run test:creative
+
+      - name: Test the authoring skill against the real CLI
+        working-directory: skills/story-to-ps1
+        run: |
+          npm ci
+          npm run check
+          npm run test:integration
+
+      - name: R1 aggregate acceptance runner
+        run: node scripts/verify-ps1-engine.mjs --json
 
       - name: Install, test, and build the portal
         working-directory: game

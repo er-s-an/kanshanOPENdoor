@@ -1,0 +1,9 @@
+{
+  "format": "kanshan-experience",
+  "formatVersion": 1,
+  "id": "signal-field",
+  "title": "旷野信号站 · Signal Field",
+  "entry": "src/scene.ts",
+  "runtimeApiVersion": "r1.0",
+  "checkpointSchemaVersion": 1
+}

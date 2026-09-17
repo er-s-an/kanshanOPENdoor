@@ -57,4 +57,5 @@ export const COMMANDS = {
   'author redo': { module: 'author.mjs', fn: 'redo' },
   build: { module: 'build.mjs', fn: 'build' },
   export: { module: 'build.mjs', fn: 'exportBundle' },
+  check: { module: 'check.mjs', fn: 'check' },
 };

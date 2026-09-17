@@ -6,6 +6,7 @@
  * build/export run entirely against local files).
  */
 import { promises as fs } from 'node:fs';
+import fsSync from 'node:fs';
 import path from 'node:path';
 
 /** Recursive walk; absolute paths of every file under root, sorted. */
@@ -56,9 +57,24 @@ export async function collectBundleBytes(outDir) {
   return { files, bytesByPath };
 }
 
-/** artifactDigest: sha256 over the concatenation of file bytes in sorted-path order. */
-export function digestOverFiles(files, bytesByPath, hash) {
-  return hash(Buffer.concat(files.map((f) => bytesByPath.get(f.path))));
+/**
+ * artifactDigest: SHA-256 over the canonical manifest of the exported files —
+ * for each file (sorted by path): its path, byte length, and SHA-256 of its
+ * bytes, then the file bytes themselves. Renames, byte changes and chunk
+ * boundary changes all change the digest. `dir` is the directory the files
+ * live in (files carry relative paths).
+ */
+export async function digestOverFiles(files, dir, hash) {
+  const manifest = files.map((f) => {
+    const bytes = fsSync.readFileSync(path.join(dir, f.path));
+    return { path: f.path, bytes: bytes.length, sha256: hash(bytes) };
+  });
+  const parts = [];
+  for (const entry of manifest) {
+    parts.push(Buffer.from(`${entry.path}:${entry.bytes}:${entry.sha256}\n`, 'utf8'));
+    parts.push(fsSync.readFileSync(path.join(dir, entry.path)));
+  }
+  return hash(Buffer.concat(parts));
 }
 
 const EXTERNAL_REF = /^(?:https?:|data:|blob:|mailto:|tel:|#)/i;

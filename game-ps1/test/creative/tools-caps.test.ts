@@ -71,7 +71,7 @@ test('capabilities: real systems, evidence levels, versions, limits, NOT_MEASURE
   assert.deepEqual(levels.sort(), ['BROWSER_RENDER_AUDIO', 'LOCAL_ENGINEERING']);
 
   // systems: real implemented set, every one carrying a declared evidence level.
-  const systems = data.systems as Array<{ id: string; evidence: string; implemented: boolean; testEvidence: { files: number; tests: number } }>;
+  const systems = data.systems as Array<{ id: string; evidence: string; implemented: boolean; testDiscovery: { files: number; tests: number }; runRecord: Record<string, unknown> }>;
   assert.ok(systems.length >= 15, `reports the implemented systems (${systems.length})`);
   const ids = systems.map((s) => s.id);
   for (const required of ['core', 'input', 'controllers', 'physics', 'animation', 'camera', 'audio', 'ui', 'state', 'gameplay', 'scene', 'ai', 'render', 'tools-transport']) {
@@ -80,7 +80,8 @@ test('capabilities: real systems, evidence levels, versions, limits, NOT_MEASURE
   for (const sys of systems) {
     assert.equal(sys.implemented, true, `${sys.id} implemented`);
     assert.ok(levels.includes(sys.evidence), `${sys.id} carries a declared evidence level`);
-    assert.ok(typeof sys.testEvidence.files === 'number' && typeof sys.testEvidence.tests === 'number');
+    assert.ok(typeof sys.testDiscovery.files === 'number' && typeof sys.testDiscovery.tests === 'number', `${sys.id} static test discovery counts`);
+    assert.ok(sys.runRecord && typeof sys.runRecord === 'object', `${sys.id} exposes a run record (unknown when no aggregate run exists)`);
   }
   // on-screen raster presentation is the one thing that genuinely needs a browser.
   const render = systems.find((s) => s.id === 'render')!;

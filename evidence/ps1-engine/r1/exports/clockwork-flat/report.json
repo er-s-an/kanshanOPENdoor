@@ -1,18 +1,18 @@
 {
-  "buildId": "build-2026-09-16T23:08:56.367Z-73e25c9b",
+  "buildId": "build-2026-09-17T10:27:45.390Z-d33406ec",
   "experienceDigest": "ccfbc4c84168141480ed52b626bca77da67de817a1f0163c48278039477e408a",
-  "artifactDigest": "3c1c5e3887842e48057033efada99f8a366fc3de0015217e28bbd4e1e47de2f5",
+  "artifactDigest": "4056b9ae5cc618dc21f2ae0598aef740be207458262e80c4d8049ecf29b96b31",
   "runtimeApiVersion": "r1.0",
-  "entry": "assets/main--b0E-7hn.js",
-  "outDir": "/Users/xiejiachen/zhihu-hackathon-2026/evidence/ps1-engine/r1/exports/clockwork-flat",
+  "entry": "assets/main-uzhPZw83.js",
+  "outDir": "/Users/xiejiachen/zhihu-hackathon-2026/kanshan-v2/game-ps1/.kanshan/builds/build-2026-09-17T10:27:45.390Z-d33406ec",
   "files": [
     {
       "path": "NOTICE.md",
       "bytes": 540
     },
     {
-      "path": "assets/main--b0E-7hn.js",
-      "bytes": 3478830
+      "path": "assets/main-uzhPZw83.js",
+      "bytes": 3479822
     },
     {
       "path": "experience.json",
@@ -20,7 +20,7 @@
     },
     {
       "path": "index.html",
-      "bytes": 285
+      "bytes": 520
     },
     {
       "path": "source.json",
@@ -35,9 +35,9 @@
   ],
   "title": "钟鸣陋室 · Clockwork Flat",
   "rapierPresent": true,
-  "generatedAt": "2026-09-16T23:08:57.217Z",
+  "generatedAt": "2026-09-17T10:27:46.288Z",
   "toolVersion": "r1.0",
-  "artifactDigestScope": "vite-emitted bundle assets (index.html, experience.json, source.json, NOTICE.md and report.json are excluded)",
+  "artifactDigestScope": "canonical digest over the exported file manifest [{path, bytes, sha256(file)}] — covers every exported file listed; report.json excludes itself (documented), boot/identity values are inside index.html",
   "filesNote": "report.json is written after this listing and is therefore not part of it",
   "closure": {
     "referenced": 1,

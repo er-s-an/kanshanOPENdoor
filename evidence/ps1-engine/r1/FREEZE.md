@@ -8,7 +8,7 @@ Frozen surface (any change after this point invalidates holdout evidence):
 - `skills/story-to-ps1/**` — authoring Skill + wrapper + references
 
 Hash manifest: `freeze-hashes.txt` (98 files, SHA-256 per file, sorted).
-Manifest digest: `60ac1e1cc9d10ecf977e8992d599f766ccb1bf57367f2738b31be24e475e44e0` (regenerated after the amendments below).
+Manifest digest: `9333d14e033d25cafc307f27f0dedece9833f860d74edf4c3d36bc9ef8d6ca7c` (regenerated after the audit-response fixes below).
 
 State at freeze: 519/519 creative tests pass; `tsc --noEmit` clean; skill check 7/7 + wrapper integration 8/8.
 
@@ -28,3 +28,10 @@ Development samples built BEFORE freeze (used to shape the architecture):
 Holdout rule: the third work is written after this freeze against a new brief, changing ONLY
 work TS/assets/params/tests. If core/systems/Skill/tools must change, that is a generalization
 failure: record the gap, fix, re-freeze, and pick a NEW brief.
+
+Audit-response amendment (2026-09-17): external audit of de8c066 found export P0s
+(F01/F02) + contract gaps (F03–F09). All fixed and re-verified; see
+architecture-decisions.md AD-09. Notable: the export path was proven broken at
+the pinned commit (real CLI exit 5), which also invalidates the reproducibility
+of the earlier green aggregate run; the new aggregate includes a separate
+browser tier (test/browser/) and export tests that failed-before/passed-after.

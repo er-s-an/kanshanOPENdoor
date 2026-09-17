@@ -25,6 +25,7 @@ import type { CharacterTuning } from '../../../src/creative/controllers/kinemati
 import { ActionMapper } from '../../../src/creative/input/mapper.ts';
 import { fpsDefaults } from '../../../src/creative/input/defaults.ts';
 import { HeadlessInputDevice } from '../../../src/creative/input/headless.ts';
+import { DomInputDevice } from '../../../src/creative/input/dom.ts';
 import type { InputDevice } from '../../../src/creative/input/types.ts';
 
 export const WALL_Z = -5;
@@ -81,7 +82,11 @@ export function createNarrowGateModule(opts?: NarrowGateOptions): SceneModule & 
       root.userData.authorId = 'narrow-gate/root';
 
       const physics = await installPhysics(ctx, {});
-      const device = opts?.device ?? new HeadlessInputDevice();
+      const device =
+        opts?.device ??
+        (typeof globalThis.window !== 'undefined'
+          ? new DomInputDevice({ scope: ctx.scope })
+          : new HeadlessInputDevice());
       const mapper = new ActionMapper(fpsDefaults, device, { scope: ctx.scope });
       let viewYaw = 0;
 

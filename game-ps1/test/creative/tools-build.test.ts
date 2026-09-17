@@ -21,7 +21,7 @@ const GP = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..'
 const CLI = path.join(GP, 'tools', 'engine-cli.mjs');
 const NOOP = path.join(GP, 'experiences', 'noop-patch');
 const CLOCKWORK = path.join(GP, 'experiences', 'clockwork-flat');
-const WORK = path.join(GP, '.kanshan', 'cli-test');
+const WORK = path.join(GP, '.kanshan', `cli-test-${process.pid}`);
 
 interface BuildFile {
   path: string;
@@ -173,11 +173,15 @@ test('export produces a self-contained private static bundle', async () => {
     assert.ok(top.includes(name), `${name} present in export`);
   }
 
-  // index.html loads the entry module, injects nothing privileged, embeds no tokens.
+  // index.html loads the entry module and carries NO secrets. Contract
+  // (F06): experienceDigest/buildId are integrity/version values, not access
+  // tokens — they are allowed and expected; actual secret shapes are not.
   const html = await fs.readFile(path.join(d.outDir, 'index.html'), 'utf8');
   assert.ok(html.includes(`src="./${d.entry}"`), 'index.html loads the entry chunk');
-  assert.ok(!html.includes(d.experienceDigest), 'no experience digest token in index.html');
-  assert.ok(!/sessionId|token/i.test(html), 'no session/token strings in index.html');
+  assert.ok(html.includes('__KANSHAN_BOOT__'), 'boot identity block present for the player shell');
+  assert.ok(html.includes(d.experienceDigest), 'experienceDigest embedded as integrity value');
+  assert.ok(!/(bearer|password|secret|api[_-]?key|authorization)/i.test(html), 'no secret-shaped strings in index.html');
+  assert.ok(!/sessionId/i.test(html), 'no session ids in index.html');
 
   // experience.json is a byte-exact copy of the manifest.
   const srcManifest = await fs.readFile(path.join(CLOCKWORK, 'experience.json'));
@@ -275,3 +279,48 @@ test('build without --out defaults to .kanshan/builds/<buildId>', async () => {
     if (r.env.data) await fs.rm(r.env.data.outDir, { recursive: true, force: true });
   }
 });
+
+test('F03: artifactDigest is tamper-evident (rename and byte change both detected)', async () => {
+  // Self-contained: the closure-honesty test deletes cwExport's entry chunk,
+  // so re-export to a private dir here.
+  const outDir = path.join(WORK, 'f3-export');
+  const r = runCli(['export', '--experience', CLOCKWORK, '--out', outDir]);
+  assert.equal(r.code, 0);
+  const d = r.env.data!;
+  const files = d.files.map((f: { path: string; bytes: number }) => ({ ...f }));
+  const base = await digestOverFilesForTest(files, d.outDir);
+  // Byte change: one flipped byte in the first file changes the digest.
+  const victim = path.join(d.outDir, files[0].path);
+  const original = await fs.readFile(victim);
+  const mutated = Buffer.from(original);
+  mutated[0] = mutated[0] ^ 0xff;
+  await fs.writeFile(victim, mutated);
+  const afterByte = await digestOverFilesForTest(files, d.outDir);
+  assert.notEqual(afterByte, base, 'byte change changes artifactDigest');
+  // Rename: same bytes under a different path changes the digest.
+  await fs.writeFile(victim, original);
+  const renamed = `renamed-${files[0].path}`;
+  await fs.rename(victim, path.join(d.outDir, renamed));
+  files[0] = { ...files[0], path: renamed };
+  const afterRename = await digestOverFilesForTest(files, d.outDir);
+  assert.notEqual(afterRename, base, 'path change changes artifactDigest');
+  await fs.rm(outDir, { recursive: true, force: true });
+});
+
+test('F06: secret-shape scan catches a planted token (negative proof)', () => {
+  const banned = /(bearer|password|secret|api[_-]?key|authorization)/i;
+  assert.ok(banned.test('<script>fetch("/x",{headers:{authorization:"Bearer abc"}})</script>'), 'scan detects a real secret');
+  assert.ok(!banned.test('<script>globalThis.__KANSHAN_BOOT__={"buildId":"b1"}</script>'), 'integrity values are not secrets');
+});
+
+async function digestOverFilesForTest(files: Array<{ path: string }>, dir: string): Promise<string> {
+  const { createHash } = await import('node:crypto');
+  const parts: Buffer[] = [];
+  for (const f of [...files].sort((a, b) => (a.path < b.path ? -1 : 1))) {
+    const bytes = await fs.readFile(path.join(dir, f.path));
+    const sha = createHash('sha256').update(bytes).digest('hex');
+    parts.push(Buffer.from(`${f.path}:${bytes.length}:${sha}\n`, 'utf8'));
+    parts.push(bytes);
+  }
+  return createHash('sha256').update(Buffer.concat(parts)).digest('hex');
+}
