@@ -355,7 +355,10 @@ export function createKanshanHallModule(
           ? new DomInputDevice({
               scope: ctx.scope,
               // 鼠标视角：点击画面锁定鼠标（浏览器内置 Esc 释放），未锁定时
-              // 鼠标增量不积累，避免拖选/误转。
+              // 鼠标增量不积累，避免拖选/误转。document 必须传入——设备靠
+              // pointerlockchange 事件才知道锁已生效，漏了它锁 active 永远
+              // 为 false，光标藏了视角却不动。
+              document: globalThis.document,
               requirePointerLock: true,
               pointerLockElement: pointerCanvas,
             })
