@@ -38,9 +38,15 @@ interface KanshanHallHandles {
 ## Behavior notes
 
 - `kanshan.state()` returns `'intro' | 'roam' | 'to-door:<id>' |
-  'opening:<id>' | 'seeoff'`. He roams a waypoint ring on a deterministic
-  RNG, never tracks the player (1.2m hard minimum distance), and interrupts
-  the roam for door runs.
+  'opening:<id>' | 'seeoff' | 'chat'`. He roams a waypoint ring on a
+  deterministic RNG, never tracks the player (1.2m hard minimum distance),
+  and interrupts the roam for door runs.
+- Player-initiated chat (和刘看山聊天): within 2.2m the HUD offers
+  「按 E 和刘看山聊聊」; E opens a modal dialogue box (white card,
+  `kanshan-chat`) with a four-topic tree (Digit1–4 choose, E/Esc close).
+  Chat freezes movement and look; `kanshan.chat-open` /
+  `kanshan.chat-topic` {topic} facts commit through the usual channel
+  (eventIds `kanshan:chat:open` / `kanshan:chat:<topic>`, deduped).
 - Intro (skippable, cancelPolicy 'finish'): near-black hall → blue-white
   crack of light in the entry door → doorway opens → 看山 peeks (head +
   ears, ~0.9s) → steps out, waves → hall lighting ramps up around him.
@@ -60,7 +66,8 @@ interface KanshanHallHandles {
   portal plane, plaque textures, point light), entry door with intro crack
   of light, light ramp. Headless-safe texture loading.
 - `src/headsay.ts` — above-head subtitle bubble with HUD fallback.
-- `src/dialogue.ts` — subtitle lines keyed by beat. ⚠️ DRAFT, pending review.
+- `src/chatbox.ts` — modal dialogue card for 和刘看山聊天.
+- `src/dialogue.ts` — subtitle lines keyed by beat + the chat tree. ⚠️ DRAFT.
 - `src/scene.ts` — SceneModule: intro timeline (skippable, finish policy),
   roam/door FSM, first-person wiring, HUD + head subtitles, synth audio,
   `exposeParameters` (`kanshan-hall.door-glow`).

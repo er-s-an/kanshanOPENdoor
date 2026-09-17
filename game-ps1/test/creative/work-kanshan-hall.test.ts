@@ -19,7 +19,9 @@
  *       roam, opens it, exactly one portal.enter {target:'blue-blood'};
  *   (e) head subtitles: greet line above his head + HUD fallback off-camera;
  *   (f) no mist: no particle Points under the hall group, no mist param;
- *   (g) palette sanity: light floor, blue-trimmed columns.
+ *   (g) palette sanity: light floor, blue-trimmed columns;
+ *   (h) chat: prompt + E opens the modal dialogue, options commit topic
+ *       facts (deduped), the modal freezes the player, bye/Esc close it.
  *
  * Evidence limits: audio assertions are AUDIO_SCHEDULING_ONLY (RecordingBackend
  * log), rendering is NOT_MEASURED headless.
@@ -45,7 +47,8 @@ import type { KanshanHallWorkHandles } from '../../experiences/kanshan-hall/src/
 import { HEAD_SAY_CLASS } from '../../experiences/kanshan-hall/src/headsay.ts';
 import { createKanshan } from '../../experiences/kanshan-hall/src/kanshan.ts';
 import { createHall } from '../../experiences/kanshan-hall/src/hall.ts';
-import { DIALOGUE } from '../../experiences/kanshan-hall/src/dialogue.ts';
+import { CHAT_ANSWERS, CHAT_ROOT_LINE, DIALOGUE } from '../../experiences/kanshan-hall/src/dialogue.ts';
+import { CHAT_BOX_CLASS } from '../../experiences/kanshan-hall/src/chatbox.ts';
 
 const DT = 1 / 60;
 
@@ -517,6 +520,106 @@ test('palette: bright blue-white hall (light floor, blue-trimmed columns, bright
 
   // No scene fog and no scene background (host pipeline owns the backdrop).
   assert.equal(s.handles.hall.object.parent !== null, true);
+  await s.host.stop();
+});
+
+test('chat: prompt + E opens the modal dialogue; topics commit facts; bye closes and unfreezes', async () => {
+  const s = await startWorkSession();
+  s.handles.skipIntro();
+  settleLines(s);
+
+  // Bring 看山 into conversation range (2.0m in front of the player, on
+  // camera) — the roam would eventually wander him close, the teleport is
+  // the deterministic shortcut the other behavior tests use too.
+  s.handles.kanshanRef.setPosition(0, 0, 5.0);
+  idle(s, 2);
+  assert.equal(s.handles.kanshan.state(), 'roam', 'still roaming before E');
+  assert.equal(s.handles.hud.prompt.visible, true, 'prompt offered near 看山');
+  assert.equal(s.handles.hud.prompt.label, '按 E 和刘看山聊聊');
+
+  // (a) E opens: prompt hides, the box shows the root line, FSM in 'chat',
+  // and the chat-open fact commits exactly once.
+  s.device.keyDown('KeyE');
+  s.host.step(1);
+  s.device.keyUp('KeyE');
+  assertMinDistance(s);
+  assert.equal(s.handles.kanshan.state(), 'chat', 'FSM in chat');
+  assert.equal(s.handles.hud.prompt.visible, false, 'prompt hidden while chatting');
+  assert.ok(s.handles.chatBox.visible, 'dialogue box visible');
+  const boxEl = s.doc.root.queryByClass(CHAT_BOX_CLASS);
+  assert.ok(boxEl && !boxEl.hidden, 'kanshan-chat element live in the injected document');
+  assert.equal(s.handles.chatBox.lineText(), CHAT_ROOT_LINE, 'box shows the root line');
+  const chatOpens = commitsOf(s, 'kanshan.chat-open');
+  assert.equal(chatOpens.length, 1, 'chat-open committed exactly once');
+  assert.equal(chatOpens[0].eventId, 'kanshan:chat:open');
+
+  // (e) his line is also the above-head bubble line.
+  assert.equal(s.handles.headSubtitle.text(), CHAT_ROOT_LINE, 'head bubble carries the chat line');
+
+  // (d) modal freeze: holding W does not move the player.
+  const before = pos(s);
+  s.device.keyDown('KeyW');
+  idle(s, 30);
+  s.device.keyUp('KeyW');
+  assert.equal(pos(s)[0], before[0], 'no lateral drift while chatting');
+  assert.equal(pos(s)[2], before[2], 'no forward movement while chatting');
+
+  // (b) option 1 → the place answer + the topic fact; choosing it again is
+  // a duplicate receipt and stays a single commit in the log.
+  s.device.keyDown('Digit1');
+  s.host.step(1);
+  s.device.keyUp('Digit1');
+  assert.equal(s.handles.chatBox.lineText(), CHAT_ANSWERS.place, 'box shows the place answer');
+  assert.equal(s.handles.headSubtitle.text(), CHAT_ANSWERS.place, 'bubble shows the place answer');
+  const topics = commitsOf(s, 'kanshan.chat-topic');
+  assert.equal(topics.length, 1, 'one topic commit so far');
+  assert.equal((topics[0].payload as { topic: string }).topic, 'place');
+  assert.equal(topics[0].eventId, 'kanshan:chat:place');
+  s.device.keyDown('Digit1');
+  s.host.step(1);
+  s.device.keyUp('Digit1');
+  assert.equal(commitsOf(s, 'kanshan.chat-topic').length, 1, 'topic fact deduped per topic');
+
+  // Esc closes as well.
+  s.device.keyDown('Escape');
+  s.host.step(1);
+  s.device.keyUp('Escape');
+  assert.equal(s.handles.kanshan.state(), 'roam', 'Esc closes back to roam');
+  assert.ok(!s.handles.chatBox.visible, 'box hidden after Esc');
+
+  // Reopening works and never re-commits chat-open (once per session).
+  s.device.keyDown('KeyE');
+  s.host.step(1);
+  s.device.keyUp('KeyE');
+  assert.equal(s.handles.kanshan.state(), 'chat', 'E reopens the dialogue');
+  assert.equal(commitsOf(s, 'kanshan.chat-open').length, 1, 'reopen never re-commits chat-open');
+  s.device.keyDown('Escape');
+  s.host.step(1);
+  s.device.keyUp('Escape');
+  assert.equal(s.handles.kanshan.state(), 'roam', 'second Esc closes again');
+
+  // (c) bye: reopen, choose 4 — closes, and movement works again.
+  s.device.keyDown('KeyE');
+  s.host.step(1);
+  s.device.keyUp('KeyE');
+  assert.equal(s.handles.kanshan.state(), 'chat');
+  s.device.keyDown('Digit4');
+  s.host.step(1);
+  s.device.keyUp('Digit4');
+  assert.equal(s.handles.kanshan.state(), 'roam', 'bye closes back to roam');
+  assert.ok(!s.handles.chatBox.visible, 'box hidden after bye');
+  assert.equal(s.handles.headSubtitle.text(), CHAT_ANSWERS.bye, 'the sign-off line plays');
+  const byeCommits = commitsOf(s, 'kanshan.chat-topic').filter(
+    (e) => (e.payload as { topic: string }).topic === 'bye',
+  );
+  assert.equal(byeCommits.length, 1, 'bye topic fact committed once');
+  const beforeMove = pos(s);
+  s.device.keyDown('KeyW');
+  idle(s, 30);
+  s.device.keyUp('KeyW');
+  assert.ok(pos(s)[2] < beforeMove[2] - 0.05, 'movement restored after close');
+  assert.deepEqual(VIOLATIONS, [], 'the 1.2m invariant held throughout the chat');
+
   await s.host.stop();
 });
 

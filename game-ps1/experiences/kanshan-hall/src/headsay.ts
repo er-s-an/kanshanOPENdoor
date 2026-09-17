@@ -49,6 +49,8 @@ export interface HeadSay {
   bubbleVisible(): boolean;
   /** Queue a line above his head (or the HUD fallback when off-camera). */
   say(line: string, durationMs?: number): void;
+  /** Replace the current line immediately (drop the queue) — modal dialogue. */
+  sayNow(line: string, durationMs?: number): void;
   /** Advance timers + re-project. Call once per present tick. */
   tick(dtMs: number): void;
   /** Drop the current line and the whole queue from both channels. */
@@ -128,6 +130,12 @@ export function createHeadSay(options: HeadSayOptions): HeadSay {
     },
     say(line: string, durationMs = 4000): void {
       queue.push({ text: line, remainingMs: durationMs });
+    },
+    sayNow(line: string, durationMs = 4000): void {
+      // Modal dialogue (chat): the answer must land NOW, not behind the
+      // still-showing previous line. The tick re-renders either channel.
+      queue.length = 0;
+      current = { text: line, remainingMs: durationMs };
     },
     tick(dtMs: number): void {
       if (current) {

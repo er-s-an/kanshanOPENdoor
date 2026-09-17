@@ -39,3 +39,33 @@ export function doorOpenBeat(doorId: string): DialogueBeat | null {
   if (doorId === 'myopia') return 'open.myopia';
   return null;
 }
+
+/**
+ * 和刘看山聊天 — the player-initiated conversation tree (modal).
+ * ⚠️ DRAFT, same as the rest of the copy. Pure data: scene.ts drives the
+ * chat state, the dialogue box, and the commits from these tables.
+ */
+export type ChatTopic = 'place' | 'doors' | 'who' | 'bye';
+
+export interface ChatOption {
+  /** Row label as rendered (「N 这是哪儿？」 numbering happens in scene). */
+  readonly label: string;
+  readonly topic: ChatTopic;
+}
+
+export const CHAT_ROOT_LINE = '嗯？想聊点什么？';
+
+export const CHAT_OPTIONS: readonly ChatOption[] = [
+  { label: '这是哪儿？', topic: 'place' },
+  { label: '那三扇门？', topic: 'doors' },
+  { label: '你到底是谁？', topic: 'who' },
+  { label: '没事，随便逛逛', topic: 'bye' },
+];
+
+/** Answer per topic; topics 1–3 return to the root options, 'bye' closes. */
+export const CHAT_ANSWERS: Record<ChatTopic, string> = {
+  place: '知乎所有故事的候车大厅。每一扇门后面都是一个完整的世界——进去之前，先想好自己想带走什么。',
+  doors: '端妃、蓝血、近视眼，三个真实存在过的故事。走到门前站一会儿，我就来开门。',
+  who: '刘看山。看门的山，也是看故事的山。好了，不能再剧透了。',
+  bye: '行，慢慢逛。开门的事，包在我身上。',
+};

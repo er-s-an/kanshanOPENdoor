@@ -309,12 +309,14 @@ export function createKanshan(opts: KanshanOptions = {}): Kanshan {
   earR.rotation.z = -0.24;
   body.add(earL, earR);
 
-  // Nose: big black oval, proud of the face.
-  const noseGeo = new THREE.SphereGeometry(1, 12, 10);
+  // Nose: big black oval, clearly PROUD of the face — the official
+  // turnaround shows it bulging well forward of the muzzle in side profile
+  // (a rounded snout, not a flat disc on the face).
+  const noseGeo = new THREE.SphereGeometry(1, 14, 12);
   const nose = new THREE.Mesh(noseGeo, black);
   nose.name = names.nose;
-  nose.scale.set(0.088, 0.105, 0.09);
-  nose.position.set(0, NOSE_Y - TORSO_BOTTOM_Y, TORSO_DEPTH / 2 + TORSO_BEVEL + 0.015);
+  nose.scale.set(0.092, 0.122, 0.135);
+  nose.position.set(0, NOSE_Y - TORSO_BOTTOM_Y, TORSO_DEPTH / 2 + TORSO_BEVEL + 0.055);
   body.add(nose);
 
   // Eyes: two small black dots beside the nose top.

@@ -22,7 +22,10 @@
  *       distance 1.2m, enforced every step); when the player lingers within
  *       1.6m of a closed door for >0.6s he runs to it, plays openDoor, the
  *       door swings and its glow rises, and a line above his head names the
- *       world.
+ *       world. Within 2.2m of him the HUD offers 「按 E 和刘看山聊聊」: a
+ *       modal dialogue box (movement + look frozen) with a four-topic
+ *       conversation tree; topics commit kanshan.chat-* facts and 'bye'
+ *       (or E/Esc) hands the hall back to roaming.
  *   (c) portal.enter: crossing an open door's plane commits
  *       'portal.enter' {target} with eventId `portal:enter:<id>` exactly once
  *       per door per session, notifies portalEnter subscribers exactly once,
@@ -76,7 +79,9 @@ import { createHall } from './hall.ts';
 import type { DoorHandle, Hall, HallTextureLoader } from './hall.ts';
 import { createHeadSay } from './headsay.ts';
 import type { HeadSay } from './headsay.ts';
-import { DIALOGUE, doorOpenBeat } from './dialogue.ts';
+import { createChatBox } from './chatbox.ts';
+import type { ChatBox } from './chatbox.ts';
+import { CHAT_ANSWERS, CHAT_OPTIONS, CHAT_ROOT_LINE, DIALOGUE, doorOpenBeat } from './dialogue.ts';
 
 // ---------------------------------------------------------------------------
 // Layout + tuning constants
@@ -109,6 +114,9 @@ const DOOR_TRIGGER_RADIUS = 1.6;
 const DOOR_DWELL_SECONDS = 0.6;
 const DOOR_OPEN_SPOT = 0.85; // meters in front of the door plane
 const SEEOFF_SECONDS = 1.6;
+/** Player-initiated chat: prompt + open radius around 看山. */
+const CHAT_TRIGGER_RADIUS = 2.2;
+const CHAT_PROMPT_LABEL = '按 E 和刘看山聊聊';
 
 /** Free-roam waypoint ring (r 3–6.5m); exported for tests/tools. */
 export const ROAM_WAYPOINTS: readonly Vec3[] = [
@@ -146,6 +154,8 @@ export interface KanshanHallWorkHandles extends KanshanHallHandles {
   readonly hud: Hud;
   /** 看山's above-head subtitle bubble (falls back to the HUD off-camera). */
   readonly headSubtitle: HeadSay;
+  /** Modal dialogue box for 和刘看山聊天 (bottom-center card). */
+  readonly chatBox: ChatBox;
   readonly audio: AudioPlayer;
   readonly params: ParameterRegistry;
   readonly camera: THREE.PerspectiveCamera;
@@ -340,7 +350,15 @@ export function createKanshanHallModule(
       const hasDom = typeof globalThis.window !== 'undefined' && typeof globalThis.document !== 'undefined';
       const device: InputDevice = options.device ?? (hasDom ? new DomInputDevice({ scope: ctx.scope }) : new HeadlessInputDevice());
       const actionMap = mergeActionMaps(fpsDefaults, {
-        actions: { skip: [{ kind: 'key', code: 'Escape' }] },
+        actions: {
+          skip: [{ kind: 'key', code: 'Escape' }],
+          // 和刘看山聊天: numbered option rows (Digit1..Digit4). 'interact'
+          // (KeyE, from fpsDefaults) opens/advances/closes the dialogue.
+          opt1: [{ kind: 'key', code: 'Digit1' }],
+          opt2: [{ kind: 'key', code: 'Digit2' }],
+          opt3: [{ kind: 'key', code: 'Digit3' }],
+          opt4: [{ kind: 'key', code: 'Digit4' }],
+        },
         axes: {},
       });
       const mapper = new ActionMapper(actionMap, device, { scope: ctx.scope });
@@ -390,6 +408,9 @@ export function createKanshanHallModule(
         viewport: hasDom ? { width: globalThis.window.innerWidth, height: globalThis.window.innerHeight } : undefined,
       });
 
+      // ---- modal dialogue box (和刘看山聊天) -------------------------------------------------
+      const chatBox = createChatBox({ doc, parent: hud.element });
+
       // ---- hall lighting ramp (intro: near-black -> daylight around him) ---------------------
       // Timeline-tweened proxy: a tween on userData.k keeps natural completion
       // and skip() in the SAME end state (finish policy fast-forwards it).
@@ -408,9 +429,10 @@ export function createKanshanHallModule(
 
       // ---- guide state machine (ai/fsm) ------------------------------------------------------
       // intro -> roam; roam --player-at-door--> to-door --at-door--> opening
-      // --door-open--> seeoff --seeoff-done--> roam. 看山 free-roams the hall
-      // on his own and NEVER tracks the player; a door run interrupts the
-      // roam from wherever he happens to be.
+      // --door-open--> seeoff --seeoff-done--> roam; roam --start-chat-->
+      // chat --chat-close--> roam. 看山 free-roams the hall on his own and
+      // NEVER tracks the player; a door run interrupts the roam from
+      // wherever he happens to be, and player-initiated chat pauses it.
       let openingDoor: DoorHandle | null = null;
       let openingTimer = 0;
       let openingCommitted = false;
@@ -479,6 +501,15 @@ export function createKanshanHallModule(
               if (seeoffTimer >= SEEOFF_SECONDS) fsm.fire('seeoff-done');
             },
           },
+          {
+            id: 'chat',
+            enter: () => {
+              kanshan.play('idle');
+            },
+            update: (dt) => {
+              facePlayer(dt);
+            },
+          },
         ],
         transitions: [
           { from: 'intro', on: 'intro-done', to: 'roam' },
@@ -489,6 +520,8 @@ export function createKanshanHallModule(
           { from: 'opening', on: 'abort-open', to: 'roam' },
           { from: 'seeoff', on: 'seeoff-done', to: 'roam' },
           { from: 'seeoff', on: 'abort-open', to: 'roam' },
+          { from: 'roam', on: 'start-chat', to: 'chat' },
+          { from: 'chat', on: 'chat-close', to: 'roam' },
         ],
       });
 
@@ -638,6 +671,44 @@ export function createKanshanHallModule(
         }
       };
 
+      // ---- 和刘看山聊天 (player-initiated dialogue) --------------------------------------------
+      let chatOpen = false;
+      let promptShown = false;
+
+      const chatOptionRows = (): string[] => CHAT_OPTIONS.map((o, i) => `${i + 1} ${o.label}`);
+
+      const openChat = (): void => {
+        chatOpen = true;
+        fsm.fire('start-chat');
+        // Deduped by eventId: exactly one chat-open envelope per session,
+        // even though the player may chat any number of times.
+        ctx.commit('kanshan.chat-open', {}, 'kanshan:chat:open');
+        chatBox.open(CHAT_ROOT_LINE, chatOptionRows());
+        headSay.sayNow(CHAT_ROOT_LINE, 3600);
+      };
+
+      const closeChat = (): void => {
+        if (!chatOpen) return;
+        chatOpen = false;
+        chatBox.close();
+        fsm.fire('chat-close');
+      };
+
+      const chooseChatOption = (index: number): void => {
+        const option = CHAT_OPTIONS[index];
+        if (!option) return;
+        // Topic facts are deduped by eventId (a repeat answer yields a
+        // duplicate receipt); the line itself always plays.
+        ctx.commit('kanshan.chat-topic', { topic: option.topic }, `kanshan:chat:${option.topic}`);
+        headSay.sayNow(CHAT_ANSWERS[option.topic], 4200);
+        if (option.topic === 'bye') {
+          closeChat();
+          return;
+        }
+        // Topics 1–3 answer and fall back to the root options.
+        chatBox.setLine(CHAT_ANSWERS[option.topic]);
+      };
+
       // ---- presentation reactions to committed facts -------------------------------------------
       let introDone = false;
       let crackTarget = 0;
@@ -771,6 +842,25 @@ export function createKanshanHallModule(
           player.update(EMPTY_ACTION_STATE, viewYaw, frame.dt);
           return;
         }
+        if (chatOpen) {
+          // Modal dialogue: movement AND look are frozen; keys drive the box.
+          if (snap.pressed('interact') || snap.pressed('skip')) closeChat();
+          else if (snap.pressed('opt1')) chooseChatOption(0);
+          else if (snap.pressed('opt2')) chooseChatOption(1);
+          else if (snap.pressed('opt3')) chooseChatOption(2);
+          else if (snap.pressed('opt4')) chooseChatOption(3);
+          player.update(EMPTY_ACTION_STATE, viewYaw, frame.dt);
+          return;
+        }
+        if (
+          snap.pressed('interact') &&
+          fsm.stateId === 'roam' &&
+          kanshan.distanceTo(player.position[0], player.position[2]) <= CHAT_TRIGGER_RADIUS
+        ) {
+          openChat();
+          player.update(EMPTY_ACTION_STATE, viewYaw, frame.dt);
+          return;
+        }
         viewYaw -= snap.axis('look.x');
         viewPitch = Math.min(1.45, Math.max(-1.45, viewPitch - snap.axis('look.y')));
         player.update(snap, viewYaw, frame.dt);
@@ -791,6 +881,15 @@ export function createKanshanHallModule(
           fsm.fire('intro-done');
         }
         if (introDone) fsm.update(dt);
+        // Interaction prompt: offered only while he is roaming (never during
+        // a door run or the intro) and the player stands within chat range.
+        const chatEligible =
+          fsm.stateId === 'roam' && kanshan.distanceTo(player.position[0], player.position[2]) <= CHAT_TRIGGER_RADIUS;
+        if (chatEligible !== promptShown) {
+          promptShown = chatEligible;
+          if (chatEligible) hud.prompt.show(CHAT_PROMPT_LABEL);
+          else hud.prompt.hide();
+        }
         // The player can close the distance in ANY state (seeoff included):
         // the minimum-distance invariant is enforced unconditionally, once
         // per fixed step, for the whole session.
@@ -863,6 +962,7 @@ export function createKanshanHallModule(
         kanshanRef: kanshan,
         hud,
         headSubtitle: headSay,
+        chatBox,
         audio,
         params,
         camera,
