@@ -160,8 +160,8 @@ export function Doors() {
     window.location.assign(new URL(destination, window.location.href).toString());
   }, [prefs.sfx]);
 
-  const pickMyopia = useCallback(() => pick3DExperience(MYOPIA_EXPERIENCE_ID, MYOPIA_TITLE, 'myopia-3d/'), [pick3DExperience]);
-  const pickConsort = useCallback(() => pick3DExperience(CONSORT_EXPERIENCE_ID, CONSORT_TITLE, 'myopia-3d/end-consort.html'), [pick3DExperience]);
+  const pickMyopia = useCallback(() => pick3DExperience(MYOPIA_EXPERIENCE_ID, MYOPIA_TITLE, '/myopia-3d/myopia.html'), [pick3DExperience]);
+  const pickConsort = useCallback(() => pick3DExperience(CONSORT_EXPERIENCE_ID, CONSORT_TITLE, '/myopia-3d/end-consort.html'), [pick3DExperience]);
 
   // Only the explicit review shortcut may bypass the welcome and door choice.
   // A normal ?story= link merely highlights that door after Liu Kanshan's welcome.

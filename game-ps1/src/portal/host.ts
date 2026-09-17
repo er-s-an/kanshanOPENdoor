@@ -111,12 +111,13 @@ export type DoorId = (typeof DOOR_IDS)[number];
 
 export const DOOR_PAGES: DoorConfig = {
   duanfei: './end-consort.html',
-  // ARG 版蓝血（调查论证玩法，结局含人格分享卡）: served same-origin from
-  // dist/arg (synced by scripts/sync-arg.mjs), /api proxied by portal-serve.
-  // Story id from the gateway registry (game/stories/蓝血-*.json, 36 幕完整版；
-  // playable-blue.json 是 6 幕切片，网关不注册它)。
-  'blue-blood': './arg/?story=蓝血-2025684191967294692',
-  myopia: './index.html',
+  // 蓝血门走 ARG 版（调查论证玩法，结局含人格分享卡）: same-origin from
+  // dist/arg, /api proxied by portal-serve. scene=1 是直进通道（不加则只
+  // 高亮门、进 ARG 自己的 2D 大厅）。Story id 来自网关注册表。
+  'blue-blood': './arg/?scene=1&story=蓝血-2025684191967294692',
+  // 必须用 myopia.html：站点根 / 已是 hall（index.html = hall），
+  // 指 ./index.html 会 hall 套 hall 递归。
+  myopia: './myopia.html',
 };
 
 export type PortalPhase = 'booting' | 'hall' | 'entering' | 'in-work' | 'error';
@@ -304,7 +305,10 @@ export function createPortalHost(deps: PortalHostDeps): PortalHost {
       frame.setAttribute('src', url);
       // Exactly these two permissions — the works are first-party same-origin
       // pages and need script + same-origin; nothing else (no top navigation).
-      frame.setAttribute('sandbox', 'allow-scripts allow-same-origin');
+      // allow-pointer-lock: the legacy stories (近视眼 etc.) acquire pointer
+      // lock on canvas mousedown for mouse-look; without this token the
+      // sandboxed iframe's requestPointerLock is rejected.
+      frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-pointer-lock');
       frame.setAttribute('title', titleFor(target));
       frame.classList.add(FRAME_CLASS);
       const readyTimer = deps.win.setTimeout(() => {

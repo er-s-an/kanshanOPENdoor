@@ -365,14 +365,14 @@ test('door config maps the three door ids to the real dist-relative story pages'
   assert.deepEqual(Object.keys(DOOR_PAGES).sort(), [...DOOR_IDS].sort());
   assert.equal(DOOR_PAGES.duanfei, './end-consort.html');
   // 蓝血门走 ARG 版（dist/arg + ?story= 深链），结局含人格分享卡。
-  assert.equal(DOOR_PAGES['blue-blood'], './arg/?story=蓝血-2025684191967294692');
-  assert.equal(DOOR_PAGES.myopia, './index.html');
+  assert.equal(DOOR_PAGES['blue-blood'], './arg/?scene=1&story=蓝血-2025684191967294692');
+  assert.equal(DOOR_PAGES.myopia, './myopia.html');
   assert.ok(DEFAULT_PORTAL_TIMINGS.readyTimeoutMs > DEFAULT_PORTAL_TIMINGS.fadeMs);
   assert.ok(DEFAULT_PORTAL_TIMINGS.fadeMs > 0);
 });
 
 test('story source pages exist as vite inputs at the game-ps1 root', () => {
-  for (const page of ['end-consort.html', 'index.html']) {
+  for (const page of ['end-consort.html', 'myopia.html']) {
     assert.ok(fs.existsSync(path.join(REPO_ROOT, page)), `${page} exists`);
   }
   // 蓝血门改走 ARG 版：其同步源是 game/dist（gitignored 构建产物，不总存在），
@@ -395,15 +395,16 @@ test('boot lands in the hall; portalEnter drives enter() into a sandboxed iframe
   const frames = f.frames();
   assert.equal(frames.length, 1);
   const frame = frames[0];
-  assert.equal(frame.getAttribute('src'), './arg/?story=蓝血-2025684191967294692');
+  assert.equal(frame.getAttribute('src'), './arg/?scene=1&story=蓝血-2025684191967294692');
   // Door title from the hall contract's doors table, not the raw id.
   assert.equal(frame.getAttribute('title'), '蓝血');
   const perms = (frame.getAttribute('sandbox') ?? '').split(/\s+/);
   assert.ok(perms.includes('allow-scripts'), 'sandbox allows scripts');
   assert.ok(perms.includes('allow-same-origin'), 'sandbox allows same-origin');
+  assert.ok(perms.includes('allow-pointer-lock'), 'sandbox allows pointer lock (legacy stories mouse-look)');
   assert.equal(perms.includes('allow-top-navigation'), false, 'no top-navigation permission');
   assert.equal(perms.some((p) => p.startsWith('allow-top-navigation')), false);
-  assert.equal(perms.length, 2, 'exactly two sandbox permissions');
+  assert.equal(perms.length, 3, 'exactly three sandbox permissions, no extras');
   assert.ok(frame.classList.contains('portal-frame'));
   assert.equal(frame.hidden, false);
   assert.equal(frame.focusCount, 1, 'iframe focused on entry');

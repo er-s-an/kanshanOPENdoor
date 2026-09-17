@@ -10,7 +10,7 @@
     "dev:gateway": "node server/gateway.mjs",
     "dev:mock": "node server/mock-upstream.mjs",
     "build": "vite build",
-    "build:experiences": "npm run build && npm --prefix ../game-ps1 run build && node scripts/bundle-myopia.mjs",
+    "build:experiences": "npm run build -- --base=/arg/ && npm --prefix ../game-ps1 run build && node ../game-ps1/scripts/sync-arg.mjs && node scripts/assemble-root.mjs",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "start": "node server/gateway.mjs",
