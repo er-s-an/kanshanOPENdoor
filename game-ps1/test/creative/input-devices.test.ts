@@ -294,3 +294,80 @@ test('headless device ties to a Scope and rejects stepping after dispose', () =>
   scope.dispose();
   assert.throws(() => device.nextFrame(), /disposed/);
 });
+
+test('headless device: touchDrag accumulates across calls, outputs once, then clears', () => {
+  const device = new HeadlessInputDevice();
+  device.touchDrag('look', 6, -3);
+  device.touchDrag('look', 4, 5);
+
+  const frame = device.nextFrame();
+  assert.deepEqual(frame.touchDrags?.get('look'), { dx: 10, dy: 2 }, 'two queued drags sum into one frame');
+
+  const next = device.nextFrame();
+  assert.equal(next.touchDrags?.size, 0, 'drag deltas are consumed per frame');
+
+  device.touchDrag('look', 1, 1);
+  device.reset();
+  assert.equal(device.nextFrame().touchDrags?.size, 0, 'reset clears queued drag deltas');
+});
+
+test('dom touch-drag area: deltas accumulate from clientX/Y per frame, pointer-filtered', () => {
+  const area = new FakeTarget();
+  const device = new DomInputDevice({
+    keys: new FakeTarget(),
+    touchDragAreas: new Map([['look', area as never]]),
+    now: () => 1000,
+  });
+
+  area.dispatch('pointerdown', { pointerId: 7, clientX: 10, clientY: 10 });
+  area.dispatch('pointermove', { pointerId: 7, clientX: 16, clientY: 7 });
+  area.dispatch('pointermove', { pointerId: 7, clientX: 20, clientY: 12 });
+  const frame = device.nextFrame();
+  assert.deepEqual(frame.touchDrags?.get('look'), { dx: 10, dy: 2 }, 'moves sum: (16-10)+(20-16), (7-10)+(12-7)');
+
+  assert.equal(device.nextFrame().touchDrags?.size, 0, 'deltas are consumed per frame');
+
+  // The tracking pointer survives the frame: the next move continues from its
+  // last position rather than re-anchoring.
+  area.dispatch('pointermove', { pointerId: 7, clientX: 26, clientY: 10 });
+  assert.deepEqual(device.nextFrame().touchDrags?.get('look'), { dx: 6, dy: -2 }, 'drag continues after a frame boundary');
+
+  // Moves from any other pointer are ignored.
+  area.dispatch('pointermove', { pointerId: 99, clientX: 100, clientY: 100 });
+  assert.equal(device.nextFrame().touchDrags?.size, 0, 'other pointers are ignored');
+
+  // A pointerup from a non-owning pointer must not end the drag.
+  area.dispatch('pointerup', { pointerId: 99 });
+  area.dispatch('pointermove', { pointerId: 7, clientX: 30, clientY: 14 });
+  assert.deepEqual(device.nextFrame().touchDrags?.get('look'), { dx: 4, dy: 4 }, 'foreign pointerup does not end the drag');
+
+  // The owning pointer's up ends it: later moves find no tracking pointer.
+  area.dispatch('pointerup', { pointerId: 7 });
+  area.dispatch('pointermove', { pointerId: 7, clientX: 40, clientY: 20 });
+  assert.equal(device.nextFrame().touchDrags?.size, 0, 'drag ended by its owning pointer');
+
+  device.dispose();
+});
+
+test('dom touch-drag area: reset() clears accumulated deltas and the tracking pointer', () => {
+  const area = new FakeTarget();
+  const device = new DomInputDevice({
+    keys: new FakeTarget(),
+    touchDragAreas: new Map([['look', area as never]]),
+    now: () => 1000,
+  });
+
+  area.dispatch('pointerdown', { pointerId: 7, clientX: 0, clientY: 0 });
+  area.dispatch('pointermove', { pointerId: 7, clientX: 5, clientY: 5 });
+  device.reset();
+  assert.equal(device.nextFrame().touchDrags?.size, 0, 'accumulated deltas dropped by reset');
+
+  area.dispatch('pointermove', { pointerId: 7, clientX: 50, clientY: 50 });
+  assert.equal(device.nextFrame().touchDrags?.size, 0, 'reset also drops the tracking pointer');
+
+  area.dispatch('pointerdown', { pointerId: 7, clientX: 10, clientY: 10 });
+  area.dispatch('pointermove', { pointerId: 7, clientX: 13, clientY: 11 });
+  assert.deepEqual(device.nextFrame().touchDrags?.get('look'), { dx: 3, dy: 1 }, 'area works again after a fresh down');
+
+  device.dispose();
+});

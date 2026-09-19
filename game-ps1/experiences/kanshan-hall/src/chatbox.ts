@@ -15,11 +15,28 @@ export const CHAT_BOX_CLASS = 'kanshan-chat';
 
 const CARD_STYLE =
   'position:absolute;left:50%;transform:translateX(-50%);bottom:110px;min-width:300px;' +
-  'max-width:540px;background:#ffffff;color:#17325e;border:1px solid #b9d2f2;border-radius:12px;' +
+  'max-width:min(540px,calc(100vw - 32px));background:#ffffff;color:#17325e;border:1px solid #b9d2f2;border-radius:12px;' +
   'box-shadow:0 6px 24px rgba(23,64,120,0.18);padding:12px 16px;z-index:20;';
 const SPEAKER_STYLE = 'font-size:12px;color:#0066ff;letter-spacing:0.08em;margin-bottom:4px;';
 const LINE_STYLE = 'font-size:15px;line-height:1.5;margin-bottom:8px;';
-const OPTION_STYLE = 'font-size:14px;line-height:1.7;color:#24406e;';
+// Option rows are tappable on touch screens: fat-finger padding + a hairline
+// separator + pointer cursor; the number prefix still matches the keyboard.
+const OPTION_STYLE =
+  'font-size:14px;line-height:1.7;color:#24406e;padding:8px 4px;border-top:1px solid #e6eefb;' +
+  'cursor:pointer;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;';
+const CLOSE_STYLE =
+  'position:absolute;top:6px;right:10px;width:28px;height:28px;line-height:28px;text-align:center;' +
+  'font-size:14px;color:#6b86ad;cursor:pointer;user-select:none;-webkit-user-select:none;' +
+  '-webkit-tap-highlight-color:transparent;';
+
+export interface ChatBoxOptions {
+  doc: DocumentLike;
+  parent?: DomElementLike;
+  /** Tapped/clicked an option row (0-based, same order as open() labels). */
+  onOption?: (index: number) => void;
+  /** Tapped/clicked the ✕ close affordance (touch screens have no Esc). */
+  onClose?: () => void;
+}
 
 export interface ChatBox {
   readonly element: DomElementLike;
@@ -34,7 +51,7 @@ export interface ChatBox {
   close(): void;
 }
 
-export function createChatBox(options: { doc: DocumentLike; parent?: DomElementLike }): ChatBox {
+export function createChatBox(options: ChatBoxOptions): ChatBox {
   const doc = options.doc;
 
   const element = doc.createElement('div');
@@ -51,6 +68,14 @@ export function createChatBox(options: { doc: DocumentLike; parent?: DomElementL
   line.setAttribute('style', LINE_STYLE);
   const optionsEl = doc.createElement('div');
   optionsEl.classList.add('kanshan-chat__options');
+  const closeButton = doc.createElement('div');
+  closeButton.classList.add('kanshan-chat__close');
+  closeButton.setAttribute('style', CLOSE_STYLE);
+  closeButton.setAttribute('role', 'button');
+  closeButton.setAttribute('aria-label', '关闭对话');
+  closeButton.textContent = '✕';
+  closeButton.addEventListener('click', () => options.onClose?.());
+  element.appendChild(closeButton);
   element.appendChild(speaker);
   element.appendChild(line);
   element.appendChild(optionsEl);
@@ -61,14 +86,16 @@ export function createChatBox(options: { doc: DocumentLike; parent?: DomElementL
   const renderOptions = (labels: readonly string[]): void => {
     for (const row of rows) row.remove();
     rows.length = 0;
-    for (const label of labels) {
+    labels.forEach((label, index) => {
       const row = doc.createElement('div');
       row.classList.add('kanshan-chat__option');
       row.setAttribute('style', OPTION_STYLE);
+      row.setAttribute('role', 'button');
       row.textContent = label;
+      row.addEventListener('click', () => options.onOption?.(index));
       optionsEl.appendChild(row);
       rows.push(row);
-    }
+    });
   };
 
   return {

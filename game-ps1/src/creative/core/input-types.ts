@@ -44,4 +44,5 @@ export type ActionBinding =
 export type AxisBinding =
   | { kind: 'key-pair'; negative: string; positive: string }
   | { kind: 'pointer-delta'; component: 'dx' | 'dy'; scale?: number }
-  | { kind: 'touch-stick'; id: string; component: 'x' | 'y' };
+  | { kind: 'touch-stick'; id: string; component: 'x' | 'y' }
+  | { kind: 'touch-drag'; id: string; component: 'dx' | 'dy'; scale?: number };

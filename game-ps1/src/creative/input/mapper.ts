@@ -240,6 +240,11 @@ function axisValue(bindings: AxisBinding[], frame: RawInputFrame): number {
         if (stick) value += binding.component === 'x' ? stick.x : stick.y;
         break;
       }
+      case 'touch-drag': {
+        const drag = frame.touchDrags?.get(binding.id);
+        if (drag) value += (binding.component === 'dx' ? drag.dx : drag.dy) * (binding.scale ?? 1);
+        break;
+      }
     }
   }
   return clampUnit(value);
@@ -254,7 +259,7 @@ function clampUnit(v: number): number {
 // ------------------------------ map helpers --------------------------------
 
 const ACTION_KINDS = new Set(['key', 'mouse-button', 'touch-button', 'touch-hold']);
-const AXIS_KINDS = new Set(['key-pair', 'pointer-delta', 'touch-stick']);
+const AXIS_KINDS = new Set(['key-pair', 'pointer-delta', 'touch-stick', 'touch-drag']);
 
 /** Validate an author-supplied ActionMap; throws CreativeError on typos. */
 export function validateActionMap(map: ActionMap): void {
@@ -300,6 +305,12 @@ export function validateActionMap(map: ActionMap): void {
       }
       if (binding.kind === 'touch-stick' && (!isNonEmpty(binding.id) || (binding.component !== 'x' && binding.component !== 'y'))) {
         throw invalidMap(`axis "${name}" touch-stick needs an id and component 'x' or 'y'`);
+      }
+      if (binding.kind === 'touch-drag' && (!isNonEmpty(binding.id) || (binding.component !== 'dx' && binding.component !== 'dy'))) {
+        throw invalidMap(`axis "${name}" touch-drag needs an id and component 'dx' or 'dy'`);
+      }
+      if (binding.kind === 'touch-drag' && binding.scale !== undefined && typeof binding.scale !== 'number') {
+        throw invalidMap(`axis "${name}" touch-drag scale must be a number`);
       }
     }
   }

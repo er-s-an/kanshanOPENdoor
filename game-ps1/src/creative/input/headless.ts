@@ -8,6 +8,7 @@ import type {
   InputDevice,
   RawInputFrame,
   RawTouchButton,
+  RawTouchDrag,
   RawTouchStick,
   ScopedOptions,
 } from './types.ts';
@@ -20,6 +21,7 @@ export class HeadlessInputDevice implements InputDevice {
   private pointerDY = 0;
   private touchButtons = new Map<string, { downAt: number }>();
   private touchSticks = new Map<string, RawTouchStick>();
+  private touchDrags = new Map<string, { dx: number; dy: number }>();
   private timeMs = 0;
   private disposed = false;
 
@@ -73,6 +75,14 @@ export class HeadlessInputDevice implements InputDevice {
     this.touchSticks.delete(id);
   }
 
+  /** Accumulate a drag delta on an area (consumed by the next nextFrame()). */
+  touchDrag(id: string, dx: number, dy: number): void {
+    const acc = this.touchDrags.get(id) ?? { dx: 0, dy: 0 };
+    acc.dx += dx;
+    acc.dy += dy;
+    this.touchDrags.set(id, acc);
+  }
+
   /** Advance virtual time; affects heldMs reported for touch buttons. */
   advance(ms: number): void {
     this.timeMs += ms;
@@ -86,6 +96,11 @@ export class HeadlessInputDevice implements InputDevice {
     for (const [id, track] of this.touchButtons) {
       buttons.set(id, { down: true, heldMs: Math.max(0, this.timeMs - track.downAt) });
     }
+    const drags = new Map<string, RawTouchDrag>();
+    for (const [id, acc] of this.touchDrags) {
+      drags.set(id, { dx: acc.dx, dy: acc.dy });
+    }
+    this.touchDrags.clear();
     const frame: RawInputFrame = {
       keys: new Set(this.keys),
       mouseButtons: new Set(this.mouseButtons),
@@ -93,6 +108,7 @@ export class HeadlessInputDevice implements InputDevice {
       pointerDY: this.pointerDY,
       touchButtons: buttons,
       touchSticks: new Map(this.touchSticks),
+      touchDrags: drags,
     };
     // Transients are per-step; held state persists.
     this.pointerDX = 0;
@@ -107,6 +123,7 @@ export class HeadlessInputDevice implements InputDevice {
     this.pointerDY = 0;
     this.touchButtons.clear();
     this.touchSticks.clear();
+    this.touchDrags.clear();
   }
 
   dispose(): void {

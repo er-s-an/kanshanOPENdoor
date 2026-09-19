@@ -17,6 +17,7 @@ export type {
 export type {
   RawInputFrame,
   RawTouchButton,
+  RawTouchDrag,
   RawTouchStick,
   InputDevice,
   ScopedOptions,

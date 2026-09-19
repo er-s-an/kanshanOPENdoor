@@ -8,6 +8,9 @@
  *   convention (y positive = up).
  * - Touch bindings reference overlay ids ('jump', 'interact', ...) that a
  *   touch HUD binds via DomInputDevice's touchButtons/touchSticks maps.
+ * - Look axes combine pointer-delta (mouse, optionally pointer-locked) with
+ *   a 'look' touch-drag area (drag-to-look on touch screens); a work that
+ *   never mounts those elements simply resolves them to 0.
  */
 import type { ActionMap } from '../core/input-types.ts';
 
@@ -57,8 +60,14 @@ export const fpsDefaults: ActionMap = {
       { kind: 'key-pair', negative: 'ArrowDown', positive: 'ArrowUp' },
       { kind: 'touch-stick', id: 'move', component: 'y' },
     ],
-    'look.x': [{ kind: 'pointer-delta', component: 'dx', scale: 0.0025 }],
-    'look.y': [{ kind: 'pointer-delta', component: 'dy', scale: 0.0025 }],
+    'look.x': [
+      { kind: 'pointer-delta', component: 'dx', scale: 0.0025 },
+      { kind: 'touch-drag', id: 'look', component: 'dx', scale: 0.0045 },
+    ],
+    'look.y': [
+      { kind: 'pointer-delta', component: 'dy', scale: 0.0025 },
+      { kind: 'touch-drag', id: 'look', component: 'dy', scale: 0.0045 },
+    ],
   },
 };
 

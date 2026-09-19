@@ -16,6 +16,7 @@ import type {
   InputDevice,
   RawInputFrame,
   RawTouchButton,
+  RawTouchDrag,
   RawTouchStick,
   ScopedOptions,
   StickElementLike,
@@ -51,6 +52,8 @@ export interface DomInputDeviceOptions extends ScopedOptions {
   touchButtons?: ReadonlyMap<string, EventTargetLike>;
   /** Touch stick id -> element (optionally with radius). */
   touchSticks?: ReadonlyMap<string, StickTarget>;
+  /** Touch-drag area id -> element; drags accumulate per-step dx/dy (look). */
+  touchDragAreas?: ReadonlyMap<string, EventTargetLike>;
   /** Called after every internal state reset (window blur, dispose). */
   onReset?: () => void;
   /** Clock for touch-hold durations (default: performance.now). */
@@ -65,6 +68,8 @@ export class DomInputDevice implements InputDevice {
   private readonly touchButtons = new Map<string, { downAt: number; pointerId: number | null }>();
   private readonly touchSticks = new Map<string, RawTouchStick>();
   private readonly stickPointers = new Map<string, { pointerId: number; originX: number; originY: number }>();
+  private readonly dragPointers = new Map<string, { pointerId: number; lastX: number; lastY: number }>();
+  private readonly dragAccumulators = new Map<string, { dx: number; dy: number }>();
   private readonly records: ListenerRecord[] = [];
   private readonly now: () => number;
   private readonly onReset?: () => void;
@@ -87,6 +92,7 @@ export class DomInputDevice implements InputDevice {
     const pointerTarget = options.pointer ?? keysTarget;
     const touchButtons = options.touchButtons ?? new Map<string, EventTargetLike>();
     const touchSticks = options.touchSticks ?? new Map<string, StickTarget>();
+    const touchDragAreas = options.touchDragAreas ?? new Map<string, EventTargetLike>();
 
     // Keyboard: edges de-duplicated by the mapper, so key repeat is harmless.
     if (keysTarget) {
@@ -195,6 +201,40 @@ export class DomInputDevice implements InputDevice {
       this.listen(element, 'pointercancel', end);
       this.listen(element, 'lostpointercapture', end);
     }
+
+    // Touch-drag areas: per-step pixel deltas (camera look). One active
+    // pointer per area; deltas come from clientX/Y so no movementX reliance.
+    for (const [id, element] of touchDragAreas) {
+      const begin = (e: { pointerId?: number; clientX?: number; clientY?: number }): void => {
+        if (this.dragPointers.has(id)) return;
+        if (e.clientX === undefined || e.clientY === undefined) return;
+        this.dragPointers.set(id, { pointerId: e.pointerId ?? -1, lastX: e.clientX, lastY: e.clientY });
+      };
+      const move = (e: { pointerId?: number; clientX?: number; clientY?: number }): void => {
+        const track = this.dragPointers.get(id);
+        if (!track || (e.pointerId !== undefined && e.pointerId !== track.pointerId)) return;
+        if (e.clientX === undefined || e.clientY === undefined) return;
+        const acc = this.dragAccumulators.get(id) ?? { dx: 0, dy: 0 };
+        acc.dx += e.clientX - track.lastX;
+        acc.dy += e.clientY - track.lastY;
+        this.dragAccumulators.set(id, acc);
+        track.lastX = e.clientX;
+        track.lastY = e.clientY;
+      };
+      const end = (e: { pointerId?: number }): void => {
+        const track = this.dragPointers.get(id);
+        if (track && e.pointerId !== undefined && e.pointerId !== track.pointerId) return;
+        this.dragPointers.delete(id);
+      };
+      this.listen(element, 'pointerdown', (e) => {
+        e.preventDefault?.();
+        begin(e);
+      });
+      this.listen(element, 'pointermove', move);
+      this.listen(element, 'pointerup', end);
+      this.listen(element, 'pointercancel', end);
+      this.listen(element, 'lostpointercapture', end);
+    }
   }
 
   // ------------------------------ InputDevice ------------------------------
@@ -205,6 +245,11 @@ export class DomInputDevice implements InputDevice {
     for (const [id, track] of this.touchButtons) {
       buttons.set(id, { down: true, heldMs: Math.max(0, this.now() - track.downAt) });
     }
+    const drags = new Map<string, RawTouchDrag>();
+    for (const [id, acc] of this.dragAccumulators) {
+      drags.set(id, { dx: acc.dx, dy: acc.dy });
+    }
+    this.dragAccumulators.clear();
     const frame: RawInputFrame = {
       keys: new Set(this.keysDown),
       mouseButtons: new Set(this.mouseButtonsDown),
@@ -212,6 +257,7 @@ export class DomInputDevice implements InputDevice {
       pointerDY: this.pointerDY,
       touchButtons: buttons,
       touchSticks: new Map(this.touchSticks),
+      touchDrags: drags,
     };
     this.pointerDX = 0;
     this.pointerDY = 0;
@@ -226,6 +272,8 @@ export class DomInputDevice implements InputDevice {
     this.touchButtons.clear();
     this.touchSticks.clear();
     this.stickPointers.clear();
+    this.dragPointers.clear();
+    this.dragAccumulators.clear();
     this.onReset?.();
   }
 

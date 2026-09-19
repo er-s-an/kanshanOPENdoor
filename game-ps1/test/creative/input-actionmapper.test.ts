@@ -359,6 +359,104 @@ test('mergeActionMaps appends shared names, keeps uniques, does not mutate input
   assert.equal(s.held('fly'), true);
 });
 
+test('touch-drag axes apply scale and are consumed per step', () => {
+  const device = new HeadlessInputDevice();
+  const map: ActionMap = {
+    actions: {},
+    axes: {
+      'look.x': [{ kind: 'touch-drag', id: 'look', component: 'dx', scale: 0.01 }],
+      'look.y': [{ kind: 'touch-drag', id: 'look', component: 'dy', scale: 0.01 }],
+    },
+  };
+  const mapper = new ActionMapper(map, device);
+
+  device.touchDrag('look', 30, -50);
+  const s1 = mapper.step();
+  assert.ok(Math.abs(s1.axis('look.x') - 0.3) < 1e-12, '30px * 0.01');
+  assert.ok(Math.abs(s1.axis('look.y') - -0.5) < 1e-12, '-50px * 0.01');
+
+  const s2 = mapper.step();
+  assert.equal(s2.axis('look.x'), 0, 'drag deltas do not accumulate across steps');
+  assert.equal(s2.axis('look.y'), 0);
+});
+
+test('touch-drag sums with pointer-delta bindings and clamps to [-1, 1]', () => {
+  const device = new HeadlessInputDevice();
+  const map: ActionMap = {
+    actions: {},
+    axes: {
+      'look.x': [
+        { kind: 'pointer-delta', component: 'dx', scale: 0.01 },
+        { kind: 'touch-drag', id: 'look', component: 'dx', scale: 0.01 },
+      ],
+    },
+  };
+  const mapper = new ActionMapper(map, device);
+
+  device.pointerDelta(60, 0); // 0.6
+  device.touchDrag('look', 80, 0); // 0.8
+  assert.equal(mapper.step().axis('look.x'), 1, '0.6 + 0.8 clamps at +1');
+
+  device.pointerDelta(-60, 0); // -0.6
+  device.touchDrag('look', -80, 0); // -0.8
+  assert.equal(mapper.step().axis('look.x'), -1, '-0.6 + -0.8 clamps at -1');
+
+  device.pointerDelta(20, 0); // 0.2
+  device.touchDrag('look', 10, 0); // 0.1
+  assert.ok(Math.abs(mapper.step().axis('look.x') - 0.3) < 1e-12, 'below the clamp both sources sum');
+});
+
+test('invalid touch-drag axis bindings are rejected', () => {
+  const cases: unknown[] = [
+    { actions: {}, axes: { x: [{ kind: 'touch-drag', component: 'dx' }] } }, // missing id
+    { actions: {}, axes: { x: [{ kind: 'touch-drag', id: '', component: 'dx' }] } }, // empty id
+    { actions: {}, axes: { x: [{ kind: 'touch-drag', id: 'look', component: 'z' }] } }, // bad component
+    { actions: {}, axes: { x: [{ kind: 'touch-drag', id: 'look', component: 'dx', scale: 'x' }] } }, // bad scale
+  ];
+  for (const bad of cases) {
+    try {
+      validateActionMap(bad as never);
+      assert.fail(`expected validation to reject ${JSON.stringify(bad)}`);
+    } catch (err) {
+      assert.ok(err instanceof CreativeError, `CreativeError expected, got ${err}`);
+      assert.equal(err.code, 'INPUT_INVALID_ACTION_MAP');
+      assert.equal(err.phase, 'input');
+    }
+  }
+});
+
+test('mergeActionMaps merges touch-drag bindings alongside pointer-delta', () => {
+  const base: ActionMap = {
+    actions: {},
+    axes: { 'look.x': [{ kind: 'pointer-delta', component: 'dx', scale: 0.0025 }] },
+  };
+  const extra: ActionMap = {
+    actions: {},
+    axes: {
+      'look.x': [{ kind: 'touch-drag', id: 'look', component: 'dx', scale: 0.0045 }],
+      'look.y': [
+        { kind: 'pointer-delta', component: 'dy', scale: 0.0025 },
+        { kind: 'touch-drag', id: 'look', component: 'dy', scale: 0.0045 },
+      ],
+    },
+  };
+  const merged = mergeActionMaps(base, extra);
+
+  assert.equal(merged.axes['look.x'].length, 2, 'shared axis gets both binding sets');
+  assert.equal(merged.axes['look.y'].length, 2);
+  assert.equal(base.axes['look.x'].length, 1, 'base not mutated');
+  assert.equal(extra.axes['look.x'].length, 1, 'extra not mutated');
+
+  // The merged map resolves mouse and touch drags through one axis.
+  const device = new HeadlessInputDevice();
+  const mapper = new ActionMapper(merged, device);
+  device.pointerDelta(100, 40); // 0.25 / 0.1
+  device.touchDrag('look', 100, 100); // 0.45 / 0.45
+  const s = mapper.step();
+  assert.ok(Math.abs(s.axis('look.x') - 0.7) < 1e-12, 'pointer-delta + touch-drag sum on look.x');
+  assert.ok(Math.abs(s.axis('look.y') - 0.55) < 1e-12, 'pointer-delta + touch-drag sum on look.y');
+});
+
 test('mapper ties to a Scope: scope dispose disables stepping', () => {
   const device = new HeadlessInputDevice();
   const scope = new Scope();

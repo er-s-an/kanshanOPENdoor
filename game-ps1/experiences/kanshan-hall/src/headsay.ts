@@ -37,8 +37,9 @@ export interface HeadSayOptions {
   /** World-space head anchor (root position; the offset is applied here). */
   headPosition: () => THREE.Vector3;
   camera: () => THREE.PerspectiveCamera;
-  /** Logical viewport for the CSS projection (layout-free environments). */
-  viewport?: { width: number; height: number };
+  /** Logical viewport for the CSS projection; pass a getter so orientation
+   *  changes / resizes on mobile are picked up on the next tick. */
+  viewport?: { width: number; height: number } | (() => { width: number; height: number });
 }
 
 export interface HeadSay {
@@ -60,7 +61,11 @@ export interface HeadSay {
 export function createHeadSay(options: HeadSayOptions): HeadSay {
   const doc = options.doc;
   const hud = options.hudSubtitle;
-  const viewport = options.viewport ?? { width: 1280, height: 720 };
+  const readViewport = (): { width: number; height: number } => {
+    const v = options.viewport;
+    if (typeof v === 'function') return v();
+    return v ?? { width: 1280, height: 720 };
+  };
 
   const element = doc.createElement('div');
   element.classList.add(HEAD_SAY_CLASS);
@@ -104,6 +109,7 @@ export function createHeadSay(options: HeadSayOptions): HeadSay {
 
   const showBubble = (line: string): void => {
     const camera = options.camera();
+    const viewport = readViewport();
     headWorld.copy(options.headPosition());
     headWorld.y += HEAD_OFFSET_Y;
     camera.updateMatrixWorld();

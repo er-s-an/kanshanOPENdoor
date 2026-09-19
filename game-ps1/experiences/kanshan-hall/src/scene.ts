@@ -37,8 +37,12 @@
  *
  * First-person wiring mirrors clockwork-flat: ActionMapper + fpsDefaults +
  * {moveYAxis:'move.z'} over a DomInputDevice (browser) or an injected
- * HeadlessInputDevice (tests). 看山's lines render as a DOM bubble above his
- * head (headsay.ts), falling back to the HUD subtitle when off-camera.
+ * HeadlessInputDevice (tests). Touch screens get the full verb set through a
+ * DOM overlay (touch-controls.ts): joystick -> 'move' stick, right-half drag
+ * -> 'look' drag, buttons -> jump/interact/skip touch bindings — every
+ * gesture resolves through the same action map as keyboard/mouse. 看山's
+ * lines render as a DOM bubble above his head (headsay.ts), falling back to
+ * the HUD subtitle when off-camera.
  * Audio is synth-only (AudioPlayer + RecordingBackend in tests).
  * Offline runs inject HeadlessInputDevice / RecordingBackend / FakeDocument.
  */
@@ -81,6 +85,9 @@ import { createHeadSay } from './headsay.ts';
 import type { HeadSay } from './headsay.ts';
 import { createChatBox } from './chatbox.ts';
 import type { ChatBox } from './chatbox.ts';
+import { createTouchControls } from './touch-controls.ts';
+import type { TouchControls } from './touch-controls.ts';
+import type { EventTargetLike, StickElementLike } from '../../../src/creative/input/types.ts';
 import { CHAT_ANSWERS, CHAT_OPTIONS, CHAT_ROOT_LINE, DIALOGUE, doorOpenBeat } from './dialogue.ts';
 
 // ---------------------------------------------------------------------------
@@ -117,6 +124,8 @@ const SEEOFF_SECONDS = 1.6;
 /** Player-initiated chat: prompt + open radius around 看山. */
 const CHAT_TRIGGER_RADIUS = 2.2;
 const CHAT_PROMPT_LABEL = '按 E 和刘看山聊聊';
+/** Touch wording: no E key on a phone — the 「聊聊」 button is the verb. */
+const TOUCH_CHAT_PROMPT_LABEL = '点「聊聊」和刘看山说话';
 
 /** Free-roam waypoint ring (r 3–6.5m); exported for tests/tools. */
 export const ROAM_WAYPOINTS: readonly Vec3[] = [
@@ -156,6 +165,8 @@ export interface KanshanHallWorkHandles extends KanshanHallHandles {
   readonly headSubtitle: HeadSay;
   /** Modal dialogue box for 和刘看山聊天 (bottom-center card). */
   readonly chatBox: ChatBox;
+  /** Touch controls overlay (joystick / look-drag / buttons). */
+  readonly touch: TouchControls;
   readonly audio: AudioPlayer;
   readonly params: ParameterRegistry;
   readonly camera: THREE.PerspectiveCamera;
@@ -349,6 +360,33 @@ export function createKanshanHallModule(
       // ---- input -----------------------------------------------------------------
       const hasDom = typeof globalThis.window !== 'undefined' && typeof globalThis.document !== 'undefined';
       const pointerCanvas = hasDom ? (globalThis.document.querySelector('canvas') ?? globalThis.document.body) : null;
+
+      // ---- HUD + touch overlay ---------------------------------------------------
+      // Built BEFORE the input device: DomInputDevice registers the overlay's
+      // stick / look-drag-area / button elements as its touch sources, so
+      // gestures flow through the same RawInputFrame -> ActionMapper path as
+      // keyboard and mouse. Headless runs inject their own device and never
+      // touch a real DOM element.
+      const doc: DocumentLike = options.document ?? defaultDocument();
+      // Mount to the page in browser runs; headless tests pass a parent or
+      // leave it detached and assert on state instead.
+      const hudParent = options.hudParent ?? (hasDom ? (globalThis.document.body as unknown as DomElementLike) : undefined);
+      const hud = new Hud(doc, hudParent);
+      const touchControls = createTouchControls({ doc, parent: hud.element });
+      if (hasDom) {
+        // Coarse pointer (phones/tablets) reveals the overlay at boot; the
+        // first touchstart covers hybrid laptops the media query misses.
+        const coarse = globalThis.matchMedia?.('(pointer: coarse)').matches === true;
+        const touchCapable = (globalThis.navigator?.maxTouchPoints ?? 0) > 0;
+        if (coarse || touchCapable) {
+          touchControls.reveal();
+        } else {
+          const onFirstTouch = (): void => touchControls.reveal();
+          globalThis.window.addEventListener('touchstart', onFirstTouch, { once: true });
+          ctx.scope.defer(() => globalThis.window.removeEventListener('touchstart', onFirstTouch));
+        }
+      }
+
       const device: InputDevice =
         options.device ??
         (hasDom
@@ -357,15 +395,27 @@ export function createKanshanHallModule(
               // 鼠标视角：点击画面锁定鼠标（浏览器内置 Esc 释放），未锁定时
               // 鼠标增量不积累，避免拖选/误转。document 必须传入——设备靠
               // pointerlockchange 事件才知道锁已生效，漏了它锁 active 永远
-              // 为 false，光标藏了视角却不动。
+              // 为 false，光标藏了视角却不动。触屏走 touch-drag 区，不受锁门控。
               document: globalThis.document,
               requirePointerLock: true,
               pointerLockElement: pointerCanvas,
+              touchSticks: new Map<string, StickElementLike>([['move', touchControls.stickBase as unknown as StickElementLike]]),
+              touchDragAreas: new Map<string, EventTargetLike>([['look', touchControls.lookArea as unknown as EventTargetLike]]),
+              touchButtons: new Map<string, EventTargetLike>([
+                ['jump', touchControls.jumpButton as unknown as EventTargetLike],
+                ['interact', touchControls.interactButton as unknown as EventTargetLike],
+                ['skip', touchControls.skipButton as unknown as EventTargetLike],
+              ]),
             })
           : new HeadlessInputDevice());
       if (!options.device && hasDom && pointerCanvas) {
         const lockTarget = pointerCanvas as { requestPointerLock?: () => Promise<void> | void };
-        const lock = (): void => {
+        const lock = (event: unknown): void => {
+          // Only a real mouse click requests pointer lock — a touch tap on
+          // the canvas must not (mobile pointer lock is broken/annoying, and
+          // touch look runs through the drag area instead).
+          const pointerType = (event as { pointerType?: string } | null)?.pointerType;
+          if (pointerType !== undefined && pointerType !== 'mouse') return;
           void lockTarget.requestPointerLock?.();
         };
         globalThis.window.addEventListener('pointerdown', lock);
@@ -373,7 +423,12 @@ export function createKanshanHallModule(
       }
       const actionMap = mergeActionMaps(fpsDefaults, {
         actions: {
-          skip: [{ kind: 'key', code: 'Escape' }],
+          // Esc skips the intro on keyboard; the touch skip button covers
+          // phones. jump/interact already carry touch bindings in fpsDefaults.
+          skip: [
+            { kind: 'key', code: 'Escape' },
+            { kind: 'touch-button', id: 'skip' },
+          ],
           // 和刘看山聊天: numbered option rows (Digit1..Digit4). 'interact'
           // (KeyE, from fpsDefaults) opens/advances/closes the dialogue.
           opt1: [{ kind: 'key', code: 'Digit1' }],
@@ -390,13 +445,6 @@ export function createKanshanHallModule(
       const graph = new AudioGraph(backend);
       ctx.scope.own(graph);
       const audio = new AudioPlayer({ backend, graph, scope: ctx.scope, clips: defaultClips() });
-
-      // ---- HUD + above-head subtitle bubble ------------------------------------
-      const doc: DocumentLike = options.document ?? defaultDocument();
-      // Mount to the page in browser runs; headless tests pass a parent or
-      // leave it detached and assert on state instead.
-      const hudParent = options.hudParent ?? (hasDom ? (globalThis.document.body as unknown as import('../../../src/creative/ui/dom.ts').DomElementLike) : undefined);
-      const hud = new Hud(doc, hudParent);
 
       // ---- camera ------------------------------------------------------------------------
       const camera = options.camera ?? new THREE.PerspectiveCamera(74, 16 / 9, 0.05, 120);
@@ -427,11 +475,27 @@ export function createKanshanHallModule(
         hudSubtitle: hud.subtitle,
         headPosition: () => kanshan.object.getWorldPosition(kanshanHead),
         camera: () => camera,
-        viewport: hasDom ? { width: globalThis.window.innerWidth, height: globalThis.window.innerHeight } : undefined,
+        // Live read: rotating a phone or resizing the window must not leave
+        // the bubble projecting against a stale viewport.
+        viewport: hasDom ? () => ({ width: globalThis.window.innerWidth, height: globalThis.window.innerHeight }) : undefined,
       });
 
       // ---- modal dialogue box (和刘看山聊天) -------------------------------------------------
-      const chatBox = createChatBox({ doc, parent: hud.element });
+      // Tap gestures on option rows / the ✕ close button are QUEUED and
+      // consumed at the top of the intent phase, so taps mutate the same
+      // fixed-step state the keyboard path does — never mid-frame DOM state.
+      let queuedChatOption: number | null = null;
+      let queuedChatClose = false;
+      const chatBox = createChatBox({
+        doc,
+        parent: hud.element,
+        onOption: (index) => {
+          queuedChatOption = index;
+        },
+        onClose: () => {
+          queuedChatClose = true;
+        },
+      });
 
       // ---- hall lighting ramp (intro: near-black -> daylight around him) ---------------------
       // Timeline-tweened proxy: a tween on userData.k keeps natural completion
@@ -866,7 +930,15 @@ export function createKanshanHallModule(
         }
         if (chatOpen) {
           // Modal dialogue: movement AND look are frozen; keys drive the box.
-          if (snap.pressed('interact') || snap.pressed('skip')) closeChat();
+          // Queued taps (chat card option rows / ✕) are consumed here so they
+          // land with fixed-step semantics exactly like key edges.
+          const tappedOption = queuedChatOption;
+          const tappedClose = queuedChatClose;
+          queuedChatOption = null;
+          queuedChatClose = false;
+          if (tappedClose) closeChat();
+          else if (tappedOption !== null) chooseChatOption(tappedOption);
+          else if (snap.pressed('interact') || snap.pressed('skip')) closeChat();
           else if (snap.pressed('opt1')) chooseChatOption(0);
           else if (snap.pressed('opt2')) chooseChatOption(1);
           else if (snap.pressed('opt3')) chooseChatOption(2);
@@ -909,9 +981,13 @@ export function createKanshanHallModule(
           fsm.stateId === 'roam' && kanshan.distanceTo(player.position[0], player.position[2]) <= CHAT_TRIGGER_RADIUS;
         if (chatEligible !== promptShown) {
           promptShown = chatEligible;
-          if (chatEligible) hud.prompt.show(CHAT_PROMPT_LABEL);
+          if (chatEligible) hud.prompt.show(touchControls.revealed() ? TOUCH_CHAT_PROMPT_LABEL : CHAT_PROMPT_LABEL);
           else hud.prompt.hide();
         }
+        // Touch overlay state: the 「聊聊」 button mirrors prompt eligibility,
+        // the 「跳过」 button lives only while the intro plays.
+        touchControls.setInteractVisible(chatEligible);
+        touchControls.setSkipVisible(introActive());
         // The player can close the distance in ANY state (seeoff included):
         // the minimum-distance invariant is enforced unconditionally, once
         // per fixed step, for the whole session.
@@ -933,6 +1009,14 @@ export function createKanshanHallModule(
         const p = player.position;
         audio.setListenerPosition([p[0], p[1] + 0.72, p[2]]);
         fade.update(frame.dt);
+        // Touch overlay presentation: knob follows the resolved move axes
+        // (zero on release, so it re-centers itself); the drag-to-look hint
+        // retires after the first real look input.
+        const axes = mapper.snapshot();
+        touchControls.setKnob(axes.axis('move.x'), axes.axis('move.z'));
+        if (touchControls.lookHintVisible() && (axes.axis('look.x') !== 0 || axes.axis('look.y') !== 0)) {
+          touchControls.setLookHintVisible(false);
+        }
       });
 
       // ---- handles -----------------------------------------------------------------------------------------
@@ -985,6 +1069,7 @@ export function createKanshanHallModule(
         hud,
         headSubtitle: headSay,
         chatBox,
+        touch: touchControls,
         audio,
         params,
         camera,

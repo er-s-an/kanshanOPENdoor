@@ -129,3 +129,29 @@ test('authors replace maps entirely: arbitrary verbs, no hard-coded vocabulary',
   assert.equal(s.axis('levitation.depth'), -0.25);
   assert.equal(s.held('forward'), false, 'default verbs do not exist in a replaced map');
 });
+
+test('fpsDefaults look axes bind a touch-drag area (id look, scale 0.0045) after pointer-delta', () => {
+  assert.doesNotThrow(() => validateActionMap(fpsDefaults));
+
+  for (const axis of ['look.x', 'look.y'] as const) {
+    const bindings = fpsDefaults.axes[axis];
+    const kinds = bindings.map((b) => b.kind);
+    assert.deepEqual(kinds, ['pointer-delta', 'touch-drag'], `${axis}: pointer-delta stays in front`);
+    const drag = bindings[1];
+    assert.equal(drag.kind, 'touch-drag');
+    if (drag.kind === 'touch-drag') {
+      assert.equal(drag.id, 'look');
+      assert.equal(drag.component, axis === 'look.x' ? 'dx' : 'dy');
+      assert.ok(drag.scale !== undefined && Math.abs(drag.scale - 0.0045) < 1e-12, 'scale is 0.0045');
+    }
+  }
+
+  // The drag binding drives the same axes end-to-end with the headless device.
+  const device = new HeadlessInputDevice();
+  const mapper = new ActionMapper(fpsDefaults, device);
+  device.touchDrag('look', 200, 100);
+  const s = mapper.step();
+  assert.ok(Math.abs(s.axis('look.x') - 0.9) < 1e-12, '200px * 0.0045');
+  assert.ok(Math.abs(s.axis('look.y') - 0.45) < 1e-12, '100px * 0.0045');
+  assert.equal(mapper.step().axis('look.x'), 0, 'drag deltas consumed per step');
+});

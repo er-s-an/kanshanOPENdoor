@@ -22,6 +22,12 @@ export interface RawTouchStick {
   readonly y: number;
 }
 
+/** Per-step drag deltas (px) accumulated on a registered touch-drag area. */
+export interface RawTouchDrag {
+  readonly dx: number;
+  readonly dy: number;
+}
+
 /**
  * Immutable view of everything the hardware reported for one fixed step.
  * Devices copy their mutable accumulators into a fresh frame on every
@@ -39,6 +45,12 @@ export interface RawInputFrame {
   readonly touchButtons: ReadonlyMap<string, RawTouchButton>;
   /** Touch sticks by author-assigned id. */
   readonly touchSticks: ReadonlyMap<string, RawTouchStick>;
+  /**
+   * Touch-drag deltas by author-assigned area id (transient, consumed per
+   * step like pointerDX/pointerDY). Optional so hand-built frames and older
+   * devices stay valid; absence means no drag activity.
+   */
+  readonly touchDrags?: ReadonlyMap<string, RawTouchDrag>;
 }
 
 /** Frozen empty frame, used for blur/focus-loss baselines. */
