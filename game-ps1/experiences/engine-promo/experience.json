@@ -1,0 +1,11 @@
+{
+  "format": "kanshan-experience",
+  "formatVersion": 1,
+  "id": "engine-promo",
+  "title": "Engine Promo · 从零搭建",
+  "entry": "src/scene.ts",
+  "runtimeApiVersion": "r1.0",
+  "checkpointSchemaVersion": 1,
+  "params": {},
+  "comment": "引擎宣传片段：60s 确定性搭建时间线 + 运镜，供 promo.html 逐帧录制加速成 30s 素材。无输入、无音频、无 HUD。"
+}

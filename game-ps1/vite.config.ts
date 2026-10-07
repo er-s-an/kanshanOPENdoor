@@ -7,13 +7,15 @@ const page = (name: string) => fileURLToPath(new URL(name, import.meta.url))
 const storyEntries = ['blue-blood.html', 'end-consort.html', 'myopia.html', 'player.html'].map(page).filter(existsSync)
 // The portal hall (kanshan-hall experience + iframe host) ships as its own page.
 const portalEntry = existsSync(page('portal.html')) ? [page('portal.html')] : []
+// Engine promo footage page (engine-promo experience, manual-step recording).
+const promoEntry = existsSync(page('promo.html')) ? [page('promo.html')] : []
 
 export default defineConfig({
   base: './',
   build: {
     chunkSizeWarningLimit: 1500,
     rollupOptions: {
-      input: [page('index.html'), page('stories.html'), ...storyEntries, ...portalEntry],
+      input: [page('index.html'), page('stories.html'), ...storyEntries, ...portalEntry, ...promoEntry],
     },
   },
 })
